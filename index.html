@@ -1,392 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>SecPack Enterprise</title>
-
-<style>
-
-body{
-margin:0;
-font-family:Arial,sans-serif;
-background:#F8FAFC;
-color:#222;
-}
-
-
-header{
-
-background:#0B1F3B;
-color:white;
-padding:25px;
-text-align:center;
-
-}
-
-
-.logo{
-
-font-size:36px;
-font-weight:bold;
-
-}
-
-
-.subtitle{
-
-color:#cbd5e1;
-margin-top:8px;
-
-}
-
-
-
-.hero{
-
-padding:50px 20px;
-text-align:center;
-
-}
-
-
-.hero h2{
-
-font-size:30px;
-color:#0B1F3B;
-
-}
-
-
-.hero p{
-
-font-size:18px;
-color:#475569;
-
-}
-
-
-
-.button{
-
-display:inline-block;
-
-background:#16A34A;
-
-color:white;
-
-padding:14px 25px;
-
-margin:10px;
-
-border-radius:8px;
-
-text-decoration:none;
-
-font-weight:bold;
-
-}
-
-
-
-.section{
-
-padding:30px 20px;
-
-}
-
-
-
-.card{
-
-background:white;
-
-padding:20px;
-
-border-radius:12px;
-
-margin-bottom:20px;
-
-box-shadow:0 3px 10px rgba(0,0,0,.08);
-
-}
-
-
-
-.card h3{
-
-color:#0B1F3B;
-
-}
-
-
-
-.badge{
-
-color:#16A34A;
-
-font-weight:bold;
-
-}
-
-
-
-footer{
-
-background:#0B1F3B;
-
-color:white;
-
-text-align:center;
-
-padding:20px;
-
-}
-
-
-</style>
-
-</head>
-
-
-<body>
-
-
 <header>
 
-<div class="logo">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;max-width:1200px;margin:auto;">
 
-SecPack
+<div>
 
-</div>
+<h1 style="margin:0;font-size:34px;">SecPack</h1>
 
-<div class="subtitle">
+<p style="margin:5px 0 0;color:#CBD5E1;">
 
 Smart Industrial Trading Platform
 
+</p>
+
 </div>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+
+<input
+type="text"
+placeholder="Search Products..."
+style="padding:10px 14px;border:none;border-radius:8px;width:220px;"
+>
+
+<button class="button">
+Search
+</button>
+
+</div>
+
+</div>
+
+<nav style="margin-top:25px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap;">
+
+<a href="#" style="color:white;text-decoration:none;">Home</a>
+
+<a href="#" style="color:white;text-decoration:none;">Products</a>
+
+<a href="#" style="color:white;text-decoration:none;">Suppliers</a>
+
+<a href="#" style="color:white;text-decoration:none;">Marketplace</a>
+
+<a href="#" style="color:white;text-decoration:none;">AI Assistant</a>
+
+<a href="#" style="color:white;text-decoration:none;">Login</a>
+
+<a href="#" style="color:white;text-decoration:none;">Cart</a>
+
+<a href="#" style="color:white;text-decoration:none;">EN</a>
+
+</nav>
 
 </header>
-
-
-
-<section class="hero">
-
-
-<h2>
-
-Global Industrial Procurement Platform
-
-</h2>
-
-
-<p>
-
-Packaging • Printing • Adhesives • Industrial Materials
-
-</p>
-
-
-<p>
-
-Find suppliers, compare products and buy smarter with AI.
-
-</p>
-
-
-<a class="button">
-
-Browse Products
-
-</a>
-
-
-<a class="button">
-
-Request Quote
-
-</a>
-
-
-</section>
-
-
-
-
-<section class="section">
-
-
-<h2>
-
-Popular Categories
-
-</h2>
-
-
-
-<div class="card">
-
-<h3>Packaging</h3>
-
-<p>
-
-BOPP Films, Laminates, Flexible Packaging
-
-</p>
-
-</div>
-
-
-
-<div class="card">
-
-<h3>Adhesives</h3>
-
-<p>
-
-Water Based, PU and Solvent Free Adhesives
-
-</p>
-
-</div>
-
-
-
-<div class="card">
-
-<h3>Printing Materials</h3>
-
-<p>
-
-Industrial Printing Solutions
-
-</p>
-
-</div>
-
-
-</section>
-
-
-
-
-
-<section class="section">
-
-
-<h2>
-
-Featured Products
-
-</h2>
-
-
-
-<div class="card">
-
-
-<h3>
-
-BOPP Thermal Film
-
-</h3>
-
-
-<p>
-
-Country: China
-
-</p>
-
-
-<p>
-
-Thickness: 15 micron
-
-</p>
-
-
-<p>
-
-Supplier: Verified Manufacturer
-
-</p>
-
-
-<div class="badge">
-
-AI Score: 92/100
-
-</div>
-
-
-</div>
-
-
-
-
-
-<div class="card">
-
-
-<h3>
-
-WA1090 Water Based Adhesive
-
-</h3>
-
-
-<p>
-
-Country: Pakistan
-
-</p>
-
-
-<p>
-
-Solid Content: 42%
-
-</p>
-
-
-<p>
-
-Application: Film Lamination
-
-</p>
-
-
-<div class="badge">
-
-Quality Check Available
-
-</div>
-
-
-</div>
-
-
-</section>
-
-
-
-
-
-<footer>
-
-
-© SecPack Enterprise
-
-
-</footer>
-
-
-
-</body>
-
-</html>
