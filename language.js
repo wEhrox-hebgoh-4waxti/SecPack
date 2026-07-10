@@ -1,55 +1,71 @@
+const translations = {
 
-let currentLanguage = "en";
+en: {
+
+title: "SecPack Enterprise",
+
+subtitle: "Global Packaging Procurement Intelligence System",
+
+products_title: "Product Catalog",
+
+supplier_title: "Supplier Intelligence",
+
+ai_title: "AI Market Insight"
+
+},
 
 
-async function loadLanguage(lang){
+fa: {
+
+title: "سک‌پک اینترپرایز",
+
+subtitle: "سیستم هوشمند تأمین و خرید جهانی بسته‌بندی",
+
+products_title: "کاتالوگ محصولات",
+
+supplier_title: "هوش تأمین‌کنندگان",
+
+ai_title: "تحلیل هوشمند بازار"
+
+},
 
 
-currentLanguage = lang;
+ar: {
 
+title: "SecPack Enterprise",
 
-let file;
+subtitle: "نظام ذكاء التوريد والشراء العالمي للتغليف",
 
+products_title: "كتالوج المنتجات",
 
-if(lang==="fa"){
-file="fa.json";
+supplier_title: "ذكاء الموردين",
+
+ai_title: "تحليل السوق بالذكاء الاصطناعي"
+
 }
 
-else if(lang==="ar"){
-file="ar.json";
-}
-
-else{
-file="en.json";
-}
+};
 
 
 
-const response =
-await fetch(file);
+function loadLanguage(lang){
 
 
-
-const translations =
-await response.json();
-
+let elements =
+document.querySelectorAll("[data-lang]");
 
 
-document
-.querySelectorAll("[data-lang]")
-.forEach(element=>{
+elements.forEach(function(element){
 
 
-const key =
+let key =
 element.getAttribute("data-lang");
 
 
-if(translations[key]){
+if(translations[lang] && translations[lang][key]){
 
-
-element.innerText =
-translations[key];
-
+element.innerHTML =
+translations[lang][key];
 
 }
 
@@ -58,21 +74,58 @@ translations[key];
 
 
 
-if(lang==="fa" || lang==="ar"){
+if(lang === "fa"){
 
-document.body.style.direction="rtl";
+document.body.style.direction = "rtl";
 
-document.body.style.textAlign="right";
+document.documentElement.lang = "fa";
+
+}
+
+else if(lang === "ar"){
+
+document.body.style.direction = "rtl";
+
+document.documentElement.lang = "ar";
 
 }
 
 else{
 
-document.body.style.direction="ltr";
+document.body.style.direction = "ltr";
 
-document.body.style.textAlign="left";
+document.documentElement.lang = "en";
+
+}
+
+
+
+localStorage.setItem(
+"secpack-language",
+lang
+);
+
 
 }
 
 
+
+
+document.addEventListener(
+"DOMContentLoaded",
+function(){
+
+
+let savedLanguage =
+localStorage.getItem(
+"secpack-language"
+);
+
+
+loadLanguage(
+savedLanguage || "en"
+);
+
+
 }
+);
