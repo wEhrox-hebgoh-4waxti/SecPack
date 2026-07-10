@@ -1,10 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" dir="ltr">
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>SecPack Enterprise</title>
@@ -13,273 +10,133 @@
 
 </head>
 
-
 <body>
-
 
 <header class="header">
 
-
 <div class="logo">
-SEC PACK
+<div class="sec-logo">SEC</div>
+<div class="brand">
+<h1>SecPack</h1>
+<span>Enterprise Procurement Intelligence</span>
 </div>
-
-
-<p>
-Global Packaging Procurement Intelligence
-</p>
-
+</div>
 
 
 <div class="language-buttons">
 
-
-<button onclick="loadLanguage('en')">
-English
+<button onclick="changeLanguage('en')">
+EN
 </button>
 
-
-<button onclick="loadLanguage('fa')">
-فارسی
+<button onclick="changeLanguage('fa')">
+FA
 </button>
 
-
-<button onclick="loadLanguage('ar')">
-العربية
+<button onclick="changeLanguage('ar')">
+AR
 </button>
-
 
 </div>
-
 
 </header>
 
 
+<main>
 
 
+<section class="hero">
 
-<main class="container">
-
-
-
-<section>
-
-
-<h2 class="section-title">
-Featured Products
+<h2 data-i18n="title">
+Global Packaging Procurement Intelligence
 </h2>
 
-
-<div class="product-grid">
-
-</div>
-
+<p data-i18n="subtitle">
+AI powered supplier sourcing, evaluation and market analysis system.
+</p>
 
 </section>
 
 
 
+<section class="cards">
 
 
-<section>
+<div class="card">
 
-
-<h2 class="section-title">
-Top Suppliers
-</h2>
-
-
-
-<div class="supplier-card">
-
-
-<h3>
-HiTech Resins
+<h3 data-i18n="product">
+Product Catalog
 </h3>
 
-
-
-<div class="info-row">
-
-<span class="label">
-Quality
-</span>
-
-
-<span>
-★★★★★
-</span>
+<p>
+Adhesives, Thermal Films, Packaging Materials
+</p>
 
 </div>
 
 
 
-<div class="info-row">
+<div class="card">
 
-<span class="label">
-Price
-</span>
+<h3 data-i18n="supplier">
+Supplier Database
+</h3>
 
-
-<span>
-88 / 100
-</span>
-
-</div>
-
-
-
-<div class="info-row">
-
-<span class="label">
-Delivery
-</span>
-
-
-<span>
-90 / 100
-</span>
+<p>
+Global manufacturers and verified suppliers
+</p>
 
 </div>
 
 
 
-<div class="info-row">
 
-<span class="label">
-Response
-</span>
+<div class="card">
 
+<h3 data-i18n="ai">
+AI Procurement Assistant
+</h3>
 
-<span>
-92 / 100
-</span>
-
-</div>
-
+<p>
+Smart analysis and purchasing recommendations
+</p>
 
 </div>
 
+
+
+<div class="card">
+
+<h3>
+TDS / COA / MSDS Analysis
+</h3>
+
+<p>
+Technical document intelligence system
+</p>
+
+</div>
 
 
 </section>
 
 
 
+<section class="dashboard">
 
-
-
-
-<section>
-
-
-<h2 class="section-title">
-Today's AI Insight
+<h2>
+SecPack Intelligence Dashboard
 </h2>
 
 
+<div id="ai-result">
 
-<div class="ai-box">
-
-
-<div class="ai-title">
-
-BOPP Thermal Film Market
-
-</div>
-
-
-<br>
-
-
-<div class="info-row">
-
-<span>
-Price Trend
-</span>
-
-
-<span>
-↓ 4.8%
-</span>
-
-
-</div>
-
-
-
-
-<div class="info-row">
-
-<span>
-Recommendation
-</span>
-
-
-<span>
-Good time to negotiate
-</span>
-
-
-</div>
-
-
-
-</div>
-
-
-
-</section>
-
-
-
-
-
-
-<section>
-
-
-<h2 class="section-title">
-Future Enterprise Modules
-</h2>
-
-
-
-<div class="supplier-card">
-
-
-<p>
-✓ AI Procurement Assistant
-</p>
-
-
-<p>
-✓ Supplier Database
-</p>
-
-
-<p>
-✓ TDS / COA Analysis
-</p>
-
-
-<p>
-✓ Market Price Monitoring
-</p>
-
-
-<p>
-✓ Purchase Risk Prediction
-</p>
-
+Loading market intelligence...
 
 </div>
 
 
 </section>
-
-
-
 
 
 
@@ -287,37 +144,21 @@ Future Enterprise Modules
 
 
 
+<footer>
 
-
-
-
-<footer class="header">
-
-
-<center>
-
+<p>
 © 2026 SecPack Enterprise
-
-</center>
-
+</p>
 
 </footer>
 
 
 
-
-
 <script src="script.js"></script>
-
-<script>
-alert("SecPack Test OK");
-</script>
 
 <script src="language.js"></script>
 
 
 </body>
 
-
 </html>
-ط
