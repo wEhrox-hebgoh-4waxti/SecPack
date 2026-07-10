@@ -1,300 +1,250 @@
-
-/* =========================
-   SecPack Enterprise CSS
-   Sprint 3
-========================= */
-
-:root{
-    --primary:#0f172a;
-    --secondary:#2563eb;
-    --accent:#10b981;
-    --background:#f8fafc;
-    --card:#ffffff;
-    --text:#1e293b;
-    --muted:#64748b;
-}
-
-
 *{
-    box-sizing:border-box;
+box-sizing:border-box;
 }
 
 
 body{
-    margin:0;
-    font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Arial,
-    sans-serif;
 
-    background:var(--background);
-    color:var(--text);
+margin:0;
+font-family:
+Arial,
+Tahoma,
+sans-serif;
+
+background:#f5f7fb;
+
+color:#1d2433;
+
 }
 
 
-/* Header */
-
 .header{
 
-    background:
-    linear-gradient(
-    135deg,
-    #0f172a,
-    #2563eb
-    );
+display:flex;
+justify-content:space-between;
+align-items:center;
 
-    color:white;
-    padding:20px;
+padding:20px 25px;
 
-    border-radius:0 0 24px 24px;
+background:#0b1220;
+
+color:white;
 
 }
 
 
 .logo{
 
-    font-size:28px;
-    font-weight:800;
-    letter-spacing:1px;
+display:flex;
+align-items:center;
+gap:15px;
 
 }
 
 
-/* Main Container */
+.sec-logo{
 
-.container{
+width:55px;
+height:55px;
 
-    width:100%;
-    max-width:1200px;
-    margin:auto;
-    padding:20px;
+display:flex;
+align-items:center;
+justify-content:center;
 
-}
+background:white;
 
+color:#0b1220;
 
-/* Section Title */
+font-size:22px;
+font-weight:bold;
 
-.section-title{
-
-    font-size:22px;
-    font-weight:700;
-    margin:30px 0 15px;
+border-radius:12px;
 
 }
 
 
-/* Product Catalog */
+.brand h1{
 
-.product-grid{
+margin:0;
 
-    display:grid;
-
-    grid-template-columns:
-    repeat(auto-fit,minmax(260px,1fr));
-
-    gap:18px;
+font-size:28px;
 
 }
 
 
-.product-card{
+.brand span{
 
-    background:var(--card);
+font-size:12px;
 
-    border-radius:20px;
-
-    padding:18px;
-
-    box-shadow:
-    0 10px 25px rgba(0,0,0,.08);
-
-    transition:.3s;
-
-}
-
-
-.product-card:hover{
-
-    transform:translateY(-5px);
-
-}
-
-
-.product-image{
-
-    height:160px;
-
-    background:#e2e8f0;
-
-    border-radius:15px;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    font-size:40px;
+opacity:.8;
 
 }
 
 
 
-/* Rating */
+.language-buttons button{
 
-.rating{
+margin:3px;
 
-    color:#f59e0b;
+padding:8px 12px;
 
-    font-size:18px;
+border:none;
 
-}
+border-radius:8px;
 
+cursor:pointer;
 
-/* Product Information */
+background:#ffffff;
 
-.info-row{
+color:#0b1220;
 
-    display:flex;
-
-    justify-content:space-between;
-
-    padding:8px 0;
-
-    border-bottom:
-    1px solid #e2e8f0;
-
-}
-
-
-.label{
-
-    color:var(--muted);
-
-}
-
-
-/* Buttons */
-
-.btn{
-
-    display:inline-block;
-
-    padding:12px 18px;
-
-    border-radius:12px;
-
-    border:none;
-
-    cursor:pointer;
-
-    font-weight:700;
-
-}
-
-
-.btn-primary{
-
-    background:var(--secondary);
-
-    color:white;
-
-}
-
-
-.btn-success{
-
-    background:var(--accent);
-
-    color:white;
+font-weight:bold;
 
 }
 
 
 
-/* Supplier Cards */
+.hero{
 
-.supplier-card{
+text-align:center;
 
-    background:white;
-
-    border-radius:18px;
-
-    padding:20px;
-
-    margin-bottom:15px;
-
-    box-shadow:
-    0 8px 20px rgba(0,0,0,.06);
+padding:50px 20px;
 
 }
 
 
-.score{
+.hero h2{
 
-    font-size:28px;
+font-size:32px;
 
-    font-weight:800;
-
-    color:var(--secondary);
+margin-bottom:15px;
 
 }
 
 
 
-/* AI Insight */
+.hero p{
 
-.ai-box{
+font-size:18px;
 
-    background:
-    linear-gradient(
-    135deg,
-    #ecfdf5,
-    #eff6ff
-    );
-
-    border-radius:20px;
-
-    padding:22px;
-
-    margin-top:20px;
+color:#555;
 
 }
 
 
-.ai-title{
 
-    font-weight:800;
 
-    font-size:20px;
+.cards{
+
+display:grid;
+
+grid-template-columns:
+repeat(auto-fit,minmax(240px,1fr));
+
+gap:20px;
+
+padding:20px;
 
 }
 
 
-/* Mobile Optimization */
+
+.card{
+
+background:white;
+
+padding:25px;
+
+border-radius:18px;
+
+box-shadow:
+0 8px 25px rgba(0,0,0,.08);
+
+transition:.3s;
+
+}
+
+
+.card:hover{
+
+transform:translateY(-5px);
+
+}
+
+
+
+.card h3{
+
+color:#0b1220;
+
+}
+
+
+
+.dashboard{
+
+margin:30px 20px;
+
+background:white;
+
+padding:25px;
+
+border-radius:18px;
+
+box-shadow:
+0 8px 25px rgba(0,0,0,.08);
+
+}
+
+
+
+#ai-result{
+
+padding:20px;
+
+background:#f1f4fa;
+
+border-radius:12px;
+
+}
+
+
+
+footer{
+
+text-align:center;
+
+padding:20px;
+
+color:#777;
+
+}
+
+
+
 
 @media(max-width:600px){
 
-    .container{
+.header{
 
-        padding:15px;
+flex-direction:column;
 
-    }
+gap:15px;
 
-
-    .product-grid{
-
-        grid-template-columns:1fr;
-
-    }
+}
 
 
-    .logo{
+.brand h1{
 
-        font-size:24px;
+font-size:24px;
 
-    }
+}
+
+
+.hero h2{
+
+font-size:25px;
+
+}
 
 }
