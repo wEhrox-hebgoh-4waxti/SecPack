@@ -1,1 +1,300 @@
 
+/* =========================
+   SecPack Enterprise CSS
+   Sprint 3
+========================= */
+
+:root{
+    --primary:#0f172a;
+    --secondary:#2563eb;
+    --accent:#10b981;
+    --background:#f8fafc;
+    --card:#ffffff;
+    --text:#1e293b;
+    --muted:#64748b;
+}
+
+
+*{
+    box-sizing:border-box;
+}
+
+
+body{
+    margin:0;
+    font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+
+    background:var(--background);
+    color:var(--text);
+}
+
+
+/* Header */
+
+.header{
+
+    background:
+    linear-gradient(
+    135deg,
+    #0f172a,
+    #2563eb
+    );
+
+    color:white;
+    padding:20px;
+
+    border-radius:0 0 24px 24px;
+
+}
+
+
+.logo{
+
+    font-size:28px;
+    font-weight:800;
+    letter-spacing:1px;
+
+}
+
+
+/* Main Container */
+
+.container{
+
+    width:100%;
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+
+}
+
+
+/* Section Title */
+
+.section-title{
+
+    font-size:22px;
+    font-weight:700;
+    margin:30px 0 15px;
+
+}
+
+
+/* Product Catalog */
+
+.product-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(260px,1fr));
+
+    gap:18px;
+
+}
+
+
+.product-card{
+
+    background:var(--card);
+
+    border-radius:20px;
+
+    padding:18px;
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,.08);
+
+    transition:.3s;
+
+}
+
+
+.product-card:hover{
+
+    transform:translateY(-5px);
+
+}
+
+
+.product-image{
+
+    height:160px;
+
+    background:#e2e8f0;
+
+    border-radius:15px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:40px;
+
+}
+
+
+
+/* Rating */
+
+.rating{
+
+    color:#f59e0b;
+
+    font-size:18px;
+
+}
+
+
+/* Product Information */
+
+.info-row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    padding:8px 0;
+
+    border-bottom:
+    1px solid #e2e8f0;
+
+}
+
+
+.label{
+
+    color:var(--muted);
+
+}
+
+
+/* Buttons */
+
+.btn{
+
+    display:inline-block;
+
+    padding:12px 18px;
+
+    border-radius:12px;
+
+    border:none;
+
+    cursor:pointer;
+
+    font-weight:700;
+
+}
+
+
+.btn-primary{
+
+    background:var(--secondary);
+
+    color:white;
+
+}
+
+
+.btn-success{
+
+    background:var(--accent);
+
+    color:white;
+
+}
+
+
+
+/* Supplier Cards */
+
+.supplier-card{
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:20px;
+
+    margin-bottom:15px;
+
+    box-shadow:
+    0 8px 20px rgba(0,0,0,.06);
+
+}
+
+
+.score{
+
+    font-size:28px;
+
+    font-weight:800;
+
+    color:var(--secondary);
+
+}
+
+
+
+/* AI Insight */
+
+.ai-box{
+
+    background:
+    linear-gradient(
+    135deg,
+    #ecfdf5,
+    #eff6ff
+    );
+
+    border-radius:20px;
+
+    padding:22px;
+
+    margin-top:20px;
+
+}
+
+
+.ai-title{
+
+    font-weight:800;
+
+    font-size:20px;
+
+}
+
+
+/* Mobile Optimization */
+
+@media(max-width:600px){
+
+    .container{
+
+        padding:15px;
+
+    }
+
+
+    .product-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+
+    .logo{
+
+        font-size:24px;
+
+    }
+
+}
