@@ -1,71 +1,37 @@
-const translations = {
-
-en: {
-
-title: "SecPack Enterprise",
-
-subtitle: "Global Packaging Procurement Intelligence System",
-
-products_title: "Product Catalog",
-
-supplier_title: "Supplier Intelligence",
-
-ai_title: "AI Market Insight"
-
-},
-
-
-fa: {
-
-title: "سک‌پک اینترپرایز",
-
-subtitle: "سیستم هوشمند تأمین و خرید جهانی بسته‌بندی",
-
-products_title: "کاتالوگ محصولات",
-
-supplier_title: "هوش تأمین‌کنندگان",
-
-ai_title: "تحلیل هوشمند بازار"
-
-},
-
-
-ar: {
-
-title: "SecPack Enterprise",
-
-subtitle: "نظام ذكاء التوريد والشراء العالمي للتغليف",
-
-products_title: "كتالوج المنتجات",
-
-supplier_title: "ذكاء الموردين",
-
-ai_title: "تحليل السوق بالذكاء الاصطناعي"
-
-}
-
-};
+let translations = {};
 
 
 
-function loadLanguage(lang){
+async function loadLanguage(lang){
 
 
-let elements =
-document.querySelectorAll("[data-lang]");
+try{
 
 
-elements.forEach(function(element){
+const response = await fetch(
+`${lang}.json`
+);
 
 
-let key =
-element.getAttribute("data-lang");
+translations = await response.json();
 
 
-if(translations[lang] && translations[lang][key]){
+document
+.querySelectorAll("[data-i18n]")
+.forEach(element=>{
 
-element.innerHTML =
-translations[lang][key];
+
+const key = element.getAttribute(
+"data-i18n"
+);
+
+
+if(translations[key]){
+
+
+element.innerText =
+translations[key];
+
 
 }
 
@@ -74,57 +40,63 @@ translations[lang][key];
 
 
 
-if(lang === "fa"){
+if(lang==="fa"){
 
-document.body.style.direction = "rtl";
 
-document.documentElement.lang = "fa";
+document.documentElement.lang="fa";
 
-}
+document.documentElement.dir="rtl";
 
-else if(lang === "ar"){
-
-document.body.style.direction = "rtl";
-
-document.documentElement.lang = "ar";
 
 }
 
 else{
 
-document.body.style.direction = "ltr";
 
-document.documentElement.lang = "en";
+document.documentElement.lang=lang;
+
+document.documentElement.dir="ltr";
+
 
 }
 
 
 
-localStorage.setItem(
-"secpack-language",
-lang
+}
+
+catch(error){
+
+
+console.log(
+"Language loading error:",
+error
 );
 
 
 }
 
+
+}
+
+
+
+
+function changeLanguage(lang){
+
+
+loadLanguage(lang);
+
+
+}
 
 
 
 document.addEventListener(
 "DOMContentLoaded",
-function(){
+()=>{
 
 
-let savedLanguage =
-localStorage.getItem(
-"secpack-language"
-);
-
-
-loadLanguage(
-savedLanguage || "en"
-);
+loadLanguage("en");
 
 
 }
