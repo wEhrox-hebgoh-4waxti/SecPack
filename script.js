@@ -1,214 +1,105 @@
-
-/*
-=================================
- SecPack Enterprise
- Sprint 3
- JavaScript Core
-=================================
-*/
-
-
-// Product Database (Temporary Mock Data)
-
 const products = [
 
 {
 name:"Water Based Lamination Adhesive",
-country:"Pakistan",
-supplier:"HiTech Resins",
-MOQ:"16 Tons",
-tds:"Available",
-coa:"Available",
-msds:"Available",
-score:92
+category:"Adhesive",
+market:"Global"
 },
 
-
 {
-name:"Thermal BOPP Film 15 Micron",
-country:"China",
-supplier:"Shandong Birch Green",
-MOQ:"20 Tons",
-tds:"Available",
-coa:"Available",
-msds:"Available",
-score:88
+name:"BOPP Thermal Film 15 Micron",
+category:"Film",
+market:"Global"
 },
 
-
 {
-name:"PU Laminating Adhesive",
-country:"India",
-supplier:"Industrial Supplier",
-MOQ:"10 Tons",
-tds:"Available",
-coa:"Pending",
-msds:"Available",
-score:85
+name:"PU Lamination Adhesive",
+category:"Adhesive",
+market:"Global"
 }
 
 ];
 
 
-
-// Supplier Ranking
 
 const suppliers = [
 
 {
-name:"HiTech Resins",
-quality:95,
-price:88,
-delivery:90,
-response:92
+name:"China Manufacturers",
+score:88
 },
 
 {
-name:"Shandong Birch Green",
-quality:90,
-price:85,
-delivery:88,
-response:90
+name:"Pakistan Manufacturers",
+score:82
+},
+
+{
+name:"India Manufacturers",
+score:85
+},
+
+{
+name:"Taiwan Manufacturers",
+score:90
 }
 
 ];
 
 
 
-
-// AI Market Insight
-
-const marketInsight = {
-
-product:"BOPP Thermal Film",
-
-change:"-4.8%",
-
-recommendation:
-"Good time to negotiate"
-
-};
+function loadAIInsight(){
 
 
+const box=document.getElementById("ai-result");
 
 
-// Generate Product Cards
-
-function loadProducts(){
-
-const container =
-document.querySelector(".product-grid");
+if(box){
 
 
-if(!container) return;
+box.innerHTML=
 
+`
+<strong>AI Market Intelligence:</strong>
 
-products.forEach(product=>{
+<br><br>
 
+Products monitored:
+${products.length}
 
-container.innerHTML += `
+<br>
 
-<div class="product-card">
+Supplier groups analyzed:
+${suppliers.length}
 
-<div class="product-image">
-📦
-</div>
+<br><br>
 
+SecPack AI recommends continuous supplier comparison based on:
 
-<h3>
-${product.name}
-</h3>
-
-
-<div class="rating">
-★★★★★
-</div>
-
-
-<div class="info-row">
-<span class="label">
-Country
-</span>
-
-<span>
-${product.country}
-</span>
-
-</div>
-
-
-<div class="info-row">
-
-<span class="label">
-Supplier
-</span>
-
-<span>
-${product.supplier}
-</span>
-
-</div>
-
-
-<div class="info-row">
-
-<span class="label">
-MOQ
-</span>
-
-<span>
-${product.MOQ}
-</span>
-
-</div>
-
-
-
-<div class="info-row">
-
-<span>
-AI Score
-</span>
-
-<strong>
-${product.score}
-</strong>
-
-
-</div>
-
-
-<button class="btn btn-primary">
-Request Quote
-</button>
-
-
-</div>
+<br>
+• Price
+<br>
+• Quality Stability
+<br>
+• Technical Support
+<br>
+• Delivery Risk
 
 `;
 
-});
+}
 
 
 }
 
 
-
-
-
-// Start System
 
 document.addEventListener(
 "DOMContentLoaded",
 ()=>{
 
+loadAIInsight();
 
-loadProducts();
+}
 
-
-console.log(
-"SecPack AI Engine Loaded"
 );
-
-
-});
