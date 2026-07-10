@@ -1,89 +1,96 @@
-const products = [
+const secpackData = {
 
-{
-name:"Water Based Lamination Adhesive",
-category:"Adhesive",
-market:"Global"
-},
 
-{
-name:"BOPP Thermal Film 15 Micron",
-category:"Film",
-market:"Global"
-},
+products:[
 
-{
-name:"PU Lamination Adhesive",
-category:"Adhesive",
-market:"Global"
+"Water Based Adhesive",
+
+"BOPP Thermal Film",
+
+"PU Lamination Adhesive",
+
+"Packaging Materials"
+
+],
+
+
+
+suppliers:[
+
+"China",
+
+"Pakistan",
+
+"India",
+
+"Taiwan",
+
+"Korea"
+
+],
+
+
+
+intelligence:{
+
+price:"Market comparison ready",
+
+quality:"Supplier quality analysis active",
+
+risk:"Risk evaluation system ready"
+
 }
 
-];
+
+};
 
 
 
-const suppliers = [
 
-{
-name:"China Manufacturers",
-score:88
-},
 
-{
-name:"Pakistan Manufacturers",
-score:82
-},
+function loadAssistant(){
 
-{
-name:"India Manufacturers",
-score:85
-},
 
-{
-name:"Taiwan Manufacturers",
-score:90
-}
-
-];
+const area=document.getElementById(
+"ai-result"
+);
 
 
 
-function loadAIInsight(){
+if(area){
 
 
-const box=document.getElementById("ai-result");
+area.innerHTML=`
 
-
-if(box){
-
-
-box.innerHTML=
-
-`
-<strong>AI Market Intelligence:</strong>
+<strong>
+SecPack Intelligence
+</strong>
 
 <br><br>
 
-Products monitored:
-${products.length}
-
-<br>
-
-Supplier groups analyzed:
-${suppliers.length}
+📦 Products monitored:
+${secpackData.products.length}
 
 <br><br>
 
-SecPack AI recommends continuous supplier comparison based on:
+🌎 Supplier regions:
+${secpackData.suppliers.length}
+
+<br><br>
+
+🤖 AI Status:
 
 <br>
-• Price
+
+${secpackData.intelligence.price}
+
 <br>
-• Quality Stability
+
+${secpackData.intelligence.quality}
+
 <br>
-• Technical Support
-<br>
-• Delivery Risk
+
+${secpackData.intelligence.risk}
 
 `;
 
@@ -94,12 +101,15 @@ SecPack AI recommends continuous supplier comparison based on:
 
 
 
+
+
 document.addEventListener(
 "DOMContentLoaded",
 ()=>{
 
-loadAIInsight();
+
+loadAssistant();
+
 
 }
-
 );
