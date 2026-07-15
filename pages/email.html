@@ -27,7 +27,6 @@
 
 </div>
 
-
 <div>
 
 <h1>SecPack</h1>
@@ -42,15 +41,14 @@
 
 
 
-
 <section class="hero">
 
 <h2>
-Email Intelligence Center
+Email Generator
 </h2>
 
 <p>
-Manage supplier communication and negotiation workflows.
+Create professional supplier messages
 </p>
 
 </section>
@@ -58,70 +56,62 @@ Manage supplier communication and negotiation workflows.
 
 
 
-<section class="cards">
+<section class="card">
 
-
-<div class="card">
-
-<h3>✉️</h3>
 
 <h2>
-Supplier Email
+Supplier Name
 </h2>
 
-<p>
-Organize supplier conversations.
-</p>
+<input id="supplier-name"
+placeholder="Example: HiTech Resins">
 
-</div>
-
-
-
-<div class="card">
-
-<h3>🌐</h3>
 
 <h2>
-Translation
+Email Type
 </h2>
 
-<p>
-Translate international business messages.
-</p>
 
-</div>
+<select id="email-type">
 
-
-
-<div class="card">
-
-<h3>🤖</h3>
-
-<h2>
-AI Reply
-</h2>
-
-<p>
-Generate professional negotiation responses.
-</p>
-
-</div>
+<option value="rfq">
+Request For Quote
+</option>
 
 
+<option value="sample">
+Sample Request
+</option>
 
-<div class="card">
 
-<h3>📋</h3>
+<option value="followup">
+Follow Up
+</option>
 
-<h2>
-History
-</h2>
 
-<p>
-Track communication records.
-</p>
+<option value="document">
+Request TDS / COA
+</option>
 
-</div>
+
+</select>
+
+
+
+<button onclick="generateEmail()">
+
+Generate Email
+
+</button>
+
+
+
+<textarea 
+id="email-result"
+rows="12"
+placeholder="Generated email will appear here">
+</textarea>
+
 
 
 </section>
@@ -134,6 +124,10 @@ Track communication records.
 SecPack Enterprise © 2026
 
 </footer>
+
+
+
+<script src="../script.js"></script>
 
 
 </body>
