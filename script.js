@@ -1,44 +1,32 @@
-const secpack = {
-
-name:"SecPack Enterprise",
-
-};
-
-
 async function loadDashboard(){
+
+const productBox = document.getElementById("product-count");
+const supplierBox = document.getElementById("supplier-count");
+
+
+if(!productBox || !supplierBox){
+
+return;
+
+}
+
 
 try{
 
+
 const products = await fetch("../data/products.json")
-.then(response=>response.json());
+.then(res=>res.json());
 
 
 const suppliers = await fetch("../data/suppliers.json")
-.then(response=>response.json());
+.then(res=>res.json());
 
 
 
-let productCount =
-document.getElementById("product-count");
+productBox.innerText = products.length;
 
+supplierBox.innerText = suppliers.length;
 
-let supplierCount =
-document.getElementById("supplier-count");
-
-
-
-if(productCount){
-
-productCount.innerText = products.length;
-
-}
-
-
-if(supplierCount){
-
-supplierCount.innerText = suppliers.length;
-
-}
 
 
 }
@@ -55,9 +43,7 @@ console.log(error);
 
 function startAI(){
 
-alert(
-"SecPack AI Assistant Ready"
-);
+alert("SecPack AI Assistant Ready");
 
 }
 
@@ -65,9 +51,5 @@ alert(
 
 document.addEventListener(
 "DOMContentLoaded",
-()=>{
-
-loadDashboard();
-
-}
+loadDashboard
 );
