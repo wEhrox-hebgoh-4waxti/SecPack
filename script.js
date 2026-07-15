@@ -2,13 +2,54 @@ const secpack = {
 
 name:"SecPack Enterprise",
 
-products:0,
-
-suppliers:0,
-
-ai:"Ready"
-
 };
+
+
+async function loadDashboard(){
+
+try{
+
+const products = await fetch("../data/products.json")
+.then(response=>response.json());
+
+
+const suppliers = await fetch("../data/suppliers.json")
+.then(response=>response.json());
+
+
+
+let productCount =
+document.getElementById("product-count");
+
+
+let supplierCount =
+document.getElementById("supplier-count");
+
+
+
+if(productCount){
+
+productCount.innerText = products.length;
+
+}
+
+
+if(supplierCount){
+
+supplierCount.innerText = suppliers.length;
+
+}
+
+
+}
+
+catch(error){
+
+console.log(error);
+
+}
+
+}
 
 
 
@@ -19,3 +60,14 @@ alert(
 );
 
 }
+
+
+
+document.addEventListener(
+"DOMContentLoaded",
+()=>{
+
+loadDashboard();
+
+}
+);
