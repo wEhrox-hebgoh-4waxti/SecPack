@@ -42,7 +42,6 @@
 
 
 
-
 <section class="hero">
 
 <h2>
@@ -50,7 +49,7 @@ AI Email Composer
 </h2>
 
 <p>
-Create negotiation emails based on your business situation.
+Create professional supplier negotiation emails
 </p>
 
 </section>
@@ -61,7 +60,7 @@ Create negotiation emails based on your business situation.
 <section class="card">
 
 
-<h3>Supplier Name</h3>
+<h3>Supplier Company</h3>
 
 <input id="supplier-name" placeholder="Example: HiTech Resins">
 
@@ -76,43 +75,63 @@ Create negotiation emails based on your business situation.
 <input id="product-name" placeholder="Example: Water Based Lamination Adhesive">
 
 
-<h3>Requirement</h3>
+<h3>Market</h3>
 
-<input id="requirement" placeholder="Example: 20ft container / 16 tons">
+<select id="market">
+
+<option>Iran</option>
+
+<option>Iraq</option>
+
+<option>Pakistan</option>
+
+</select>
 
 
-<h3>Target Price</h3>
 
-<input id="target-price" placeholder="Example: USD 1.40/kg">
+<h3>Purchase Volume</h3>
+
+<select id="volume">
+
+<option>Sample Evaluation</option>
+
+<option>1 Ton Trial Order</option>
+
+<option>20ft Container</option>
+
+</select>
 
 
-<h3>Email Purpose</h3>
 
-<select id="email-purpose">
+
+<h3>Email Goal</h3>
+
+<select id="goal">
 
 <option value="price">
-Price Negotiation
+Negotiate Best Price
 </option>
 
 <option value="sample">
-Sample Request
+Request Sample
+</option>
+
+<option value="technical">
+Request Technical Documents
 </option>
 
 <option value="cooperation">
 Long Term Cooperation
 </option>
 
-<option value="followup">
-Follow Up
-</option>
-
 </select>
+
 
 
 
 <button onclick="generateBusinessEmail()">
 
-Generate Professional Email
+Generate Business Email
 
 </button>
 
@@ -120,14 +139,14 @@ Generate Professional Email
 
 <textarea 
 id="email-result"
-rows="15"
-placeholder="AI generated email">
+rows="18"
+placeholder="Generated email">
 
 </textarea>
 
 
-</section>
 
+</section>
 
 
 
