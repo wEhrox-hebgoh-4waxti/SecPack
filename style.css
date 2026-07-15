@@ -9,6 +9,12 @@ background:#f6f8fc;
 color:#172033;
 }
 
+a{
+text-decoration:none;
+color:inherit;
+}
+
+
 .topbar{
 display:flex;
 justify-content:space-between;
@@ -18,11 +24,13 @@ background:#0b1f3a;
 color:white;
 }
 
+
 .logo-area{
 display:flex;
 align-items:center;
 gap:15px;
 }
+
 
 .logo-box{
 width:70px;
@@ -35,16 +43,19 @@ justify-content:center;
 overflow:hidden;
 }
 
+
 .logo-box img{
-display:block;
-width:55px;
-height:55px;
+width:58px;
+height:58px;
 object-fit:contain;
 }
 
+
 .logo-area h1{
 margin:0;
+font-size:28px;
 }
+
 
 .logo-area p{
 margin:5px 0 0;
@@ -52,12 +63,16 @@ font-size:12px;
 opacity:.8;
 }
 
+
 .languages button{
 padding:8px 12px;
+margin:3px;
 border:none;
 border-radius:10px;
-margin:3px;
+cursor:pointer;
+font-weight:bold;
 }
+
 
 .hero{
 text-align:center;
@@ -65,14 +80,36 @@ background:white;
 padding:50px 20px;
 }
 
+
+.hero h2{
+font-size:34px;
+}
+
+
+.hero p{
+font-size:18px;
+color:#667085;
+}
+
+
+.actions{
+display:flex;
+justify-content:center;
+flex-wrap:wrap;
+gap:10px;
+}
+
+
 .actions button{
+padding:15px 25px;
+border:none;
+border-radius:15px;
 background:#1463ff;
 color:white;
-border:none;
-padding:15px 25px;
-border-radius:15px;
-margin:10px;
+font-size:16px;
+cursor:pointer;
 }
+
 
 .cards{
 display:grid;
@@ -81,14 +118,44 @@ gap:20px;
 padding:30px;
 }
 
+
 .card{
 background:white;
 padding:30px;
 border-radius:20px;
 text-align:center;
+box-shadow:0 8px 25px rgba(0,0,0,.08);
+transition:.3s;
 }
+
+
+.card:hover{
+transform:translateY(-5px);
+}
+
+
+.card h3{
+font-size:40px;
+}
+
+
+.card p{
+color:#667085;
+}
+
 
 footer{
 text-align:center;
 padding:20px;
+color:#777;
+}
+
+
+@media(max-width:600px){
+
+.topbar{
+flex-direction:column;
+gap:15px;
+}
+
 }
