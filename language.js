@@ -1,46 +1,50 @@
 let translations = {};
 
-
 async function loadLanguage(lang){
 
 try{
 
-const response = await fetch(
-`lang/${lang}.json`
-);
-
+const response = await fetch(`lang/${lang}.json`);
 
 translations = await response.json();
 
 
 document
 .querySelectorAll("[data-i18n]")
-.forEach(item=>{
+.forEach(element=>{
 
-
-let key=item.getAttribute("data-i18n");
-
+const key = element.getAttribute("data-i18n");
 
 if(translations[key]){
 
-item.innerText =
-translations[key];
+element.innerText = translations[key];
 
 }
-
 
 });
 
 
-if(lang==="fa"){
+if(lang === "fa"){
 
-document.documentElement.dir="rtl";
+document.documentElement.lang = "fa";
+
+document.documentElement.dir = "rtl";
+
+}
+
+else if(lang === "ar"){
+
+document.documentElement.lang = "ar";
+
+document.documentElement.dir = "rtl";
 
 }
 
 else{
 
-document.documentElement.dir="ltr";
+document.documentElement.lang = "en";
+
+document.documentElement.dir = "ltr";
 
 }
 
@@ -49,10 +53,9 @@ document.documentElement.dir="ltr";
 
 catch(error){
 
-console.log(error);
+console.log("Language Error:",error);
 
 }
-
 
 }
 
