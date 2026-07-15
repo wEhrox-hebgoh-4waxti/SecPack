@@ -7,7 +7,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>SecPack Email Center</title>
+<title>SecPack AI Email Composer</title>
 
 <link rel="stylesheet" href="../style.css">
 
@@ -27,11 +27,12 @@
 
 </div>
 
+
 <div>
 
 <h1>SecPack</h1>
 
-<p>Supplier Communication Center</p>
+<p>AI Business Communication</p>
 
 </div>
 
@@ -41,14 +42,15 @@
 
 
 
+
 <section class="hero">
 
 <h2>
-Email Generator
+AI Email Composer
 </h2>
 
 <p>
-Create professional supplier messages
+Create negotiation emails based on your business situation.
 </p>
 
 </section>
@@ -59,48 +61,58 @@ Create professional supplier messages
 <section class="card">
 
 
-<h2>
-Supplier Name
-</h2>
+<h3>Supplier Name</h3>
 
-<input id="supplier-name"
-placeholder="Example: HiTech Resins">
+<input id="supplier-name" placeholder="Example: HiTech Resins">
 
 
-<h2>
-Email Type
-</h2>
+<h3>Contact Person</h3>
+
+<input id="contact-name" placeholder="Example: Imran">
 
 
-<select id="email-type">
+<h3>Product</h3>
 
-<option value="rfq">
-Request For Quote
+<input id="product-name" placeholder="Example: Water Based Lamination Adhesive">
+
+
+<h3>Requirement</h3>
+
+<input id="requirement" placeholder="Example: 20ft container / 16 tons">
+
+
+<h3>Target Price</h3>
+
+<input id="target-price" placeholder="Example: USD 1.40/kg">
+
+
+<h3>Email Purpose</h3>
+
+<select id="email-purpose">
+
+<option value="price">
+Price Negotiation
 </option>
-
 
 <option value="sample">
 Sample Request
 </option>
 
+<option value="cooperation">
+Long Term Cooperation
+</option>
 
 <option value="followup">
 Follow Up
 </option>
 
-
-<option value="document">
-Request TDS / COA
-</option>
-
-
 </select>
 
 
 
-<button onclick="generateEmail()">
+<button onclick="generateBusinessEmail()">
 
-Generate Email
+Generate Professional Email
 
 </button>
 
@@ -108,10 +120,10 @@ Generate Email
 
 <textarea 
 id="email-result"
-rows="12"
-placeholder="Generated email will appear here">
-</textarea>
+rows="15"
+placeholder="AI generated email">
 
+</textarea>
 
 
 </section>
