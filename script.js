@@ -1,119 +1,28 @@
-async function loadDashboard(){
-
-const productBox = document.getElementById("product-count");
-const supplierBox = document.getElementById("supplier-count");
-
-
-if(!productBox || !supplierBox){
-
-return;
-
-}
-
-
-try{
-
-const products = await fetch("../data/products.json")
-.then(response=>response.json());
-
-
-const suppliers = await fetch("../data/suppliers.json")
-.then(response=>response.json());
-
-
-productBox.innerText = products.length;
-
-supplierBox.innerText = suppliers.length;
-
-
-}
-
-catch(error){
-
-console.log(error);
-
-}
-
-}
-
-
-
-
-
-async function loadProducts(){
-
-
-const container =
-document.getElementById("products-list");
-
-
-if(!container){
-
-return;
-
-}
-
-
-try{
-
-
-const products =
-await fetch("../data/products.json")
-.then(response=>response.json());
-
-
-
-container.innerHTML="";
-
-
-
-products.forEach(product=>{
-
-
-container.innerHTML += `
-
-<div class="card">
-
-<h3>📦</h3>
-
-<h2>${product.name}</h2>
-
-<p>Category: ${product.category}</p>
-
-<p>Application: ${product.application}</p>
-
-<strong>${product.status}</strong>
-
-</div>
-
-`;
-
-});
-
-
-}
-
-catch(error){
-
-console.log(error);
-
-}
-
-
-}
-
-
-
-
-function generateEmail(){
+function generateBusinessEmail(){
 
 
 let supplier =
 document.getElementById("supplier-name").value;
 
 
-let type =
-document.getElementById("email-type").value;
+let contact =
+document.getElementById("contact-name").value;
+
+
+let product =
+document.getElementById("product-name").value;
+
+
+let requirement =
+document.getElementById("requirement").value;
+
+
+let price =
+document.getElementById("target-price").value;
+
+
+let purpose =
+document.getElementById("email-purpose").value;
 
 
 let result =
@@ -121,119 +30,106 @@ document.getElementById("email-result");
 
 
 
-let text="";
+let email="";
 
 
 
-if(type==="rfq"){
+if(purpose==="price"){
 
 
-text=
+email=
 
-`Dear ${supplier},
+`Dear ${contact},
 
-We are interested in your products.
+Thank you for your previous information regarding ${product}.
 
-Please send us your best quotation, MOQ, payment terms and delivery time.
+We are currently evaluating suppliers for long-term cooperation in our market.
 
-Also kindly provide technical documents.
+Our initial requirement is ${requirement}.
 
-Best regards
+Considering current market conditions and our target purchasing level of ${price}, we would appreciate your best possible export quotation and commercial terms.
+
+Please also confirm MOQ, production lead time, payment terms and shipping options.
+
+We look forward to building a reliable long-term partnership with ${supplier}.
+
+Best regards,
 SecPack Procurement Team`;
 
+}
 
+
+
+if(purpose==="sample"){
+
+
+email=
+
+`Dear ${contact},
+
+Thank you for sharing information about ${product}.
+
+Before starting commercial cooperation, we would like to evaluate your product through a laboratory sample.
+
+Please confirm sample availability, shipping details and technical documents including TDS and COA.
+
+After successful evaluation, we will discuss regular purchasing requirements of ${requirement}.
+
+Best regards,
+SecPack Procurement Team`;
 
 }
 
 
 
 
-if(type==="sample"){
+if(purpose==="cooperation"){
 
 
-text=
+email=
 
-`Dear ${supplier},
+`Dear ${contact},
 
-We would like to request a product sample for laboratory evaluation.
+We are interested in developing a long-term business relationship with ${supplier}.
 
-Please confirm sample availability and shipping details.
+Our focus is establishing a stable supply chain for ${product}.
 
-Best regards
-SecPack Team`;
+We are looking for consistent quality, competitive pricing and reliable delivery.
 
+Please share your company profile, export experience and cooperation terms.
 
-
-}
-
-
-
-
-if(type==="followup"){
-
-
-text=
-
-`Dear ${supplier},
-
-We are following up on our previous discussion.
-
-Please update us regarding pricing and cooperation possibilities.
-
-Best regards
-SecPack Team`;
-
-
+Best regards,
+SecPack Procurement Team`;
 
 }
 
 
 
 
-if(type==="document"){
+if(purpose==="followup"){
 
 
-text=
+email=
 
-`Dear ${supplier},
+`Dear ${contact},
 
-Please provide TDS, COA and MSDS documents for technical evaluation.
+I hope you are doing well.
 
-Thank you.
+We would like to follow up regarding our previous discussion about ${product}.
 
-Best regards
-SecPack Team`;
+Please update us on quotation, availability and next steps.
 
+We appreciate your feedback and look forward to your reply.
 
-
-}
-
-
-
-result.value=text;
-
+Best regards,
+SecPack Procurement Team`;
 
 }
 
 
 
 
-function startAI(){
+result.value=email;
 
-alert("SecPack AI Assistant Ready");
 
 }
-
-
-
-
-document.addEventListener(
-"DOMContentLoaded",
-()=>{
-
-loadDashboard();
-
-loadProducts();
-
-}
-);
