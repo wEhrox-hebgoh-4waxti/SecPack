@@ -1,1 +1,23 @@
-[]
+[
+{
+"id":1,
+"name":"Water Based Lamination Adhesive",
+"category":"Adhesive",
+"application":"Film to Paper / Film to Film",
+"status":"Active"
+},
+{
+"id":2,
+"name":"BOPP Thermal Lamination Film",
+"category":"Film",
+"application":"Packaging Lamination",
+"status":"Active"
+},
+{
+"id":3,
+"name":"PU Lamination Adhesive",
+"category":"Adhesive",
+"application":"Flexible Packaging",
+"status":"Active"
+}
+]
