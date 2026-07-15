@@ -1,41 +1,31 @@
 function generateBusinessEmail(){
 
-
 let supplier =
 document.getElementById("supplier-name").value;
-
 
 let contact =
 document.getElementById("contact-name").value;
 
-
 let product =
 document.getElementById("product-name").value;
-
 
 let requirement =
 document.getElementById("requirement").value;
 
-
 let price =
 document.getElementById("target-price").value;
 
-
 let purpose =
 document.getElementById("email-purpose").value;
-
 
 let result =
 document.getElementById("email-result");
 
 
-
 let email="";
 
 
-
 if(purpose==="price"){
-
 
 email=
 
@@ -62,7 +52,6 @@ SecPack Procurement Team`;
 
 if(purpose==="sample"){
 
-
 email=
 
 `Dear ${contact},
@@ -82,9 +71,7 @@ SecPack Procurement Team`;
 
 
 
-
 if(purpose==="cooperation"){
-
 
 email=
 
@@ -105,9 +92,7 @@ SecPack Procurement Team`;
 
 
 
-
 if(purpose==="followup"){
-
 
 email=
 
@@ -127,9 +112,156 @@ SecPack Procurement Team`;
 }
 
 
-
-
+if(result){
 result.value=email;
+}
+
+}
+
+
+
+
+
+// Load Suppliers Data
+
+async function loadSuppliers(){
+
+let container =
+document.getElementById("suppliers-list");
+
+
+if(!container) return;
+
+
+try{
+
+let response =
+await fetch("../data/suppliers.json");
+
+
+let suppliers =
+await response.json();
+
+
+container.innerHTML="";
+
+
+suppliers.forEach(supplier=>{
+
+
+container.innerHTML += `
+
+<div class="card">
+
+<h2>${supplier.name}</h2>
+
+<p>
+Country: ${supplier.country}
+</p>
+
+<p>
+Category: ${supplier.category}
+</p>
+
+<p>
+Score: ${supplier.score}/100
+</p>
+
+<p>
+Status: ${supplier.status}
+</p>
+
+</div>
+
+`;
+
+});
 
 
 }
+
+catch(error){
+
+console.log("Supplier data error", error);
+
+}
+
+}
+
+
+
+
+
+// Load Products Data
+
+async function loadProducts(){
+
+let container =
+document.getElementById("products-list");
+
+
+if(!container) return;
+
+
+try{
+
+let response =
+await fetch("../data/products.json");
+
+
+let products =
+await response.json();
+
+
+container.innerHTML="";
+
+
+products.forEach(product=>{
+
+
+container.innerHTML += `
+
+<div class="card">
+
+<h2>${product.name}</h2>
+
+<p>
+Category: ${product.category}
+</p>
+
+<p>
+Application: ${product.application}
+</p>
+
+<p>
+Status: ${product.status}
+</p>
+
+</div>
+
+`;
+
+});
+
+
+}
+
+catch(error){
+
+console.log("Product data error", error);
+
+}
+
+}
+
+
+
+
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+loadSuppliers();
+
+loadProducts();
+
+});
