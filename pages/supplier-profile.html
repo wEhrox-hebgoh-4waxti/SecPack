@@ -50,7 +50,7 @@ Supplier Profile
 </h2>
 
 <p>
-Supplier evaluation, commercial information and procurement history.
+Complete supplier evaluation and procurement intelligence record.
 </p>
 
 </section>
@@ -60,8 +60,93 @@ Supplier evaluation, commercial information and procurement history.
 
 <section class="cards" id="supplier-profile">
 
+</section>
+
+
+
+
+<section class="hero">
+
+<h2>
+Procurement Intelligence
+</h2>
 
 </section>
+
+
+
+
+<section class="cards">
+
+
+<div class="card">
+
+<h2>Commercial Information</h2>
+
+<p>Price History: Available</p>
+
+<p>Target Price: Under Evaluation</p>
+
+<p>Purchase Volume: Under Evaluation</p>
+
+<p>MOQ: Pending</p>
+
+<p>Payment Terms: Pending</p>
+
+</div>
+
+
+
+
+<div class="card">
+
+<h2>Technical Documents</h2>
+
+<p>TDS: Available</p>
+
+<p>COA: Pending</p>
+
+<p>MSDS: Pending</p>
+
+<p>Sample Status: Requested</p>
+
+</div>
+
+
+
+
+<div class="card">
+
+<h2>Communication History</h2>
+
+<p>Last Contact: Recorded</p>
+
+<p>Email History: Coming Soon</p>
+
+<p>Notes: Available</p>
+
+</div>
+
+
+
+
+<div class="card">
+
+<h2>Supplier Evaluation</h2>
+
+<p>Quality Score: --</p>
+
+<p>Price Score: --</p>
+
+<p>Risk Score: --</p>
+
+<p>Overall Score: --</p>
+
+</div>
+
+
+</section>
+
 
 
 
@@ -75,12 +160,11 @@ SecPack Enterprise © 2026
 
 
 
-<script src="../script.js"></script>
-
-
 <script>
 
+
 async function loadSupplierProfile(){
+
 
 let params = new URLSearchParams(window.location.search);
 
@@ -90,25 +174,12 @@ let id = params.get("id");
 let container = document.getElementById("supplier-profile");
 
 
-if(!id){
-
-container.innerHTML =
-
-`
-<div class="card">
-<h2>No Supplier Selected</h2>
-<p>Please select a supplier from database.</p>
-</div>
-`;
-
-return;
-
-}
-
 
 try{
 
+
 let response = await fetch("../data/suppliers.json");
+
 
 let suppliers = await response.json();
 
@@ -123,7 +194,9 @@ container.innerHTML =
 
 `
 <div class="card">
+
 <h2>Supplier Not Found</h2>
+
 </div>
 `;
 
@@ -139,7 +212,9 @@ container.innerHTML =
 
 <div class="card">
 
+
 <h2>${supplier.name}</h2>
+
 
 <p>Country: ${supplier.country}</p>
 
@@ -171,8 +246,6 @@ container.innerHTML =
 
 <p>Score: ${supplier.score}/100</p>
 
-<p>Last Contact: ${supplier.lastContact}</p>
-
 <p>Notes: ${supplier.notes}</p>
 
 
@@ -194,10 +267,12 @@ console.log(error);
 }
 
 
+
 loadSupplierProfile();
 
 
 </script>
+
 
 
 </body>
