@@ -1,1 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SecPack Supplier Profile</title>
+
+<link rel="stylesheet" href="../style.css">
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+<div class="logo-area">
+
+<div class="logo-box">
+
+<img src="../logo.jpg" alt="SecPack Logo">
+
+</div>
+
+
+<div>
+
+<h1>SecPack</h1>
+
+<p>Supplier Intelligence Profile</p>
+
+</div>
+
+</div>
+
+</header>
+
+
+
+
+<section class="hero">
+
+<h2>
+Supplier Profile
+</h2>
+
+<p>
+Supplier evaluation, commercial information and procurement history.
+</p>
+
+</section>
+
+
+
+
+<section class="cards" id="supplier-profile">
+
+
+</section>
+
+
+
+
+<footer>
+
+SecPack Enterprise © 2026
+
+</footer>
+
+
+
+
+<script src="../script.js"></script>
+
+
+<script>
+
+async function loadSupplierProfile(){
+
+let params = new URLSearchParams(window.location.search);
+
+let id = params.get("id");
+
+
+let container = document.getElementById("supplier-profile");
+
+
+if(!id){
+
+container.innerHTML =
+
+`
+<div class="card">
+<h2>No Supplier Selected</h2>
+<p>Please select a supplier from database.</p>
+</div>
+`;
+
+return;
+
+}
+
+
+try{
+
+let response = await fetch("../data/suppliers.json");
+
+let suppliers = await response.json();
+
+
+let supplier = suppliers.find(item => item.id == id);
+
+
+
+if(!supplier){
+
+container.innerHTML =
+
+`
+<div class="card">
+<h2>Supplier Not Found</h2>
+</div>
+`;
+
+return;
+
+}
+
+
+
+container.innerHTML =
+
+`
+
+<div class="card">
+
+<h2>${supplier.name}</h2>
+
+<p>Country: ${supplier.country}</p>
+
+<p>City: ${supplier.city}</p>
+
+<p>Contact: ${supplier.contact}</p>
+
+<p>Position: ${supplier.position}</p>
+
+<p>Product: ${supplier.product}</p>
+
+<p>Category: ${supplier.category}</p>
+
+<p>Last Price: ${supplier.lastPrice}</p>
+
+<p>Target Price: ${supplier.targetPrice}</p>
+
+<p>Purchase Volume: ${supplier.purchaseVolume}</p>
+
+<p>Sample: ${supplier.sample}</p>
+
+<p>TDS: ${supplier.tds}</p>
+
+<p>COA: ${supplier.coa}</p>
+
+<p>MSDS: ${supplier.msds}</p>
+
+<p>Status: ${supplier.status}</p>
+
+<p>Score: ${supplier.score}/100</p>
+
+<p>Last Contact: ${supplier.lastContact}</p>
+
+<p>Notes: ${supplier.notes}</p>
+
+
+</div>
+
+`;
+
+
+
+}
+
+catch(error){
+
+console.log(error);
+
+}
+
+
+}
+
+
+loadSupplierProfile();
+
+
+</script>
+
+
+</body>
+
+</html>
