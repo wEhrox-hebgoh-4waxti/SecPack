@@ -227,62 +227,33 @@ container.innerHTML =
 
 <p>${translations.city}: ${supplier.city}</p>
 
-<p>Contact: ${supplier.contact}</p>
+<p>${translations.contact}: ${supplier.contact}</p>
 
-<p>Position: ${supplier.position}</p>
+<p>${translations.position}: ${supplier.position}</p>
 
-<p>Product: ${supplier.product}</p>
+<p>${translations.product}: ${supplier.product}</p>
 
-<p>Category: ${supplier.category}</p>
+<p>${translations.category}: ${supplier.category}</p>
 
-<p>Last Price: ${supplier.lastPrice}</p>
+<p>${translations.last_price}: ${supplier.lastPrice}</p>
 
-<p>Target Price: ${supplier.targetPrice}</p>
+<p>${translations.target_price}: ${supplier.targetPrice}</p>
 
-<p>Purchase Volume: ${supplier.purchaseVolume}</p>
+<p>${translations.purchase_volume}: ${supplier.purchaseVolume}</p>
 
-<p>Sample: ${supplier.sample}</p>
+<p>${translations.sample}: ${supplier.sample}</p>
 
-<p>TDS: ${supplier.tds}</p>
+<p>${translations.tds}: ${supplier.tds}</p>
 
-<p>COA: ${supplier.coa}</p>
+<p>${translations.coa}: ${supplier.coa}</p>
 
-<p>MSDS: ${supplier.msds}</p>
+<p>${translations.msds}: ${supplier.msds}</p>
 
-<p>Status: ${supplier.status}</p>
+<p>${translations.status}: ${supplier.status}</p>
 
-<p>Score: ${supplier.score}/100</p>
+<p>${translations.score}: ${supplier.score}/100</p>
 
-<p>Notes: ${supplier.notes}</p>
-
-
-</div>
-
-`;
-
-
-
-}
-
-catch(error){
-
-console.log(error);
-
-}
-
-
-}
-
-
-
-loadSupplierProfile();
-
-
-</script>
-
-<script src="../Language.js"></script>
-
-<script>
+<p>${translations.notes}: ${supplier.notes}</p>
 loadLanguage(localStorage.getItem("language") || "en");
 </script>
 
