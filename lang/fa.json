@@ -1,43 +1,33 @@
 {
-  "title":"دستیار هوشمند تامین و تجارت جهانی",
-  "subtitle":"تامین‌کنندگان را پیدا کنید، قیمت‌ها را مقایسه کنید و تصمیم‌های خرید مبتنی بر شواهد بگیرید.",
+"title":"دستیار هوشمند خرید جهانی",
+"subtitle":"تأمین‌کنندگان را پیدا کنید، قیمت‌ها را مقایسه کنید و خرید را بر اساس شواهد انجام دهید.",
+"products":"محصولات",
+"suppliers":"تأمین‌کنندگان",
+"ask_ai":"از هوش مصنوعی بپرس",
 
-  "products":"محصولات",
-  "suppliers":"تامین‌کنندگان",
-  "ask_ai":"دستیار هوشمند",
+"supplier_title":"پروفایل تأمین‌کننده",
+"procurement_intelligence":"هوش خرید",
+"commercial":"اطلاعات تجاری",
+"documents":"اسناد فنی",
+"history":"سوابق ارتباطات",
+"evaluation":"ارزیابی تأمین‌کننده",
 
-  "supplier_title":"پروفایل تامین‌کننده",
-  "supplier_database":"بانک اطلاعات تامین‌کنندگان",
-  "supplier_information":"اطلاعات تامین‌کننده",
-
-  "company":"شرکت",
-  "country":"کشور",
-  "city":"شهر",
-  "contact":"شخص تماس",
-  "position":"سمت",
-  "website":"وب‌سایت",
-
-  "product":"محصول",
-  "category":"دسته‌بندی",
-
-  "price":"اطلاعات قیمت",
-  "sample":"وضعیت نمونه",
-
-  "documents":"اسناد فنی",
-
-  "tds":"TDS",
-  "coa":"COA",
-  "msds":"MSDS",
-
-  "commercial":"اطلاعات تجاری",
-
-  "history":"سوابق ارتباطات",
-
-  "evaluation":"ارزیابی تامین‌کننده",
-
-  "score":"امتیاز",
-
-  "notes":"یادداشت‌ها",
-
-  "back":"بازگشت"
+"country":"کشور",
+"city":"شهر",
+"contact":"شخص تماس",
+"position":"سمت",
+"product":"محصول",
+"category":"دسته‌بندی",
+"price":"آخرین قیمت",
+"last_price":"آخرین قیمت",
+"target_price":"قیمت هدف",
+"purchase_volume":"حجم خرید",
+"price_history":"سوابق قیمت",
+"sample":"نمونه",
+"tds":"TDS",
+"coa":"COA",
+"msds":"MSDS",
+"status":"وضعیت",
+"score":"امتیاز",
+"notes":"یادداشت‌ها"
 }
