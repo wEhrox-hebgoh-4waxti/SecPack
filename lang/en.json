@@ -1,7 +1,43 @@
 {
-"title":"Smart Global Procurement Assistant",
-"subtitle":"Find suppliers, compare prices and make evidence-based purchasing decisions.",
-"products":"Products",
-"suppliers":"Suppliers",
-"ask_ai":"Ask AI Assistant"
+  "title":"Smart Global Procurement Assistant",
+  "subtitle":"Find suppliers, compare prices and make evidence-based purchasing decisions.",
+
+  "products":"Products",
+  "suppliers":"Suppliers",
+  "ask_ai":"Ask AI Assistant",
+
+  "supplier_title":"Supplier Profile",
+  "supplier_database":"Supplier Database",
+  "supplier_information":"Supplier Information",
+
+  "company":"Company",
+  "country":"Country",
+  "city":"City",
+  "contact":"Contact Person",
+  "position":"Position",
+  "website":"Website",
+
+  "product":"Product",
+  "category":"Category",
+
+  "price":"Price Information",
+  "sample":"Sample Status",
+
+  "documents":"Technical Documents",
+
+  "tds":"TDS",
+  "coa":"COA",
+  "msds":"MSDS",
+
+  "commercial":"Commercial Information",
+
+  "history":"Communication History",
+
+  "evaluation":"Supplier Evaluation",
+
+  "score":"Score",
+
+  "notes":"Notes",
+
+  "back":"Back"
 }
