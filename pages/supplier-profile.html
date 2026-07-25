@@ -13,35 +13,24 @@
 
 </head>
 
-
 <body>
-
 
 <header class="topbar">
 
 <div class="logo-area">
 
 <div class="logo-box">
-
 <img src="../logo.jpg" alt="SecPack Logo">
-
 </div>
 
-
 <div>
-
 <h1>SecPack</h1>
-
 <p>Supplier Intelligence Profile</p>
-
 </div>
 
 </div>
 
 </header>
-
-
-
 
 <section class="hero">
 
@@ -49,21 +38,14 @@
 Supplier Profile
 </h2>
 
-<p>
+<p data-i18n="supplier_subtitle">
 Complete supplier evaluation and procurement intelligence record.
 </p>
 
 </section>
 
-
-
-
 <section class="cards" id="supplier-profile">
-
 </section>
-
-
-
 
 <section class="hero">
 
@@ -73,11 +55,7 @@ Procurement Intelligence
 
 </section>
 
-
-
-
 <section class="cards">
-
 
 <div class="card">
 
@@ -85,20 +63,13 @@ Procurement Intelligence
 Commercial Information
 </h2>
 
-<p><span data-i18n="price_history">Price History</span>: Available</p>
-
-<p>Target Price: Under Evaluation</p>
-
-<p>Purchase Volume: Under Evaluation</p>
-
+<p><span data-i18n="price_history"></span>: Available</p>
+<p><span data-i18n="target_price"></span>: Under Evaluation</p>
+<p><span data-i18n="purchase_volume"></span>: Under Evaluation</p>
 <p>MOQ: Pending</p>
-
 <p>Payment Terms: Pending</p>
 
 </div>
-
-
-
 
 <div class="card">
 
@@ -106,18 +77,12 @@ Commercial Information
 Technical Documents
 </h2>
 
-<p><span data-i18n="tds">TDS</span>: Available</p>
-
-<p>COA: Pending</p>
-
-<p>MSDS: Pending</p>
-
-<p>Sample Status: Requested</p>
+<p><span data-i18n="tds"></span>: Available</p>
+<p><span data-i18n="coa"></span>: Pending</p>
+<p><span data-i18n="msds"></span>: Pending</p>
+<p><span data-i18n="sample"></span>: Requested</p>
 
 </div>
-
-
-
 
 <div class="card">
 
@@ -126,102 +91,59 @@ Communication History
 </h2>
 
 <p>Last Contact: Recorded</p>
-
 <p>Email History: Coming Soon</p>
-
-<p>Notes: Available</p>
+<p><span data-i18n="notes"></span>: Available</p>
 
 </div>
 
-
-
-
 <div class="card">
+
 <h2 data-i18n="evaluation">
 Supplier Evaluation
 </h2>
 
 <p>Quality Score: --</p>
-
 <p>Price Score: --</p>
-
 <p>Risk Score: --</p>
-
 <p>Overall Score: --</p>
 
 </div>
 
-
 </section>
 
-
-
-
-
 <footer>
-
 SecPack Enterprise © 2026
-
 </footer>
-
-
-
 
 <script>
 
-
 async function loadSupplierProfile(){
 
+let params=new URLSearchParams(window.location.search);
 
-let params = new URLSearchParams(window.location.search);
+let id=params.get("id");
 
-let id = params.get("id");
-
-
-let container = document.getElementById("supplier-profile");
-
-
+let container=document.getElementById("supplier-profile");
 
 try{
 
+let response=await fetch("../data/suppliers.json");
 
-let response = await fetch("../data/suppliers.json");
+let suppliers=await response.json();
 
-
-let suppliers = await response.json();
-
-
-let supplier = suppliers.find(item => item.id == id);
-
-
+let supplier=suppliers.find(item=>item.id==id);
 
 if(!supplier){
 
-container.innerHTML =
-
-`
+container.innerHTML=`
 <div class="card">
-
 <h2>Supplier Not Found</h2>
-
 </div>
-`;
-
-return;
-
-}
-
-
-
-container.innerHTML =
-
-`
+`;container.innerHTML = `
 
 <div class="card">
-
 
 <h2>${supplier.name}</h2>
-
 
 <p>${translations.country}: ${supplier.country}</p>
 
@@ -254,9 +176,47 @@ container.innerHTML =
 <p>${translations.score}: ${supplier.score}/100</p>
 
 <p>${translations.notes}: ${supplier.notes}</p>
-loadLanguage(localStorage.getItem("language") || "en");
+
+</div>
+
+`;
+
+}
+
+catch(error){
+
+console.log(error);
+
+}
+
+}
+
+async function initializePage(){
+
+await loadLanguage(
+localStorage.getItem("language") || "en"
+);
+
+await loadSupplierProfile();
+
+}</script>
+
+<script src="../Language.js"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+await initializePage();
+
+});
+
 </script>
 
 </body>
 
 </html>
+
+return;
+
+}
