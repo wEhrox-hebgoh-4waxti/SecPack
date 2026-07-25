@@ -2,69 +2,49 @@ let translations = {};
 
 async function loadLanguage(lang){
 
-try{
+    try{
 
-const response = await fetch(`lang/${lang}.json`);
+        const response = await fetch(`lang/${lang}.json`);
 
-translations = await response.json();
+        translations = await response.json();
 
-document
-.querySelectorAll("[data-i18n]")
-.forEach(element=>{
+        localStorage.setItem("language", lang);
 
-const key = element.getAttribute("data-i18n");
+        document.documentElement.lang = lang;
 
-if(translations[key]){
+        document.documentElement.dir =
+            (lang==="fa" || lang==="ar") ? "rtl" : "ltr";
 
-element.innerText = translations[key];
+        document.querySelectorAll("[data-i18n]").forEach(el=>{
 
-}
+            const key = el.dataset.i18n;
 
-});
+            if(translations[key]){
+                el.textContent = translations[key];
+            }
 
-if(lang === "fa"){
+        });
 
-document.documentElement.lang = "fa";
-document.documentElement.dir = "rtl";
+        window.dispatchEvent(new Event("languageChanged"));
 
-}
+    }
 
-else if(lang === "ar"){
+    catch(error){
 
-document.documentElement.lang = "ar";
-document.documentElement.dir = "rtl";
+        console.log(error);
 
-}
-
-else{
-
-document.documentElement.lang = "en";
-document.documentElement.dir = "ltr";
-
-}
-
-localStorage.setItem("language", lang);
-
-}
-
-catch(error){
-
-console.log("Language Error:",error);
-
-}
+    }
 
 }
 
 function changeLanguage(lang){
 
-loadLanguage(lang);
+    loadLanguage(lang);
 
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
 
-const savedLanguage = localStorage.getItem("language") || "en";
-
-loadLanguage(savedLanguage);
+    loadLanguage(localStorage.getItem("language") || "en");
 
 });
