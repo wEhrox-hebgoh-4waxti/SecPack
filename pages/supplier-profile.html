@@ -4,7 +4,6 @@
 <head>
 
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>SecPack Supplier Profile</title>
@@ -119,19 +118,19 @@ SecPack Enterprise © 2026
 
 async function loadSupplierProfile(){
 
-let params=new URLSearchParams(window.location.search);
+const params=new URLSearchParams(window.location.search);
 
-let id=params.get("id");
+const id=params.get("id");
 
-let container=document.getElementById("supplier-profile");
+const container=document.getElementById("supplier-profile");
 
 try{
 
-let response=await fetch("../data/suppliers.json");
+const response=await fetch("../data/suppliers.json");
 
-let suppliers=await response.json();
+const suppliers=await response.json();
 
-let supplier=suppliers.find(item=>item.id==id);
+const supplier=suppliers.find(item=>item.id==id);
 
 if(!supplier){
 
@@ -139,7 +138,13 @@ container.innerHTML=`
 <div class="card">
 <h2>Supplier Not Found</h2>
 </div>
-`;container.innerHTML = `
+`;
+
+return;
+
+}
+
+container.innerHTML=`
 
 <div class="card">
 
@@ -184,8 +189,14 @@ container.innerHTML=`
 }
 
 catch(error){
+console.log("Supplier Profile Error:",error);
 
-console.log(error);
+container.innerHTML=`
+<div class="card">
+<h2>Loading Error</h2>
+<p>Unable to load supplier information.</p>
+</div>
+`;
 
 }
 
@@ -193,21 +204,24 @@ console.log(error);
 
 async function initializePage(){
 
-await loadLanguage(
-localStorage.getItem("language") || "en"
-);
+const currentLanguage=
+localStorage.getItem("language") || "en";
+
+await loadLanguage(currentLanguage);
 
 await loadSupplierProfile();
 
-}</script>
+}
+
+</script>
 
 <script src="../Language.js"></script>
 
 <script>
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded",()=>{
 
-await initializePage();
+initializePage();
 
 });
 
@@ -216,7 +230,3 @@ await initializePage();
 </body>
 
 </html>
-
-return;
-
-}
