@@ -3,14 +3,19 @@ document.addEventListener("DOMContentLoaded", function(){
     console.log("SecPack script loaded");
 
 
-    const stockData = JSON.parse(localStorage.getItem("secpackStock")) || {
+    let stockData = JSON.parse(
+        localStorage.getItem("secpackStock")
+    ) || {
+
         "Thermal Lamination Film": 4000,
         "Water-Based Adhesive": 500,
         "Packaging Materials": 2500
+
     };
 
 
-    function saveStockData(){
+
+    function saveData(){
 
         localStorage.setItem(
             "secpackStock",
@@ -21,29 +26,41 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 
+
+
     window.addStock = function(product, quantity){
 
-        if(!product || !quantity) return;
+        quantity = Number(quantity);
 
 
-        if(stockData[product]){
+        if(!product || !quantity){
 
-            stockData[product] += Number(quantity);
-
-        }else{
-
-            stockData[product] = Number(quantity);
+            alert("Please enter product and quantity");
+            return;
 
         }
 
 
-        saveStockData();
+        if(stockData[product] === undefined){
+
+            stockData[product] = 0;
+
+        }
+
+
+        stockData[product] += quantity;
+
+
+        saveData();
+
 
         alert("Stock added successfully");
 
-        location.reload();
+
+        updateDisplay();
 
     };
+
 
 
 
@@ -51,29 +68,46 @@ document.addEventListener("DOMContentLoaded", function(){
 
     window.removeStock = function(product, quantity){
 
-        if(!product || !quantity) return;
+        quantity = Number(quantity);
 
 
-        if(stockData[product]){
+        if(!product || !quantity){
 
-            stockData[product] -= Number(quantity);
-
-            if(stockData[product] < 0){
-
-                stockData[product] = 0;
-
-            }
+            alert("Please enter product and quantity");
+            return;
 
         }
 
 
-        saveStockData();
+        if(stockData[product] === undefined){
+
+            alert("Product not found");
+            return;
+
+        }
+
+
+        stockData[product] -= quantity;
+
+
+        if(stockData[product] < 0){
+
+            stockData[product] = 0;
+
+        }
+
+
+        saveData();
+
 
         alert("Stock removed successfully");
 
-        location.reload();
+
+        updateDisplay();
 
     };
+
+
 
 
 
@@ -83,17 +117,20 @@ document.addEventListener("DOMContentLoaded", function(){
 
         let message = "";
 
+
         Object.keys(stockData).forEach(function(item){
 
 
             if(stockData[item] < 500){
 
-                message += item + " : Low Stock\n";
+                message += item + 
+                " : Low Stock\n";
 
             }
 
 
         });
+
 
 
         if(message){
@@ -106,7 +143,10 @@ document.addEventListener("DOMContentLoaded", function(){
 
         }
 
+
     };
+
+
 
 
 
@@ -114,18 +154,81 @@ document.addEventListener("DOMContentLoaded", function(){
 
     window.viewReport = function(){
 
-        let report = "";
+        let report = "SecPack Inventory Report\n\n";
+
 
         Object.keys(stockData).forEach(function(item){
 
-            report += item + " : " + stockData[item] + "\n";
+
+            report += 
+            item + 
+            " : " + 
+            stockData[item] + 
+            "\n";
+
 
         });
+
 
 
         alert(report);
 
     };
+
+
+
+
+
+
+
+    function updateDisplay(){
+
+
+        let film =
+        document.getElementById("filmStock");
+
+
+        let glue =
+        document.getElementById("glueStock");
+
+
+        let pack =
+        document.getElementById("packStock");
+
+
+
+        if(film){
+
+            film.innerHTML =
+            stockData["Thermal Lamination Film"] + " kg";
+
+        }
+
+
+
+        if(glue){
+
+            glue.innerHTML =
+            stockData["Water-Based Adhesive"] + " kg";
+
+        }
+
+
+
+        if(pack){
+
+            pack.innerHTML =
+            stockData["Packaging Materials"] + " pcs";
+
+        }
+
+
+    }
+
+
+
+
+    updateDisplay();
 
 
 });
