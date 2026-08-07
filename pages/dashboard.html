@@ -25,24 +25,11 @@
 </div>
 
 <div>
-
 <h1>SecPack Dashboard</h1>
-
 <p>Private Management System</p>
-
 </div>
 
 </div>
-
-
-<div class="languages">
-
-<button onclick="changeLanguage('en')">EN</button>
-<button onclick="changeLanguage('fa')">FA</button>
-<button onclick="changeLanguage('ar')">AR</button>
-
-</div>
-
 
 </header>
 
@@ -70,181 +57,48 @@ Manage products, suppliers, stock and purchasing decisions.
 
 
 <div class="card">
-
 <h3>📦</h3>
-
 <h2>Products</h2>
-
-<p>
-Manage packaging materials and product information.
-</p>
-
+<p>Manage packaging materials and product information.</p>
 </div>
 
 
-
 <div class="card">
-
 <h3>🏭</h3>
-
 <h2>Suppliers</h2>
-
-<p>
-Manage supplier information and sourcing data.
-</p>
-
+<p>Manage supplier information and sourcing data.</p>
 </div>
 
 
-
 <div class="card">
-
 <h3>📊</h3>
-
 <h2>Inventory</h2>
-
-<p>
-Monitor stock levels and product availability.
-</p>
-
+<p>Monitor stock levels and product availability.</p>
 </div>
 
 
-
 <div class="card">
-
 <h3>⚠️</h3>
-
 <h2>Stock Alerts</h2>
-
-<p>
-Receive warnings when inventory reaches minimum level.
-</p>
-
+<p>Receive warnings when inventory reaches minimum level.</p>
 </div>
 
 
-
 <div class="card">
-
 <h3>💰</h3>
-
 <h2>Purchasing</h2>
-
-<p>
-Track purchase orders and cost information.
-</p>
-
+<p>Track purchase orders and cost information.</p>
 </div>
 
 
-
 <div class="card">
-
 <h3>🤖</h3>
-
 <h2>AI Assistant</h2>
-
-<p>
-Support for procurement analysis and decisions.
-</p>
-
+<p>Support for procurement analysis and decisions.</p>
 </div>
 
 
 </section>
-
-
-
-
-
-<section class="hero">
-
-<h2>
-Inventory Control Panel
-</h2>
-
-<p>
-Manage stock movement and inventory status.
-</p>
-
-</section>
-
-
-
-
-
-<section class="cards">
-
-
-<div class="card">
-
-<h3>➕</h3>
-
-<h2>
-Stock In
-</h2>
-
-<p>
-Register incoming products and warehouse receiving.
-</p>
-
-</div>
-
-
-
-
-<div class="card">
-
-<h3>➖</h3>
-
-<h2>
-Stock Out
-</h2>
-
-<p>
-Register sales and material consumption.
-</p>
-
-</div>
-
-
-
-
-<div class="card">
-
-<h3>🔔</h3>
-
-<h2>
-Low Stock Alert
-</h2>
-
-<p>
-Automatic warning when inventory reaches minimum level.
-</p>
-
-</div>
-
-
-
-
-<div class="card">
-
-<h3>📈</h3>
-
-<h2>
-Inventory Report
-</h2>
-
-<p>
-Review stock history and consumption reports.
-</p>
-
-</div>
-
-
-</section>
-
 
 
 
@@ -266,7 +120,6 @@ Stock entry and exit management.
 
 
 
-
 <section class="cards">
 
 
@@ -274,20 +127,34 @@ Stock entry and exit management.
 
 <h3>➕</h3>
 
-<h2>
-Add Stock
-</h2>
+<h2>Add Stock</h2>
 
 
-<input type="text" placeholder="Product Name">
+<select id="addProduct">
+
+<option>Thermal Lamination Film</option>
+<option>Water-Based Adhesive</option>
+<option>Packaging Materials</option>
+
+</select>
+
 
 <br><br>
 
-<input type="number" placeholder="Quantity">
+
+<input 
+id="addQuantity" 
+type="number" 
+placeholder="Quantity">
+
 
 <br><br>
 
-<button>
+
+<button onclick="addStock(
+document.getElementById('addProduct').value,
+document.getElementById('addQuantity').value
+)">
 Save Stock
 </button>
 
@@ -303,20 +170,34 @@ Save Stock
 
 <h3>➖</h3>
 
-<h2>
-Remove Stock
-</h2>
+<h2>Remove Stock</h2>
 
 
-<input type="text" placeholder="Product Name">
+<select id="removeProduct">
+
+<option>Thermal Lamination Film</option>
+<option>Water-Based Adhesive</option>
+<option>Packaging Materials</option>
+
+</select>
+
 
 <br><br>
 
-<input type="number" placeholder="Quantity">
+
+<input 
+id="removeQuantity" 
+type="number" 
+placeholder="Quantity">
+
 
 <br><br>
 
-<button>
+
+<button onclick="removeStock(
+document.getElementById('removeProduct').value,
+document.getElementById('removeQuantity').value
+)">
 Save Removal
 </button>
 
@@ -332,17 +213,14 @@ Save Removal
 
 <h3>🔔</h3>
 
-<h2>
-Stock Alert
-</h2>
-
+<h2>Stock Alert</h2>
 
 <p>
 Products below minimum stock will appear here.
 </p>
 
 
-<button>
+<button onclick="checkAlerts()">
 Check Alerts
 </button>
 
@@ -358,17 +236,14 @@ Check Alerts
 
 <h3>📈</h3>
 
-<h2>
-Inventory Report
-</h2>
-
+<h2>Inventory Report</h2>
 
 <p>
-Stock movement history and consumption report.
+Stock movement history and current inventory.
 </p>
 
 
-<button>
+<button onclick="viewReport()">
 View Report
 </button>
 
@@ -388,29 +263,16 @@ View Report
 
 <div class="card">
 
-
 <h2>
 Thermal Lamination Film
 </h2>
 
-
 <p>
-Current Stock: <b>4000 kg</b>
+Current Stock: <b id="filmStock">4000 kg</b>
 </p>
-
 
 <p>
 Minimum Level: 1000 kg
-</p>
-
-
-<p>
-Last Update: 2026
-</p>
-
-
-<p>
-Status: ✅ Available
 </p>
 
 
@@ -420,32 +282,39 @@ Status: ✅ Available
 
 
 
-
 <div class="card">
-
 
 <h2>
 Water-Based Adhesive
 </h2>
 
-
 <p>
-Current Stock: <b>500 kg</b>
+Current Stock: <b id="glueStock">500 kg</b>
 </p>
-
 
 <p>
 Minimum Level: 200 kg
 </p>
 
 
+</div>
+
+
+
+
+
+<div class="card">
+
+<h2>
+Packaging Materials
+</h2>
+
 <p>
-Last Update: 2026
+Current Stock: <b id="packStock">2500 pcs</b>
 </p>
 
-
 <p>
-Status: ⚠️ Monitor
+Minimum Level: 500 pcs
 </p>
 
 
