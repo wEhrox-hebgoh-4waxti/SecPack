@@ -36,6 +36,7 @@
 
 
 
+
 <section class="hero">
 
 <h2>
@@ -51,48 +52,115 @@ Manage products, suppliers, stock and purchasing decisions.
 
 
 
+
 <section class="cards">
 
 
 <div class="card">
+
 <h3>📦</h3>
-<h2>Products</h2>
-<p>Manage packaging materials and product information.</p>
+
+<h2>
+Products
+</h2>
+
+<p>
+Manage packaging materials and product information.
+</p>
+
 </div>
 
 
-<div class="card">
+
+
+
+<div class="card"
+onclick="window.location.href='suppliers.html'"
+style="cursor:pointer;">
+
+
 <h3>🏭</h3>
-<h2>Suppliers</h2>
-<p>Manage supplier information and sourcing data.</p>
+
+<h2>
+Suppliers
+</h2>
+
+<p>
+Manage supplier information and sourcing data.
+</p>
+
 </div>
 
 
+
+
+
 <div class="card">
+
 <h3>📊</h3>
-<h2>Inventory</h2>
-<p>Monitor stock levels and product availability.</p>
+
+<h2>
+Inventory
+</h2>
+
+<p>
+Monitor stock levels and product availability.
+</p>
+
 </div>
 
 
+
+
+
 <div class="card">
+
 <h3>⚠️</h3>
-<h2>Stock Alerts</h2>
-<p>Receive warnings when inventory reaches minimum level.</p>
+
+<h2>
+Stock Alerts
+</h2>
+
+<p>
+Receive warnings when inventory reaches minimum level.
+</p>
+
 </div>
 
 
+
+
+
 <div class="card">
+
 <h3>💰</h3>
-<h2>Purchasing</h2>
-<p>Track purchase orders and cost information.</p>
+
+<h2>
+Purchasing
+</h2>
+
+<p>
+Track purchase orders and cost information.
+</p>
+
 </div>
 
 
+
+
+
 <div class="card">
+
 <h3>🤖</h3>
-<h2>AI Assistant</h2>
-<p>Support for procurement analysis and decisions.</p>
+
+<h2>
+AI Assistant
+</h2>
+
+<p>
+Support for procurement analysis and decisions.
+</p>
+
 </div>
 
 
@@ -127,7 +195,6 @@ Stock entry and exit management.
 
 <h2>Add Stock</h2>
 
-
 <select id="addProduct">
 
 <option>Thermal Lamination Film</option>
@@ -140,7 +207,9 @@ Stock entry and exit management.
 <br><br>
 
 
-<input id="addQuantity" type="number" placeholder="Quantity">
+<input id="addQuantity"
+type="number"
+placeholder="Quantity">
 
 
 <br><br>
@@ -166,7 +235,6 @@ Save Stock
 
 <h2>Remove Stock</h2>
 
-
 <select id="removeProduct">
 
 <option>Thermal Lamination Film</option>
@@ -179,7 +247,9 @@ Save Stock
 <br><br>
 
 
-<input id="removeQuantity" type="number" placeholder="Quantity">
+<input id="removeQuantity"
+type="number"
+placeholder="Quantity">
 
 
 <br><br>
@@ -196,48 +266,6 @@ Save Removal
 </div>
 
 
-
-
-<div class="card">
-
-<h3>🔔</h3>
-
-<h2>Stock Alert</h2>
-
-<button onclick="checkAlerts()">
-Check Alerts
-</button>
-
-</div>
-
-
-
-
-<div class="card">
-
-<h3>📈</h3>
-
-<h2>Inventory Report</h2>
-
-<button onclick="viewReport()">
-View Report
-</button>
-
-</div>
-
-
-</section>
-
-
-
-
-
-<section class="hero">
-
-<h2>
-Current Inventory
-</h2>
-
 </section>
 
 
@@ -249,7 +277,9 @@ Current Inventory
 
 <div class="card">
 
-<h2>🎞️ Thermal Lamination Film</h2>
+<h2>
+🎞️ Thermal Lamination Film
+</h2>
 
 <p>Current Stock</p>
 
@@ -261,9 +291,6 @@ Current Inventory
 🟢 Available
 </p>
 
-<p>
-Minimum Level: 1000 kg
-</p>
 
 </div>
 
@@ -271,10 +298,11 @@ Minimum Level: 1000 kg
 
 
 
-
 <div class="card">
 
-<h2>🧪 Water-Based Adhesive</h2>
+<h2>
+🧪 Water-Based Adhesive
+</h2>
 
 <p>Current Stock</p>
 
@@ -286,9 +314,6 @@ Minimum Level: 1000 kg
 🟢 Available
 </p>
 
-<p>
-Minimum Level: 200 kg
-</p>
 
 </div>
 
@@ -296,10 +321,11 @@ Minimum Level: 200 kg
 
 
 
-
 <div class="card">
 
-<h2>📦 Packaging Materials</h2>
+<h2>
+📦 Packaging Materials
+</h2>
 
 <p>Current Stock</p>
 
@@ -311,9 +337,6 @@ Minimum Level: 200 kg
 🟢 Available
 </p>
 
-<p>
-Minimum Level: 500 pcs
-</p>
 
 </div>
 
@@ -324,16 +347,13 @@ Minimum Level: 500 pcs
 
 
 
-
 <footer>
 
-SecPack Private Dashboard © 2026
+SecPack Private System © 2026
 
 </footer>
 
 
-
-<script src="../language.js"></script>
 
 <script src="../script.js"></script>
 
