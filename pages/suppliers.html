@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>SecPack Supply Network</title>
+<title>SecPack Suppliers</title>
 
 <link rel="stylesheet" href="../style.css">
 
@@ -18,36 +18,21 @@
 
 <header class="topbar">
 
-
 <div class="logo-area">
 
 <div class="logo-box">
-
 <img src="../logo.jpg" alt="SecPack Logo">
-
 </div>
-
 
 <div>
 
-<h1>SecPack</h1>
+<h1>SecPack Suppliers</h1>
 
-<p>Professional Packaging Materials Supplier</p>
-
-</div>
+<p>Global Supplier Management</p>
 
 </div>
 
-
-
-<div class="languages">
-
-<button onclick="changeLanguage('en')">EN</button>
-<button onclick="changeLanguage('fa')">FA</button>
-<button onclick="changeLanguage('ar')">AR</button>
-
 </div>
-
 
 </header>
 
@@ -57,20 +42,13 @@
 
 <section class="hero">
 
-
-<h2 data-i18n="supplier_title">
-
-Global Supply Network
-
+<h2>
+Supplier Management
 </h2>
 
-
-<p data-i18n="supplier_text">
-
-Reliable sourcing system with professional quality evaluation and supply management.
-
+<p>
+Manage suppliers, sourcing information and cooperation status.
 </p>
-
 
 </section>
 
@@ -83,89 +61,90 @@ Reliable sourcing system with professional quality evaluation and supply managem
 
 <div class="card">
 
+<h3>🏭</h3>
+
+<h2>Add Supplier</h2>
+
+
+<input id="supplierName" placeholder="Supplier Name">
+
+
+<br><br>
+
+
+<input id="supplierCountry" placeholder="Country">
+
+
+<br><br>
+
+
+<input id="supplierProduct" placeholder="Product">
+
+
+<br><br>
+
+
+<input id="supplierPrice" placeholder="Price">
+
+
+<br><br>
+
+
+<button onclick="addSupplier()">
+
+Save Supplier
+
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h3>📊</h3>
+
+<h2>Supplier Score</h2>
+
+<p>
+Evaluate supplier performance.
+</p>
+
+
+<p>
+Quality: ⭐⭐⭐⭐⭐
+</p>
+
+
+<p>
+Price: ⭐⭐⭐⭐⭐
+</p>
+
+
+<p>
+Support: ⭐⭐⭐⭐⭐
+</p>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
 <h3>🌍</h3>
 
-<h2 data-i18n="network">
+<h2>Global Sourcing</h2>
 
-Global Supplier Network
-
-</h2>
-
-
-<p data-i18n="network_text">
-
-Access to qualified production partners and reliable packaging material sources.
-
+<p>
+Track suppliers from different countries.
 </p>
 
-</div>
-
-
-
-
-
-<div class="card">
-
-<h3>🔍</h3>
-
-<h2 data-i18n="evaluation">
-
-Quality Evaluation
-
-</h2>
-
-
-<p data-i18n="evaluation_text">
-
-Products are reviewed based on quality consistency, technical specifications and performance.
-
-</p>
-
-</div>
-
-
-
-
-
-<div class="card">
-
-<h3>🛡️</h3>
-
-<h2 data-i18n="control">
-
-Supply Control
-
-</h2>
-
-
-<p data-i18n="control_text">
-
-Professional supply management to ensure stable availability and customer confidence.
-
-</p>
-
-</div>
-
-
-
-
-
-<div class="card">
-
-<h3>🛠️</h3>
-
-<h2 data-i18n="technical">
-
-Technical Support
-
-</h2>
-
-
-<p data-i18n="technical_text">
-
-Supporting customers in selecting suitable materials for their applications.
-
-</p>
 
 </div>
 
@@ -176,15 +155,84 @@ Supporting customers in selecting suitable materials for their applications.
 
 
 
+
+<section class="hero">
+
+<h2>
+Supplier List
+</h2>
+
+
+</section>
+
+
+
+
+
+
+<section class="cards" id="supplierList">
+
+
+<div class="card">
+
+<h2>
+HiTech Resins
+</h2>
+
+<p>
+Country: Pakistan
+</p>
+
+<p>
+Product: Water-Based Adhesive
+</p>
+
+<p>
+Status: Active
+</p>
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h2>
+Nantong Comens
+</h2>
+
+<p>
+Country: China
+</p>
+
+<p>
+Product: Lamination Adhesive
+</p>
+
+<p>
+Status: Testing
+</p>
+
+</div>
+
+
+
+</section>
+
+
+
+
+
+
 <footer>
 
-SecPack Enterprise © 2026
+SecPack Private System © 2026
 
 </footer>
 
 
-
-<script src="../language.js"></script>
 
 <script src="../script.js"></script>
 
