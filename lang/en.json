@@ -37,5 +37,20 @@
   "contact_title": "Request Quote",
   "contact_text": "Tell us your packaging requirements and our team will contact you.",
   "contact_form": "Contact Information",
-  "send_button": "Send Request"
+  "send_button": "Send Request",
+
+  "supplier_title": "Global Supply Network",
+  "supplier_text": "Reliable sourcing system with professional quality evaluation and supply management.",
+
+  "network": "Global Supplier Network",
+  "network_text": "Access to qualified production partners and reliable packaging material sources.",
+
+  "evaluation": "Quality Evaluation",
+  "evaluation_text": "Products are reviewed based on quality consistency, technical specifications and performance.",
+
+  "control": "Supply Control",
+  "control_text": "Professional supply management to ensure stable availability and customer confidence.",
+
+  "technical": "Technical Support",
+  "technical_text": "Supporting customers in selecting suitable materials for their applications."
 }
