@@ -16,6 +16,7 @@
   "standards_text": "Products suitable for professional printing and packaging industries.",
 
   "products_title": "Our Products",
+  "products_subtitle": "Professional packaging materials for printing, lamination and industrial applications.",
 
   "film": "Thermal Lamination Film",
   "film_text": "High quality lamination film designed for smooth finishing, excellent bonding and professional printing applications.",
@@ -31,6 +32,10 @@
 
   "quote_title": "Need a Quote?",
   "quote_text": "Tell us your requirements and our team will contact you with the best solution.",
+  "quote_button": "Request Quote",
 
-  "quote_button": "Request Quote"
+  "contact_title": "Request Quote",
+  "contact_text": "Tell us your packaging requirements and our team will contact you.",
+  "contact_form": "Contact Information",
+  "send_button": "Send Request"
 }
