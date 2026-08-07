@@ -200,10 +200,72 @@ font-size:40px;
 
 
 
+.card h2{
+
+font-size:24px;
+margin:15px 0;
+
+}
+
+
+
+
 .card p{
 
 color:#667085;
 line-height:1.7;
+
+}
+
+
+
+
+.card input,
+.card select{
+
+width:90%;
+padding:12px;
+border-radius:10px;
+border:1px solid #ddd;
+font-size:16px;
+
+}
+
+
+
+.card button{
+
+padding:12px 25px;
+border:none;
+border-radius:12px;
+background:#1463ff;
+color:white;
+font-size:16px;
+cursor:pointer;
+
+}
+
+
+
+.card button:hover{
+
+opacity:.85;
+
+}
+
+
+
+
+
+/* Inventory Large Numbers */
+
+
+.stock-number{
+
+font-size:48px;
+font-weight:900;
+color:#0b1f3a;
+margin:20px 0;
 
 }
 
@@ -308,8 +370,6 @@ background:#f6f8fc;
 text-align:center;
 
 }
-
-
 
 
 
@@ -443,6 +503,14 @@ font-size:26px;
 .hero h2{
 
 font-size:26px;
+
+}
+
+
+
+.stock-number{
+
+font-size:38px;
 
 }
 
