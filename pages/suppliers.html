@@ -21,7 +21,9 @@
 <div class="logo-area">
 
 <div class="logo-box">
+
 <img src="../logo.jpg" alt="SecPack Logo">
+
 </div>
 
 
@@ -33,10 +35,11 @@
 
 </div>
 
+
 </div>
 
-
 </header>
+
 
 
 
@@ -61,7 +64,6 @@ Manage suppliers, sourcing information and cooperation status.
 
 
 
-
 <section class="cards">
 
 
@@ -70,11 +72,7 @@ Manage suppliers, sourcing information and cooperation status.
 
 <h3>🏭</h3>
 
-
-<h2>
-Add Supplier
-</h2>
-
+<h2>Add Supplier</h2>
 
 
 <input id="supplierName"
@@ -125,10 +123,7 @@ Save Supplier
 
 <h3>📊</h3>
 
-
-<h2>
-Supplier Score
-</h2>
+<h2>Supplier Score</h2>
 
 
 <p>
@@ -156,7 +151,6 @@ Technical Support: 10%
 </p>
 
 
-
 </div>
 
 
@@ -169,7 +163,6 @@ Technical Support: 10%
 
 
 <h3>🌍</h3>
-
 
 <h2>
 Global Sourcing
@@ -184,9 +177,99 @@ Track suppliers from different countries.
 </div>
 
 
+</section>
+
+
+
+
+
+
+
+
+<section class="hero">
+
+<h2>
+Edit Supplier
+</h2>
+
 
 </section>
 
+
+
+
+
+<section class="cards">
+
+
+<div class="card">
+
+
+<input id="editIndex" type="hidden">
+
+
+
+<input id="editName"
+placeholder="Supplier Name">
+
+
+<br><br>
+
+
+<input id="editCountry"
+placeholder="Country">
+
+
+<br><br>
+
+
+<input id="editProduct"
+placeholder="Product">
+
+
+<br><br>
+
+
+<input id="editPrice"
+placeholder="Price">
+
+
+<br><br>
+
+
+<input id="editScore"
+placeholder="Score">
+
+
+<br><br>
+
+
+<input id="editStatus"
+placeholder="Status">
+
+
+<br><br>
+
+
+<button onclick="saveEditSupplier()">
+
+Save Changes
+
+</button>
+
+
+<button onclick="cancelEdit()">
+
+Cancel
+
+</button>
+
+
+
+</div>
+
+
+</section>
 
 
 
@@ -220,12 +303,12 @@ Supplier List
 
 
 
-
 <footer>
 
 SecPack Private System © 2026
 
 </footer>
+
 
 
 
