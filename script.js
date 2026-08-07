@@ -1,8 +1,6 @@
 document.addEventListener("DOMContentLoaded", function(){
 
-
 console.log("SecPack script loaded");
-
 
 
 /* =========================
@@ -45,8 +43,8 @@ JSON.stringify(stockData)
 
 
 
-window.addStock=function(product,quantity){
 
+window.addStock=function(product,quantity){
 
 quantity=Number(quantity);
 
@@ -70,7 +68,6 @@ alert("Stock added successfully");
 
 updateInventory();
 
-
 };
 
 
@@ -79,7 +76,6 @@ updateInventory();
 
 
 window.removeStock=function(product,quantity){
-
 
 quantity=Number(quantity);
 
@@ -92,7 +88,6 @@ return;
 }
 
 
-
 stockData[product]-=quantity;
 
 
@@ -103,7 +98,6 @@ stockData[product]=0;
 }
 
 
-
 saveStock();
 
 
@@ -112,8 +106,9 @@ alert("Stock removed successfully");
 
 updateInventory();
 
-
 };
+
+
 
 
 
@@ -151,6 +146,7 @@ return "🟢 Available";
 
 
 
+
 function updateInventory(){
 
 
@@ -160,28 +156,16 @@ let pack=document.getElementById("packStock");
 
 
 
-if(film){
-
+if(film)
 film.innerHTML=stockData["Thermal Lamination Film"]+" kg";
 
-}
 
-
-
-if(glue){
-
+if(glue)
 glue.innerHTML=stockData["Water-Based Adhesive"]+" kg";
 
-}
 
-
-
-if(pack){
-
+if(pack)
 pack.innerHTML=stockData["Packaging Materials"]+" pcs";
-
-}
-
 
 
 
@@ -191,32 +175,19 @@ let packStatus=document.getElementById("packStatus");
 
 
 
-if(filmStatus){
-
+if(filmStatus)
 filmStatus.innerHTML=getStatus("Thermal Lamination Film");
 
-}
 
-
-
-if(glueStatus){
-
+if(glueStatus)
 glueStatus.innerHTML=getStatus("Water-Based Adhesive");
 
-}
 
-
-
-if(packStatus){
-
+if(packStatus)
 packStatus.innerHTML=getStatus("Packaging Materials");
 
-}
-
-
 
 }
-
 
 
 
@@ -235,23 +206,37 @@ let suppliers=JSON.parse(
 
 localStorage.getItem("secpackSuppliers")
 
-)||[
+) || [
 
 {
+
 name:"HiTech Resins",
 country:"Pakistan",
 product:"Water-Based Adhesive",
 price:"-",
+quality:30,
+priceScore:30,
+batch:20,
+response:10,
+support:10,
 status:"Active"
+
 },
 
 
 {
+
 name:"Nantong Comens",
 country:"China",
 product:"Lamination Adhesive",
 price:"-",
+quality:30,
+priceScore:25,
+batch:20,
+response:10,
+support:10,
 status:"Testing"
+
 }
 
 ];
@@ -260,18 +245,36 @@ status:"Testing"
 
 
 
+
+
 function saveSuppliers(){
 
 localStorage.setItem(
-
 "secpackSuppliers",
-
 JSON.stringify(suppliers)
-
 );
 
 }
 
+
+
+
+
+
+
+function calculateScore(item){
+
+return Number(item.quality || 0)
++
+Number(item.priceScore || 0)
++
+Number(item.batch || 0)
++
+Number(item.response || 0)
++
+Number(item.support || 0);
+
+}
 
 
 
@@ -296,10 +299,10 @@ let price=document.getElementById("supplierPrice").value;
 if(!name){
 
 alert("Enter supplier name");
-
 return;
 
 }
+
 
 
 
@@ -313,6 +316,16 @@ product:product,
 
 price:price,
 
+quality:25,
+
+priceScore:25,
+
+batch:20,
+
+response:10,
+
+support:10,
+
 status:"New"
 
 });
@@ -325,7 +338,6 @@ saveSuppliers();
 
 
 alert("Supplier saved successfully");
-
 
 
 showSuppliers();
@@ -348,12 +360,8 @@ function showSuppliers(){
 let list=document.getElementById("supplierList");
 
 
-
-if(!list){
-
+if(!list)
 return;
-
-}
 
 
 
@@ -362,7 +370,6 @@ list.innerHTML="";
 
 
 suppliers.forEach(function(item){
-
 
 
 list.innerHTML += `
@@ -392,6 +399,11 @@ Price: ${item.price}
 
 
 <p>
+Score: ${calculateScore(item)} / 100
+</p>
+
+
+<p>
 Status: ${item.status}
 </p>
 
@@ -402,9 +414,7 @@ Status: ${item.status}
 `;
 
 
-
 });
-
 
 
 }
@@ -429,7 +439,7 @@ Object.keys(stockData).forEach(function(item){
 if(getStatus(item)!=="🟢 Available"){
 
 
-message+=item+" : "+getStatus(item)+"\n";
+message += item+" : "+getStatus(item)+"\n";
 
 
 }
@@ -439,18 +449,11 @@ message+=item+" : "+getStatus(item)+"\n";
 
 
 
-if(message){
-
-alert(message);
-
-}else{
-
-alert("All stock levels are OK");
-
-}
+alert(message || "All stock levels are OK");
 
 
 };
+
 
 
 
@@ -468,8 +471,7 @@ let report="SecPack Inventory Report\n\n";
 Object.keys(stockData).forEach(function(item){
 
 
-report+=
-item+
+report += item+
 " : "+
 stockData[item]+
 " "+
@@ -478,7 +480,6 @@ getStatus(item)+
 
 
 });
-
 
 
 alert(report);
