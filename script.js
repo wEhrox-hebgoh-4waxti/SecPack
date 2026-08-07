@@ -19,7 +19,6 @@ localStorage.getItem("secpackStock")
 };
 
 
-
 const minimumStock={
 
 "Thermal Lamination Film":1000,
@@ -27,7 +26,6 @@ const minimumStock={
 "Packaging Materials":500
 
 };
-
 
 
 
@@ -59,17 +57,13 @@ return;
 
 stockData[product]+=quantity;
 
-
 saveStock();
 
-
 alert("Stock added successfully");
-
 
 updateInventory();
 
 };
-
 
 
 
@@ -100,9 +94,7 @@ stockData[product]=0;
 
 saveStock();
 
-
 alert("Stock removed successfully");
-
 
 updateInventory();
 
@@ -113,10 +105,7 @@ updateInventory();
 
 
 
-
-
 function getStatus(product){
-
 
 let value=stockData[product];
 
@@ -145,8 +134,6 @@ return "🟢 Available";
 
 
 
-
-
 function updateInventory(){
 
 
@@ -166,6 +153,7 @@ glue.innerHTML=stockData["Water-Based Adhesive"]+" kg";
 
 if(pack)
 pack.innerHTML=stockData["Packaging Materials"]+" pcs";
+
 
 
 
@@ -194,12 +182,9 @@ packStatus.innerHTML=getStatus("Packaging Materials");
 
 
 
-
-
 /* =========================
    SUPPLIER SYSTEM
 ========================= */
-
 
 
 let suppliers=JSON.parse(
@@ -209,34 +194,22 @@ localStorage.getItem("secpackSuppliers")
 ) || [
 
 {
-
 name:"HiTech Resins",
 country:"Pakistan",
 product:"Water-Based Adhesive",
 price:"-",
-quality:30,
-priceScore:30,
-batch:20,
-response:10,
-support:10,
+score:90,
 status:"Active"
-
 },
 
 
 {
-
 name:"Nantong Comens",
 country:"China",
 product:"Lamination Adhesive",
 price:"-",
-quality:30,
-priceScore:25,
-batch:20,
-response:10,
-support:10,
+score:85,
 status:"Testing"
-
 }
 
 ];
@@ -250,8 +223,11 @@ status:"Testing"
 function saveSuppliers(){
 
 localStorage.setItem(
+
 "secpackSuppliers",
+
 JSON.stringify(suppliers)
+
 );
 
 }
@@ -262,28 +238,7 @@ JSON.stringify(suppliers)
 
 
 
-function calculateScore(item){
-
-return Number(item.quality || 0)
-+
-Number(item.priceScore || 0)
-+
-Number(item.batch || 0)
-+
-Number(item.response || 0)
-+
-Number(item.support || 0);
-
-}
-
-
-
-
-
-
-
 window.addSupplier=function(){
-
 
 
 let name=document.getElementById("supplierName").value;
@@ -299,6 +254,7 @@ let price=document.getElementById("supplierPrice").value;
 if(!name){
 
 alert("Enter supplier name");
+
 return;
 
 }
@@ -316,15 +272,7 @@ product:product,
 
 price:price,
 
-quality:25,
-
-priceScore:25,
-
-batch:20,
-
-response:10,
-
-support:10,
+score:70,
 
 status:"New"
 
@@ -332,15 +280,48 @@ status:"New"
 
 
 
-
 saveSuppliers();
-
 
 
 alert("Supplier saved successfully");
 
 
 showSuppliers();
+
+
+};
+
+
+
+
+
+
+
+
+
+window.deleteSupplier=function(index){
+
+
+let confirmDelete =
+confirm(
+"Are you sure you want to delete this supplier?"
+);
+
+
+
+if(confirmDelete){
+
+
+suppliers.splice(index,1);
+
+
+saveSuppliers();
+
+
+showSuppliers();
+
+
+}
 
 
 
@@ -369,7 +350,8 @@ list.innerHTML="";
 
 
 
-suppliers.forEach(function(item){
+suppliers.forEach(function(item,index){
+
 
 
 list.innerHTML += `
@@ -378,9 +360,7 @@ list.innerHTML += `
 <div class="card">
 
 
-<h2>
-${item.name}
-</h2>
+<h2>${item.name}</h2>
 
 
 <p>
@@ -399,7 +379,7 @@ Price: ${item.price}
 
 
 <p>
-Score: ${calculateScore(item)} / 100
+Score: ${item.score} / 100
 </p>
 
 
@@ -408,17 +388,26 @@ Status: ${item.status}
 </p>
 
 
+
+<button onclick="deleteSupplier(${index})">
+
+🗑 Delete
+
+</button>
+
+
+
 </div>
 
 
 `;
 
 
+
 });
 
 
 }
-
 
 
 
@@ -448,7 +437,6 @@ message += item+" : "+getStatus(item)+"\n";
 });
 
 
-
 alert(message || "All stock levels are OK");
 
 
@@ -460,12 +448,10 @@ alert(message || "All stock levels are OK");
 
 
 
-
 window.viewReport=function(){
 
 
 let report="SecPack Inventory Report\n\n";
-
 
 
 Object.keys(stockData).forEach(function(item){
@@ -486,7 +472,6 @@ alert(report);
 
 
 };
-
 
 
 
