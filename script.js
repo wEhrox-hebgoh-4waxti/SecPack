@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function(){
 
 console.log("SecPack script loaded");
 
@@ -32,6 +32,7 @@ const minimumStock = {
 
 
 
+
 function saveStock(){
 
 localStorage.setItem(
@@ -40,6 +41,8 @@ JSON.stringify(stockData)
 );
 
 }
+
+
 
 
 
@@ -72,21 +75,68 @@ return "🟢 Available";
 
 
 
-window.addStock = function(product, quantity){
+
+function updateInventory(){
 
 
-quantity = Number(quantity);
+let film=document.getElementById("filmStock");
+let glue=document.getElementById("glueStock");
+let pack=document.getElementById("packStock");
+
+
+
+if(film){
+
+film.innerHTML =
+stockData["Thermal Lamination Film"]+" kg";
+
+}
+
+
+
+if(glue){
+
+glue.innerHTML =
+stockData["Water-Based Adhesive"]+" kg";
+
+}
+
+
+
+if(pack){
+
+pack.innerHTML =
+stockData["Packaging Materials"]+" pcs";
+
+}
+
+
+}
+
+
+
+
+
+
+
+window.addStock=function(product,quantity){
+
+
+quantity=Number(quantity);
+
 
 
 if(!product || !quantity){
 
 alert("Enter product and quantity");
+
 return;
 
 }
 
 
-stockData[product] += quantity;
+
+stockData[product]+=quantity;
 
 
 saveStock();
@@ -106,28 +156,33 @@ updateInventory();
 
 
 
-window.removeStock = function(product, quantity){
+window.removeStock=function(product,quantity){
 
 
-quantity = Number(quantity);
+quantity=Number(quantity);
+
 
 
 if(!product || !quantity){
 
 alert("Enter product and quantity");
+
 return;
 
 }
 
 
-stockData[product] -= quantity;
+
+stockData[product]-=quantity;
 
 
-if(stockData[product] < 0){
 
-stockData[product] = 0;
+if(stockData[product]<0){
+
+stockData[product]=0;
 
 }
+
 
 
 saveStock();
@@ -139,68 +194,13 @@ alert("Stock removed successfully");
 updateInventory();
 
 
-};
-
-
-
-
-
-
-function updateInventory(){
-
-
-let film = document.getElementById("filmStock");
-let glue = document.getElementById("glueStock");
-let pack = document.getElementById("packStock");
-
-
-if(film)
-film.innerHTML = stockData["Thermal Lamination Film"]+" kg";
-
-
-if(glue)
-glue.innerHTML = stockData["Water-Based Adhesive"]+" kg";
-
-
-if(pack)
-pack.innerHTML = stockData["Packaging Materials"]+" pcs";
-
-
-
-let filmStatus=document.getElementById("filmStatus");
-let glueStatus=document.getElementById("glueStatus");
-let packStatus=document.getElementById("packStatus");
-
-
-if(filmStatus)
-filmStatus.innerHTML=getStatus("Thermal Lamination Film");
-
-
-if(glueStatus)
-glueStatus.innerHTML=getStatus("Water-Based Adhesive");
-
-
-if(packStatus)
-packStatus.innerHTML=getStatus("Packaging Materials");
-
-
-}
-
-
-
-
-
-
-/* =========================
+};/* =========================
    SUPPLIER SYSTEM
 ========================= */
 
 
-
 let suppliers = JSON.parse(
-
 localStorage.getItem("secpackSuppliers")
-
 ) || [];
 
 
@@ -210,11 +210,8 @@ localStorage.getItem("secpackSuppliers")
 function saveSuppliers(){
 
 localStorage.setItem(
-
 "secpackSuppliers",
-
 JSON.stringify(suppliers)
-
 );
 
 }
@@ -224,7 +221,8 @@ JSON.stringify(suppliers)
 
 
 
-function prepareSuppliers(){
+
+function fixSupplierData(){
 
 
 suppliers = suppliers.map(function(item){
@@ -255,7 +253,10 @@ saveSuppliers();
 
 
 
+
+
 window.addSupplier=function(){
+
 
 
 let name=document.getElementById("supplierName").value;
@@ -271,9 +272,11 @@ let price=document.getElementById("supplierPrice").value;
 if(!name){
 
 alert("Enter supplier name");
+
 return;
 
 }
+
 
 
 
@@ -298,7 +301,6 @@ status:"New"
 saveSuppliers();
 
 
-
 alert("Supplier saved successfully");
 
 
@@ -313,19 +315,145 @@ showSuppliers();
 
 
 
-window.deleteSupplier=function(index){
+
+
+window.editSupplier=function(index){
 
 
 
-let answer = confirm(
+let item=suppliers[index];
 
-"Delete this supplier?"
 
+
+let name=prompt(
+"Supplier Name:",
+item.name
 );
 
 
 
-if(answer){
+if(name===null)
+return;
+
+
+
+
+let country=prompt(
+"Country:",
+item.country
+);
+
+
+
+if(country===null)
+return;
+
+
+
+
+
+let product=prompt(
+"Product:",
+item.product
+);
+
+
+
+if(product===null)
+return;
+
+
+
+
+
+let price=prompt(
+"Price:",
+item.price
+);
+
+
+
+if(price===null)
+return;
+
+
+
+
+
+let score=prompt(
+"Score:",
+item.score
+);
+
+
+
+if(score===null)
+return;
+
+
+
+
+
+let status=prompt(
+"Status:",
+item.status
+);
+
+
+
+if(status===null)
+return;
+
+
+
+
+
+suppliers[index]={
+
+name:name,
+
+country:country,
+
+product:product,
+
+price:price,
+
+score:Number(score),
+
+status:status
+
+};
+
+
+
+saveSuppliers();
+
+
+showSuppliers();
+
+
+
+};
+
+
+
+
+
+
+
+
+
+window.deleteSupplier=function(index){
+
+
+
+let result = confirm(
+"Delete this supplier?"
+);
+
+
+
+if(result){
 
 
 suppliers.splice(index,1);
@@ -340,7 +468,9 @@ showSuppliers();
 }
 
 
+
 };
+
 
 
 
@@ -362,7 +492,9 @@ return;
 
 
 
+
 list.innerHTML="";
+
 
 
 
@@ -405,6 +537,15 @@ Status: ${item.status}
 
 
 
+
+<button onclick="editSupplier(${index})">
+
+✏️ Edit
+
+</button>
+
+
+
 <button onclick="deleteSupplier(${index})">
 
 🗑 Delete
@@ -423,7 +564,9 @@ Status: ${item.status}
 });
 
 
+
 }
+
 
 
 
@@ -434,24 +577,7 @@ Status: ${item.status}
 window.checkAlerts=function(){
 
 
-let result="";
-
-
-Object.keys(stockData).forEach(function(item){
-
-
-if(getStatus(item)!=="🟢 Available"){
-
-result += item+" : "+getStatus(item)+"\n";
-
-}
-
-
-});
-
-
-
-alert(result || "All stock levels are OK");
+alert("Stock alert system active");
 
 
 };
@@ -473,12 +599,11 @@ Object.keys(stockData).forEach(function(item){
 report += item+
 " : "+
 stockData[item]+
-" | "+
-getStatus(item)+
 "\n";
 
 
 });
+
 
 
 alert(report);
@@ -492,7 +617,7 @@ alert(report);
 
 
 
-prepareSuppliers();
+fixSupplierData();
 
 updateInventory();
 
