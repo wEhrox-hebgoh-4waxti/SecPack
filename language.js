@@ -1,5 +1,6 @@
 let translations = {};
 
+
 async function loadLanguage(lang){
 
     try{
@@ -15,15 +16,19 @@ async function loadLanguage(lang){
         document.documentElement.dir =
             (lang==="fa" || lang==="ar") ? "rtl" : "ltr";
 
+
         document.querySelectorAll("[data-i18n]").forEach(el=>{
 
             const key = el.dataset.i18n;
 
             if(translations[key]){
+
                 el.textContent = translations[key];
+
             }
 
         });
+
 
         window.dispatchEvent(new Event("languageChanged"));
 
@@ -31,17 +36,21 @@ async function loadLanguage(lang){
 
     catch(error){
 
-        console.log(error);
+        console.log("Language loading error:", error);
 
     }
 
 }
+
+
 
 function changeLanguage(lang){
 
     loadLanguage(lang);
 
 }
+
+
 
 document.addEventListener("DOMContentLoaded",()=>{
 
