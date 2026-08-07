@@ -1,33 +1,36 @@
 {
-"title":"Smart Global Procurement Assistant",
-"subtitle":"Find suppliers, compare prices and make evidence-based purchasing decisions.",
-"products":"Products",
-"suppliers":"Suppliers",
-"ask_ai":"Ask AI Assistant",
+  "title": "Smart Global Procurement Assistant",
+  "subtitle": "Find suppliers, compare prices and make better purchasing decisions.",
 
-"supplier_title":"Supplier Profile",
-"procurement_intelligence":"Procurement Intelligence",
-"commercial":"Commercial Information",
-"documents":"Technical Documents",
-"history":"Communication History",
-"evaluation":"Supplier Evaluation",
+  "why_title": "Why SecPack",
+  "quality": "Premium Quality",
+  "quality_text": "Carefully selected packaging materials with consistent performance.",
 
-"country":"Country",
-"city":"City",
-"contact":"Contact",
-"position":"Position",
-"product":"Product",
-"category":"Category",
-"price":"Last Price",
-"last_price":"Last Price",
-"target_price":"Target Price",
-"purchase_volume":"Purchase Volume",
-"price_history":"Price History",
-"sample":"Sample",
-"tds":"TDS",
-"coa":"COA",
-"msds":"MSDS",
-"status":"Status",
-"score":"Score",
-"notes":"Notes"
+  "supply": "Reliable Supply",
+  "supply_text": "Stable sourcing and dependable delivery for long-term cooperation.",
+
+  "support": "Technical Support",
+  "support_text": "Professional assistance for selecting the right material.",
+
+  "standards": "Global Standards",
+  "standards_text": "Products suitable for professional printing and packaging industries.",
+
+  "products_title": "Our Products",
+
+  "film": "Thermal Lamination Film",
+  "film_text": "High quality lamination film designed for smooth finishing, excellent bonding and professional printing applications.",
+
+  "adhesive": "Water-Based Adhesive",
+  "adhesive_text": "Reliable adhesive solutions for paper, film and packaging lamination processes.",
+
+  "materials": "Packaging Materials",
+  "materials_text": "Professional materials supporting modern packaging production requirements.",
+
+  "solutions": "Industrial Solutions",
+  "solutions_text": "Customized packaging solutions for different industries and applications.",
+
+  "quote_title": "Need a Quote?",
+  "quote_text": "Tell us your requirements and our team will contact you with the best solution.",
+
+  "quote_button": "Request Quote"
 }
