@@ -2,6 +2,7 @@
 box-sizing:border-box;
 }
 
+
 body{
 margin:0;
 font-family:Arial,Tahoma,sans-serif;
@@ -9,30 +10,39 @@ background:#f6f8fc;
 color:#172033;
 }
 
+
 a{
 text-decoration:none;
 color:inherit;
 }
 
 
+
 .topbar{
+
 display:flex;
 justify-content:space-between;
 align-items:center;
 padding:18px 25px;
 background:#0b1f3a;
 color:white;
+
 }
+
 
 
 .logo-area{
+
 display:flex;
 align-items:center;
 gap:15px;
+
 }
 
 
+
 .logo-box{
+
 width:70px;
 height:70px;
 background:white;
@@ -41,66 +51,97 @@ display:flex;
 align-items:center;
 justify-content:center;
 overflow:hidden;
+
 }
+
 
 
 .logo-box img{
+
 width:58px;
 height:58px;
 object-fit:contain;
+
 }
+
 
 
 .logo-area h1{
+
 margin:0;
 font-size:28px;
+
 }
+
 
 
 .logo-area p{
+
 margin:5px 0 0;
 font-size:12px;
 opacity:.8;
+
 }
 
 
+
 .languages button{
+
 padding:8px 12px;
 margin:3px;
 border:none;
 border-radius:10px;
 cursor:pointer;
 font-weight:bold;
+
 }
+
+
 
 
 .hero{
+
 text-align:center;
 background:white;
 padding:50px 20px;
+
 }
+
 
 
 .hero h2{
+
 font-size:34px;
+
 }
+
 
 
 .hero p{
+
 font-size:18px;
 color:#667085;
+
 }
 
 
+
+
+
 .actions{
+
 display:flex;
 justify-content:center;
 flex-wrap:wrap;
 gap:10px;
+
 }
 
 
+
+
 .actions button{
+
 padding:15px 25px;
 border:none;
 border-radius:15px;
@@ -108,125 +149,197 @@ background:#1463ff;
 color:white;
 font-size:16px;
 cursor:pointer;
+
 }
 
 
+
+
+
 .cards{
+
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
 gap:20px;
 padding:30px;
+
 }
 
 
+
+
 .card{
+
 background:white;
 padding:30px;
 border-radius:20px;
 text-align:center;
 box-shadow:0 8px 25px rgba(0,0,0,.08);
 transition:.3s;
+
 }
+
+
 
 
 .card:hover{
+
 transform:translateY(-5px);
+
 }
+
+
 
 
 .card h3{
+
 font-size:40px;
+
 }
+
+
 
 
 .card p{
+
 color:#667085;
+line-height:1.7;
+
 }
+
+
+
 
 
 footer{
+
 text-align:center;
 padding:20px;
 color:#777;
+
 }
+
+
+
+
 
 
 /* Why SecPack */
 
+
 .why{
+
 padding:50px 30px;
 background:#ffffff;
 text-align:center;
+
 }
+
 
 
 .why h2,
 .categories h2,
 .quote h2{
+
 font-size:32px;
 margin-bottom:30px;
+
 }
+
 
 
 .why-grid{
+
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
 gap:20px;
+
 }
 
 
+
 .why-card{
+
 background:#f8fafc;
 padding:30px;
 border-radius:20px;
 box-shadow:0 8px 20px rgba(0,0,0,.06);
+
 }
+
 
 
 .why-card h3{
+
 font-size:38px;
 margin:0;
+
 }
+
 
 
 .why-card h4{
+
 font-size:20px;
 margin:15px 0;
+
 }
+
 
 
 .why-card p{
+
 color:#667085;
 line-height:1.6;
+
 }
+
+
+
 
 
 /* Product Categories */
 
+
 .categories{
+
 padding:50px 30px;
 background:#f6f8fc;
 text-align:center;
+
 }
+
+
+
+
+
 
 
 /* Request Quote */
 
+
 .quote{
+
 padding:60px 20px;
 background:white;
 text-align:center;
+
 }
+
 
 
 .quote p{
+
 font-size:18px;
 color:#667085;
 margin-bottom:25px;
+
 }
 
 
+
 .quote button{
+
 padding:15px 30px;
 border:none;
 border-radius:15px;
@@ -234,27 +347,105 @@ background:#1463ff;
 color:white;
 font-size:17px;
 cursor:pointer;
+
 }
+
+
+
+
+
+/* Products Page */
+
+
+.products-hero{
+
+background:white;
+padding:60px 20px;
+text-align:center;
+
+}
+
+
+
+
+.product-card{
+
+background:white;
+padding:35px;
+border-radius:25px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+transition:.3s;
+
+}
+
+
+
+.product-card:hover{
+
+transform:translateY(-8px);
+
+}
+
+
+
+.product-card h2{
+
+font-size:24px;
+margin:20px 0;
+
+}
+
+
+
+.product-card p{
+
+line-height:1.8;
+color:#667085;
+
+}
+
+
+
+.product-icon{
+
+font-size:55px;
+
+}
+
+
+
+
 
 
 
 @media(max-width:600px){
 
+
 .topbar{
+
 flex-direction:column;
 gap:15px;
+
 }
+
 
 
 .why h2,
 .categories h2,
 .quote h2{
+
 font-size:26px;
+
 }
+
 
 
 .hero h2{
+
 font-size:26px;
+
 }
+
+
 
 }
