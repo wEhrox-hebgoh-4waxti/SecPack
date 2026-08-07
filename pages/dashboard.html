@@ -36,7 +36,6 @@
 
 
 
-
 <section class="hero">
 
 <h2>
@@ -52,8 +51,8 @@ Manage products, suppliers, stock and purchasing decisions.
 
 
 
-
 <section class="cards">
+
 
 <div class="card">
 <h3>📦</h3>
@@ -95,6 +94,7 @@ Manage products, suppliers, stock and purchasing decisions.
 <h2>AI Assistant</h2>
 <p>Support for procurement analysis and decisions.</p>
 </div>
+
 
 </section>
 
@@ -140,10 +140,7 @@ Stock entry and exit management.
 <br><br>
 
 
-<input 
-id="addQuantity"
-type="number"
-placeholder="Quantity">
+<input id="addQuantity" type="number" placeholder="Quantity">
 
 
 <br><br>
@@ -156,8 +153,8 @@ document.getElementById('addQuantity').value
 Save Stock
 </button>
 
-</div>
 
+</div>
 
 
 
@@ -182,10 +179,7 @@ Save Stock
 <br><br>
 
 
-<input 
-id="removeQuantity"
-type="number"
-placeholder="Quantity">
+<input id="removeQuantity" type="number" placeholder="Quantity">
 
 
 <br><br>
@@ -204,17 +198,11 @@ Save Removal
 
 
 
-
 <div class="card">
 
 <h3>🔔</h3>
 
 <h2>Stock Alert</h2>
-
-<p>
-Products below minimum stock will appear here.
-</p>
-
 
 <button onclick="checkAlerts()">
 Check Alerts
@@ -225,17 +213,11 @@ Check Alerts
 
 
 
-
 <div class="card">
 
 <h3>📈</h3>
 
 <h2>Inventory Report</h2>
-
-<p>
-Stock movement history and current inventory.
-</p>
-
 
 <button onclick="viewReport()">
 View Report
@@ -250,21 +232,13 @@ View Report
 
 
 
-
-
-
 <section class="hero">
 
 <h2>
 Current Inventory
 </h2>
 
-<p>
-Real-time stock information
-</p>
-
 </section>
-
 
 
 
@@ -275,28 +249,22 @@ Real-time stock information
 
 <div class="card">
 
-<h2>
-🎞️ Thermal Lamination Film
-</h2>
+<h2>🎞️ Thermal Lamination Film</h2>
 
-
-<p>
-Current Stock
-</p>
-
+<p>Current Stock</p>
 
 <h1 class="stock-number">
-
 <b id="filmStock">4400 kg</b>
-
 </h1>
 
+<p id="filmStatus">
+🟢 Available
+</p>
 
 <p>
 Minimum Level: 1000 kg
 </p>
 
-
 </div>
 
 
@@ -306,29 +274,22 @@ Minimum Level: 1000 kg
 
 <div class="card">
 
+<h2>🧪 Water-Based Adhesive</h2>
 
-<h2>
-🧪 Water-Based Adhesive
-</h2>
-
-
-<p>
-Current Stock
-</p>
-
+<p>Current Stock</p>
 
 <h1 class="stock-number">
-
 <b id="glueStock">1100 kg</b>
-
 </h1>
 
+<p id="glueStatus">
+🟢 Available
+</p>
 
 <p>
 Minimum Level: 200 kg
 </p>
 
-
 </div>
 
 
@@ -338,28 +299,21 @@ Minimum Level: 200 kg
 
 <div class="card">
 
+<h2>📦 Packaging Materials</h2>
 
-<h2>
-📦 Packaging Materials
-</h2>
-
-
-<p>
-Current Stock
-</p>
-
+<p>Current Stock</p>
 
 <h1 class="stock-number">
-
 <b id="packStock">2500 pcs</b>
-
 </h1>
 
+<p id="packStatus">
+🟢 Available
+</p>
 
 <p>
 Minimum Level: 500 pcs
 </p>
-
 
 </div>
 
