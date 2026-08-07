@@ -4,7 +4,6 @@
 <head>
 
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>SecPack Dashboard</title>
@@ -19,39 +18,54 @@
 
 <header class="topbar">
 
+
 <div class="logo-area">
 
 <div class="logo-box">
-
 <img src="../logo.jpg" alt="SecPack Logo">
-
 </div>
+
 
 <div>
 
-<h1>SecPack</h1>
+<h1>SecPack Dashboard</h1>
 
-<p>Global Procurement Intelligence</p>
+<p>Private Management System</p>
+
+</div>
 
 </div>
 
+
+
+<div class="languages">
+
+<button onclick="changeLanguage('en')">EN</button>
+<button onclick="changeLanguage('fa')">FA</button>
+<button onclick="changeLanguage('ar')">AR</button>
+
 </div>
+
 
 </header>
+
+
 
 
 
 <section class="hero">
 
 <h2>
-SecPack Intelligence Dashboard
+Procurement & Inventory Dashboard
 </h2>
 
 <p>
-Your global sourcing control center
+Manage products, suppliers, stock and purchasing decisions.
 </p>
 
 </section>
+
+
 
 
 
@@ -62,19 +76,14 @@ Your global sourcing control center
 
 <h3>📦</h3>
 
-<h2>
-Products
-</h2>
+<h2>Products</h2>
 
 <p>
-Tracked products
+Manage packaging materials and product information.
 </p>
 
-<strong id="product-count">
-0
-</strong>
-
 </div>
+
 
 
 
@@ -82,19 +91,44 @@ Tracked products
 
 <h3>🏭</h3>
 
-<h2>
-Suppliers
-</h2>
+<h2>Suppliers</h2>
 
 <p>
-Registered suppliers
+Manage supplier information and sourcing data.
 </p>
 
-<strong id="supplier-count">
-0
-</strong>
+</div>
+
+
+
+
+<div class="card">
+
+<h3>📊</h3>
+
+<h2>Inventory</h2>
+
+<p>
+Monitor stock levels and product availability.
+</p>
 
 </div>
+
+
+
+
+<div class="card">
+
+<h3>⚠️</h3>
+
+<h2>Stock Alerts</h2>
+
+<p>
+Receive warnings when inventory reaches minimum level.
+</p>
+
+</div>
+
 
 
 
@@ -102,19 +136,14 @@ Registered suppliers
 
 <h3>💰</h3>
 
-<h2>
-Price Intelligence
-</h2>
+<h2>Purchasing</h2>
 
 <p>
-Market comparison
+Track purchase orders and cost information.
 </p>
 
-<strong>
-Ready
-</strong>
-
 </div>
+
 
 
 
@@ -122,17 +151,11 @@ Ready
 
 <h3>🤖</h3>
 
-<h2>
-AI Assistant
-</h2>
+<h2>AI Assistant</h2>
 
 <p>
-Smart procurement
+Support for procurement analysis and decisions.
 </p>
-
-<strong>
-Online
-</strong>
 
 </div>
 
@@ -141,12 +164,120 @@ Online
 
 
 
+
+
+
+<section class="hero">
+
+<h2>
+Inventory Management
+</h2>
+
+<p>
+Stock monitoring and low inventory warning system.
+</p>
+
+</section>
+
+
+
+
+
+<section class="cards">
+
+
+
+<div class="card">
+
+<h3>🎞️</h3>
+
+<h2>
+Thermal Lamination Film
+</h2>
+
+<p>
+Current Stock: <b>4000 kg</b>
+</p>
+
+<p>
+Minimum Level: 1000 kg
+</p>
+
+<p>
+Status: ✅ Available
+</p>
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h3>🧪</h3>
+
+<h2>
+Water-Based Adhesive
+</h2>
+
+<p>
+Current Stock: <b>500 kg</b>
+</p>
+
+<p>
+Minimum Level: 200 kg
+</p>
+
+<p>
+Status: ⚠️ Monitor
+</p>
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h3>📦</h3>
+
+<h2>
+Packaging Materials
+</h2>
+
+<p>
+Current Stock: <b>2500 pcs</b>
+</p>
+
+<p>
+Minimum Level: 500 pcs
+</p>
+
+<p>
+Status: ✅ Available
+</p>
+
+</div>
+
+
+
+</section>
+
+
+
+
+
 <footer>
 
-SecPack Enterprise © 2026
+SecPack Private Dashboard © 2026
 
 </footer>
 
+
+
+<script src="../language.js"></script>
 
 <script src="../script.js"></script>
 
