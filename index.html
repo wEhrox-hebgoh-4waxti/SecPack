@@ -1,83 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SecPack Enterprise</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+
+<div class="logo-area">
+
+
+<div class="logo-box">
+
+<img src="logo.jpg" alt="SecPack Logo">
+
+</div>
+
+
+<div>
+
+<h1>SecPack</h1>
+
+<p>Professional Packaging Materials Supplier</p>
+
+</div>
+
+
+</div>
+
+
+
+<div class="languages">
+
+<button onclick="changeLanguage('en')">EN</button>
+
+<button onclick="changeLanguage('fa')">FA</button>
+
+<button onclick="changeLanguage('ar')">AR</button>
+
+</div>
+
+
+</header>
+
+
+
+
+
+<section class="hero">
+
+
+<h2 data-i18n="title">
+Smart Global Procurement Assistant
+</h2>
+
+
+<p data-i18n="subtitle">
+Find suppliers, compare prices and make better purchasing decisions.
+</p>
+
+
+
+<div class="actions">
+
+
+<a href="pages/dashboard.html">
+<button>📊 Dashboard</button>
+</a>
+
+
+<a href="pages/products.html">
+<button>📦 Products</button>
+</a>
+
+
+<a href="pages/suppliers.html">
+<button>🏭 Suppliers</button>
+</a>
+
+
+<a href="pages/ai.html">
+<button>🤖 AI Assistant</button>
+</a>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
 <section class="why">
 
-<h2>Why SecPack</h2>
+
+<h2 data-i18n="why_title">
+Why SecPack
+</h2>
+
 
 <div class="why-grid">
 
+
 <div class="why-card">
+
 <h3>⭐</h3>
-<h4>Premium Quality</h4>
-<p>Carefully selected packaging materials with consistent performance.</p>
+
+<h4 data-i18n="quality">
+Premium Quality
+</h4>
+
+<p data-i18n="quality_text">
+Carefully selected packaging materials with consistent performance.
+</p>
+
 </div>
 
+
+
 <div class="why-card">
+
 <h3>🚚</h3>
-<h4>Reliable Supply</h4>
-<p>Stable sourcing and dependable delivery for long-term cooperation.</p>
+
+<h4 data-i18n="supply">
+Reliable Supply
+</h4>
+
+<p data-i18n="supply_text">
+Stable sourcing and dependable delivery for long-term cooperation.
+</p>
+
 </div>
 
+
+
 <div class="why-card">
+
 <h3>🛠️</h3>
-<h4>Technical Support</h4>
-<p>Professional assistance for selecting the right material.</p>
+
+<h4 data-i18n="support">
+Technical Support
+</h4>
+
+<p data-i18n="support_text">
+Professional assistance for selecting the right material.
+</p>
+
 </div>
+
+
 
 <div class="why-card">
+
 <h3>🌍</h3>
-<h4>Global Standards</h4>
-<p>Products suitable for professional printing and packaging industries.</p>
-</div>
+
+<h4 data-i18n="standards">
+Global Standards
+</h4>
+
+<p data-i18n="standards_text">
+Products suitable for professional printing and packaging industries.
+</p>
 
 </div>
+
+
+</div>
+
 
 </section>
+
+
+
+
 
 <section class="categories">
 
-<h2>Our Products</h2>
+
+<h2 data-i18n="products_title">
+Our Products
+</h2>
+
 
 <div class="cards">
 
+
 <a href="pages/products.html" class="card">
+
 <h3>🎞️</h3>
-<h2>Thermal Lamination Film</h2>
-<p>Premium lamination solutions.</p>
+
+<h2 data-i18n="film">
+Thermal Lamination Film
+</h2>
+
+<p data-i18n="film_text">
+Premium lamination solutions.
+</p>
+
 </a>
 
+
+
 <a href="pages/products.html" class="card">
+
 <h3>🧪</h3>
-<h2>Water-Based Adhesive</h2>
-<p>Reliable lamination adhesives.</p>
+
+<h2 data-i18n="adhesive">
+Water-Based Adhesive
+</h2>
+
+<p data-i18n="adhesive_text">
+Reliable lamination adhesives.
+</p>
+
 </a>
 
+
+
 <a href="pages/products.html" class="card">
+
 <h3>📦</h3>
-<h2>Packaging Materials</h2>
-<p>Professional packaging products.</p>
+
+<h2 data-i18n="materials">
+Packaging Materials
+</h2>
+
+<p data-i18n="materials_text">
+Professional packaging products.
+</p>
+
 </a>
 
+
+
 <a href="pages/products.html" class="card">
+
 <h3>🏭</h3>
-<h2>Industrial Solutions</h2>
-<p>Packaging solutions for modern industries.</p>
+
+<h2 data-i18n="solutions">
+Industrial Solutions
+</h2>
+
+<p data-i18n="solutions_text">
+Packaging solutions for modern industries.
+</p>
+
 </a>
+
 
 </div>
 
+
 </section>
+
+
+
+
 
 <section class="quote">
 
-<h2>Need a Quote?</h2>
 
-<p>
+<h2 data-i18n="quote_title">
+Need a Quote?
+</h2>
+
+
+<p data-i18n="quote_text">
 Tell us your requirements and our team will contact you with the best solution.
 </p>
 
+
+
 <a href="pages/contact.html">
 
-<button>Request Quote</button>
+<button data-i18n="quote_button">
+Request Quote
+</button>
 
 </a>
 
+
 </section>
+
+
+
+
+
+<footer>
+
+SecPack Enterprise © 2026
+
+</footer>
+
+
+
+<script src="language.js"></script>
+
+<script src="script.js"></script>
+
+
+</body>
+
+</html>
