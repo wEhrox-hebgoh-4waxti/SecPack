@@ -70,44 +70,85 @@ Manage products, suppliers, stock and purchasing decisions.
 
 
 <div class="card">
+
 <h3>📦</h3>
+
 <h2>Products</h2>
-<p>Manage packaging materials and product information.</p>
+
+<p>
+Manage packaging materials and product information.
+</p>
+
 </div>
 
 
+
 <div class="card">
+
 <h3>🏭</h3>
+
 <h2>Suppliers</h2>
-<p>Manage supplier information and sourcing data.</p>
+
+<p>
+Manage supplier information and sourcing data.
+</p>
+
 </div>
 
 
+
 <div class="card">
+
 <h3>📊</h3>
+
 <h2>Inventory</h2>
-<p>Monitor stock levels and product availability.</p>
+
+<p>
+Monitor stock levels and product availability.
+</p>
+
 </div>
 
 
+
 <div class="card">
+
 <h3>⚠️</h3>
+
 <h2>Stock Alerts</h2>
-<p>Receive warnings when inventory reaches minimum level.</p>
+
+<p>
+Receive warnings when inventory reaches minimum level.
+</p>
+
 </div>
 
 
+
 <div class="card">
+
 <h3>💰</h3>
+
 <h2>Purchasing</h2>
-<p>Track purchase orders and cost information.</p>
+
+<p>
+Track purchase orders and cost information.
+</p>
+
 </div>
 
 
+
 <div class="card">
+
 <h3>🤖</h3>
+
 <h2>AI Assistant</h2>
-<p>Support for procurement analysis and decisions.</p>
+
+<p>
+Support for procurement analysis and decisions.
+</p>
+
 </div>
 
 
@@ -148,12 +189,7 @@ Stock In
 Register incoming products and warehouse receiving.
 </p>
 
-<button>
-Add Stock
-</button>
-
 </div>
-
 
 
 
@@ -170,12 +206,7 @@ Stock Out
 Register sales and material consumption.
 </p>
 
-<button>
-Remove Stock
-</button>
-
 </div>
-
 
 
 
@@ -192,12 +223,7 @@ Low Stock Alert
 Automatic warning when inventory reaches minimum level.
 </p>
 
-<button>
-Check Alerts
-</button>
-
 </div>
-
 
 
 
@@ -214,14 +240,28 @@ Inventory Report
 Review stock history and consumption reports.
 </p>
 
-<button>
-View Report
-</button>
-
 </div>
 
 
 </section>
+
+
+
+
+
+
+<section class="hero">
+
+<h2>
+Inventory Actions
+</h2>
+
+<p>
+Stock entry and exit management.
+</p>
+
+</section>
+
 
 
 
@@ -232,27 +272,28 @@ View Report
 
 <div class="card">
 
+<h3>➕</h3>
+
 <h2>
-Thermal Lamination Film
+Add Stock
 </h2>
 
-<p>
-Current Stock: <b>4000 kg</b>
-</p>
 
-<p>
-Minimum Level: 1000 kg
-</p>
+<input type="text" placeholder="Product Name">
 
-<p>
-Last Update: 2026
-</p>
+<br><br>
 
-<p>
-Status: ✅ Available
-</p>
+<input type="number" placeholder="Quantity">
+
+<br><br>
+
+<button>
+Save Stock
+</button>
+
 
 </div>
+
 
 
 
@@ -260,28 +301,155 @@ Status: ✅ Available
 
 <div class="card">
 
+<h3>➖</h3>
+
 <h2>
-Water-Based Adhesive
+Remove Stock
 </h2>
 
-<p>
-Current Stock: <b>500 kg</b>
-</p>
+
+<input type="text" placeholder="Product Name">
+
+<br><br>
+
+<input type="number" placeholder="Quantity">
+
+<br><br>
+
+<button>
+Save Removal
+</button>
+
+
+</div>
+
+
+
+
+
+
+<div class="card">
+
+<h3>🔔</h3>
+
+<h2>
+Stock Alert
+</h2>
+
 
 <p>
-Minimum Level: 200 kg
+Products below minimum stock will appear here.
 </p>
+
+
+<button>
+Check Alerts
+</button>
+
+
+</div>
+
+
+
+
+
+
+<div class="card">
+
+<h3>📈</h3>
+
+<h2>
+Inventory Report
+</h2>
+
+
+<p>
+Stock movement history and consumption report.
+</p>
+
+
+<button>
+View Report
+</button>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+<section class="cards">
+
+
+<div class="card">
+
+
+<h2>
+Thermal Lamination Film
+</h2>
+
+
+<p>
+Current Stock: <b>4000 kg</b>
+</p>
+
+
+<p>
+Minimum Level: 1000 kg
+</p>
+
 
 <p>
 Last Update: 2026
 </p>
 
+
+<p>
+Status: ✅ Available
+</p>
+
+
+</div>
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+Water-Based Adhesive
+</h2>
+
+
+<p>
+Current Stock: <b>500 kg</b>
+</p>
+
+
+<p>
+Minimum Level: 200 kg
+</p>
+
+
+<p>
+Last Update: 2026
+</p>
+
+
 <p>
 Status: ⚠️ Monitor
 </p>
 
-</div>
 
+</div>
 
 
 </section>
@@ -295,6 +463,7 @@ Status: ⚠️ Monitor
 SecPack Private Dashboard © 2026
 
 </footer>
+
 
 
 <script src="../language.js"></script>
