@@ -55,7 +55,6 @@ Manage products, suppliers, stock and purchasing decisions.
 
 <section class="cards">
 
-
 <div class="card">
 <h3>📦</h3>
 <h2>Products</h2>
@@ -96,7 +95,6 @@ Manage products, suppliers, stock and purchasing decisions.
 <h2>AI Assistant</h2>
 <p>Support for procurement analysis and decisions.</p>
 </div>
-
 
 </section>
 
@@ -143,8 +141,8 @@ Stock entry and exit management.
 
 
 <input 
-id="addQuantity" 
-type="number" 
+id="addQuantity"
+type="number"
 placeholder="Quantity">
 
 
@@ -157,7 +155,6 @@ document.getElementById('addQuantity').value
 )">
 Save Stock
 </button>
-
 
 </div>
 
@@ -186,8 +183,8 @@ Save Stock
 
 
 <input 
-id="removeQuantity" 
-type="number" 
+id="removeQuantity"
+type="number"
 placeholder="Quantity">
 
 
@@ -208,7 +205,6 @@ Save Removal
 
 
 
-
 <div class="card">
 
 <h3>🔔</h3>
@@ -224,9 +220,7 @@ Products below minimum stock will appear here.
 Check Alerts
 </button>
 
-
 </div>
-
 
 
 
@@ -247,9 +241,27 @@ Stock movement history and current inventory.
 View Report
 </button>
 
-
 </div>
 
+
+</section>
+
+
+
+
+
+
+
+
+<section class="hero">
+
+<h2>
+Current Inventory
+</h2>
+
+<p>
+Real-time stock information
+</p>
 
 </section>
 
@@ -264,12 +276,21 @@ View Report
 <div class="card">
 
 <h2>
-Thermal Lamination Film
+🎞️ Thermal Lamination Film
 </h2>
 
+
 <p>
-Current Stock: <b id="filmStock">4000 kg</b>
+Current Stock
 </p>
+
+
+<h1 class="stock-number">
+
+<b id="filmStock">4400 kg</b>
+
+</h1>
+
 
 <p>
 Minimum Level: 1000 kg
@@ -282,15 +303,26 @@ Minimum Level: 1000 kg
 
 
 
+
 <div class="card">
 
+
 <h2>
-Water-Based Adhesive
+🧪 Water-Based Adhesive
 </h2>
 
+
 <p>
-Current Stock: <b id="glueStock">500 kg</b>
+Current Stock
 </p>
+
+
+<h1 class="stock-number">
+
+<b id="glueStock">1100 kg</b>
+
+</h1>
+
 
 <p>
 Minimum Level: 200 kg
@@ -303,15 +335,26 @@ Minimum Level: 200 kg
 
 
 
+
 <div class="card">
 
+
 <h2>
-Packaging Materials
+📦 Packaging Materials
 </h2>
 
+
 <p>
-Current Stock: <b id="packStock">2500 pcs</b>
+Current Stock
 </p>
+
+
+<h1 class="stock-number">
+
+<b id="packStock">2500 pcs</b>
+
+</h1>
+
 
 <p>
 Minimum Level: 500 pcs
@@ -322,6 +365,7 @@ Minimum Level: 500 pcs
 
 
 </section>
+
 
 
 
