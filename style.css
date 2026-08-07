@@ -5,9 +5,8 @@ box-sizing:border-box;
 body{
 margin:0;
 font-family:Arial,Tahoma,sans-serif;
-background:#f7f9fc;
+background:#f6f8fc;
 color:#172033;
-line-height:1.6;
 }
 
 a{
@@ -16,16 +15,13 @@ color:inherit;
 }
 
 
-/* HEADER */
-
 .topbar{
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:18px 35px;
+padding:18px 25px;
 background:#0b1f3a;
 color:white;
-gap:20px;
 }
 
 
@@ -49,87 +45,65 @@ overflow:hidden;
 
 
 .logo-box img{
-width:60px;
-height:60px;
+width:58px;
+height:58px;
 object-fit:contain;
 }
 
 
 .logo-area h1{
 margin:0;
-font-size:30px;
+font-size:28px;
 }
 
 
 .logo-area p{
-margin:3px 0;
-font-size:13px;
+margin:5px 0 0;
+font-size:12px;
 opacity:.8;
-}
-
-
-nav{
-display:flex;
-gap:25px;
-font-weight:bold;
-}
-
-
-nav a:hover{
-opacity:.7;
 }
 
 
 .languages button{
 padding:8px 12px;
-border:none;
-border-radius:8px;
 margin:3px;
+border:none;
+border-radius:10px;
 cursor:pointer;
 font-weight:bold;
 }
 
 
-/* HERO */
-
 .hero{
-background:white;
 text-align:center;
-padding:80px 25px;
+background:white;
+padding:50px 20px;
 }
 
 
 .hero h2{
-font-size:38px;
-max-width:900px;
-margin:auto;
-color:#0b1f3a;
+font-size:34px;
 }
 
 
 .hero p{
-font-size:19px;
-max-width:750px;
-margin:20px auto;
+font-size:18px;
 color:#667085;
 }
 
 
-/* BUTTONS */
-
 .actions{
 display:flex;
 justify-content:center;
-gap:15px;
 flex-wrap:wrap;
-margin-top:30px;
+gap:10px;
 }
 
 
 .actions button{
-padding:15px 30px;
+padding:15px 25px;
 border:none;
-border-radius:12px;
+border-radius:15px;
 background:#1463ff;
 color:white;
 font-size:16px;
@@ -137,18 +111,11 @@ cursor:pointer;
 }
 
 
-.actions button:hover{
-opacity:.85;
-}
-
-
-/* PRODUCT CARDS */
-
 .cards{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:25px;
-padding:45px;
+grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+gap:20px;
+padding:30px;
 }
 
 
@@ -156,24 +123,19 @@ padding:45px;
 background:white;
 padding:30px;
 border-radius:20px;
+text-align:center;
 box-shadow:0 8px 25px rgba(0,0,0,.08);
 transition:.3s;
 }
 
 
 .card:hover{
-transform:translateY(-6px);
+transform:translateY(-5px);
 }
 
 
 .card h3{
-font-size:42px;
-margin:0;
-}
-
-
-.card h2{
-color:#0b1f3a;
+font-size:40px;
 }
 
 
@@ -182,42 +144,117 @@ color:#667085;
 }
 
 
-/* WHY SECTION */
-
-#solutions{
-background:#f7f9fc;
-}
-
-
-/* FOOTER */
-
 footer{
-background:#0b1f3a;
-color:white;
 text-align:center;
-padding:25px;
+padding:20px;
+color:#777;
 }
 
 
-/* MOBILE */
+/* Why SecPack */
 
-@media(max-width:800px){
+.why{
+padding:50px 30px;
+background:#ffffff;
+text-align:center;
+}
+
+
+.why h2,
+.categories h2,
+.quote h2{
+font-size:32px;
+margin-bottom:30px;
+}
+
+
+.why-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;
+}
+
+
+.why-card{
+background:#f8fafc;
+padding:30px;
+border-radius:20px;
+box-shadow:0 8px 20px rgba(0,0,0,.06);
+}
+
+
+.why-card h3{
+font-size:38px;
+margin:0;
+}
+
+
+.why-card h4{
+font-size:20px;
+margin:15px 0;
+}
+
+
+.why-card p{
+color:#667085;
+line-height:1.6;
+}
+
+
+/* Product Categories */
+
+.categories{
+padding:50px 30px;
+background:#f6f8fc;
+text-align:center;
+}
+
+
+/* Request Quote */
+
+.quote{
+padding:60px 20px;
+background:white;
+text-align:center;
+}
+
+
+.quote p{
+font-size:18px;
+color:#667085;
+margin-bottom:25px;
+}
+
+
+.quote button{
+padding:15px 30px;
+border:none;
+border-radius:15px;
+background:#1463ff;
+color:white;
+font-size:17px;
+cursor:pointer;
+}
+
+
+
+@media(max-width:600px){
 
 .topbar{
 flex-direction:column;
+gap:15px;
 }
 
-nav{
-flex-wrap:wrap;
-justify-content:center;
+
+.why h2,
+.categories h2,
+.quote h2{
+font-size:26px;
 }
+
 
 .hero h2{
-font-size:28px;
-}
-
-.cards{
-padding:20px;
+font-size:26px;
 }
 
 }
