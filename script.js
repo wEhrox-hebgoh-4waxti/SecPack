@@ -1,316 +1,501 @@
 document.addEventListener("DOMContentLoaded", function(){
 
-    console.log("SecPack script loaded");
 
+console.log("SecPack script loaded");
 
-    let stockData = JSON.parse(
-        localStorage.getItem("secpackStock")
-    ) || {
 
-        "Thermal Lamination Film": 4000,
-        "Water-Based Adhesive": 500,
-        "Packaging Materials": 2500
 
-    };
+/* =========================
+   INVENTORY SYSTEM
+========================= */
 
 
+let stockData = JSON.parse(
+localStorage.getItem("secpackStock")
+) || {
 
-    const minimumStock = {
+"Thermal Lamination Film":4400,
+"Water-Based Adhesive":1100,
+"Packaging Materials":2500
 
-        "Thermal Lamination Film":1000,
-        "Water-Based Adhesive":200,
-        "Packaging Materials":500
+};
 
-    };
 
 
+const minimumStock={
 
+"Thermal Lamination Film":1000,
+"Water-Based Adhesive":200,
+"Packaging Materials":500
 
+};
 
-    function saveData(){
 
-        localStorage.setItem(
-            "secpackStock",
-            JSON.stringify(stockData)
-        );
 
-    }
 
+function saveStock(){
 
+localStorage.setItem(
+"secpackStock",
+JSON.stringify(stockData)
+);
 
+}
 
 
-    window.addStock = function(product, quantity){
 
-        quantity = Number(quantity);
 
-        if(!product || !quantity){
+window.addStock=function(product,quantity){
 
-            alert("Please enter product and quantity");
-            return;
 
-        }
+quantity=Number(quantity);
 
 
-        if(stockData[product] === undefined){
+if(!product || !quantity){
 
-            stockData[product]=0;
+alert("Please enter product and quantity");
+return;
 
-        }
+}
 
 
-        stockData[product]+=quantity;
+stockData[product]+=quantity;
 
 
-        saveData();
+saveStock();
 
-        alert("Stock added successfully");
 
-        updateDisplay();
+alert("Stock added successfully");
 
-    };
 
+updateInventory();
 
 
+};
 
 
 
-    window.removeStock = function(product, quantity){
 
-        quantity = Number(quantity);
 
 
-        if(!product || !quantity){
+window.removeStock=function(product,quantity){
 
-            alert("Please enter product and quantity");
-            return;
 
-        }
+quantity=Number(quantity);
 
 
+if(!product || !quantity){
 
-        stockData[product]-=quantity;
+alert("Please enter product and quantity");
+return;
 
+}
 
 
-        if(stockData[product]<0){
 
-            stockData[product]=0;
+stockData[product]-=quantity;
 
-        }
 
+if(stockData[product]<0){
 
+stockData[product]=0;
 
-        saveData();
+}
 
-        alert("Stock removed successfully");
 
-        updateDisplay();
 
-    };
+saveStock();
 
 
+alert("Stock removed successfully");
 
 
+updateInventory();
 
 
+};
 
-    function getStatus(product){
 
-        let current = stockData[product];
 
-        let minimum = minimumStock[product];
 
 
 
-        if(current <= minimum){
+function getStatus(product){
 
-            return "🔴 Low Stock";
 
-        }
+let value=stockData[product];
 
 
-        if(current <= minimum * 2){
+if(value<=minimumStock[product]){
 
-            return "🟡 Monitor";
+return "🔴 Low Stock";
 
-        }
+}
 
 
-        return "🟢 Available";
+if(value<=minimumStock[product]*2){
 
+return "🟡 Monitor";
 
-    }
+}
 
 
+return "🟢 Available";
 
 
+}
 
 
 
 
-    function updateDisplay(){
 
 
-        let film =
-        document.getElementById("filmStock");
 
+function updateInventory(){
 
-        let glue =
-        document.getElementById("glueStock");
 
+let film=document.getElementById("filmStock");
+let glue=document.getElementById("glueStock");
+let pack=document.getElementById("packStock");
 
-        let pack =
-        document.getElementById("packStock");
 
 
+if(film){
 
-        if(film){
+film.innerHTML=stockData["Thermal Lamination Film"]+" kg";
 
-            film.innerHTML =
-            stockData["Thermal Lamination Film"]+" kg";
+}
 
-        }
 
 
+if(glue){
 
-        if(glue){
+glue.innerHTML=stockData["Water-Based Adhesive"]+" kg";
 
-            glue.innerHTML =
-            stockData["Water-Based Adhesive"]+" kg";
+}
 
-        }
 
 
+if(pack){
 
-        if(pack){
+pack.innerHTML=stockData["Packaging Materials"]+" pcs";
 
-            pack.innerHTML =
-            stockData["Packaging Materials"]+" pcs";
+}
 
-        }
 
 
 
+let filmStatus=document.getElementById("filmStatus");
+let glueStatus=document.getElementById("glueStatus");
+let packStatus=document.getElementById("packStatus");
 
-        let filmStatus =
-        document.getElementById("filmStatus");
 
 
-        let glueStatus =
-        document.getElementById("glueStatus");
+if(filmStatus){
 
+filmStatus.innerHTML=getStatus("Thermal Lamination Film");
 
-        let packStatus =
-        document.getElementById("packStatus");
+}
 
 
 
-        if(filmStatus){
+if(glueStatus){
 
-            filmStatus.innerHTML =
-            getStatus("Thermal Lamination Film");
+glueStatus.innerHTML=getStatus("Water-Based Adhesive");
 
-        }
+}
 
 
 
-        if(glueStatus){
+if(packStatus){
 
-            glueStatus.innerHTML =
-            getStatus("Water-Based Adhesive");
+packStatus.innerHTML=getStatus("Packaging Materials");
 
-        }
+}
 
 
 
-        if(packStatus){
+}
 
-            packStatus.innerHTML =
-            getStatus("Packaging Materials");
 
-        }
 
 
-    }
 
 
 
 
 
+/* =========================
+   SUPPLIER SYSTEM
+========================= */
 
 
 
-    window.checkAlerts=function(){
+let suppliers=JSON.parse(
 
-        let alertText="";
+localStorage.getItem("secpackSuppliers")
 
+)||[
 
-        Object.keys(stockData).forEach(function(item){
+{
+name:"HiTech Resins",
+country:"Pakistan",
+product:"Water-Based Adhesive",
+price:"-",
+status:"Active"
+},
 
 
-            if(getStatus(item)!=="🟢 Available"){
+{
+name:"Nantong Comens",
+country:"China",
+product:"Lamination Adhesive",
+price:"-",
+status:"Testing"
+}
 
-                alertText += item+" : "+getStatus(item)+"\n";
+];
 
-            }
 
 
-        });
 
 
+function saveSuppliers(){
 
-        if(alertText){
+localStorage.setItem(
 
-            alert(alertText);
+"secpackSuppliers",
 
-        }else{
+JSON.stringify(suppliers)
 
-            alert("All stock levels are OK");
+);
 
-        }
+}
 
 
-    };
 
 
 
 
 
 
+window.addSupplier=function(){
 
 
-    window.viewReport=function(){
 
-        let report="SecPack Inventory Report\n\n";
+let name=document.getElementById("supplierName").value;
 
+let country=document.getElementById("supplierCountry").value;
 
-        Object.keys(stockData).forEach(function(item){
+let product=document.getElementById("supplierProduct").value;
 
+let price=document.getElementById("supplierPrice").value;
 
-            report +=
-            item+
-            " : "+
-            stockData[item]+
-            " | "+
-            getStatus(item)+
-            "\n";
 
 
-        });
+if(!name){
 
+alert("Enter supplier name");
 
+return;
 
-        alert(report);
+}
 
 
-    };
 
+suppliers.push({
 
+name:name,
 
+country:country,
 
+product:product,
 
-    updateDisplay();
+price:price,
+
+status:"New"
+
+});
+
+
+
+
+saveSuppliers();
+
+
+
+alert("Supplier saved successfully");
+
+
+
+showSuppliers();
+
+
+
+};
+
+
+
+
+
+
+
+
+
+function showSuppliers(){
+
+
+let list=document.getElementById("supplierList");
+
+
+
+if(!list){
+
+return;
+
+}
+
+
+
+list.innerHTML="";
+
+
+
+suppliers.forEach(function(item){
+
+
+
+list.innerHTML += `
+
+
+<div class="card">
+
+
+<h2>
+${item.name}
+</h2>
+
+
+<p>
+Country: ${item.country}
+</p>
+
+
+<p>
+Product: ${item.product}
+</p>
+
+
+<p>
+Price: ${item.price}
+</p>
+
+
+<p>
+Status: ${item.status}
+</p>
+
+
+</div>
+
+
+`;
+
+
+
+});
+
+
+
+}
+
+
+
+
+
+
+
+
+
+window.checkAlerts=function(){
+
+
+let message="";
+
+
+Object.keys(stockData).forEach(function(item){
+
+
+if(getStatus(item)!=="🟢 Available"){
+
+
+message+=item+" : "+getStatus(item)+"\n";
+
+
+}
+
+
+});
+
+
+
+if(message){
+
+alert(message);
+
+}else{
+
+alert("All stock levels are OK");
+
+}
+
+
+};
+
+
+
+
+
+
+
+window.viewReport=function(){
+
+
+let report="SecPack Inventory Report\n\n";
+
+
+
+Object.keys(stockData).forEach(function(item){
+
+
+report+=
+item+
+" : "+
+stockData[item]+
+" "+
+getStatus(item)+
+"\n";
+
+
+});
+
+
+
+alert(report);
+
+
+};
+
+
+
+
+
+
+
+updateInventory();
+
+showSuppliers();
+
 
 
 });
