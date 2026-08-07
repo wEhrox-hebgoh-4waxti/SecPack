@@ -1,6 +1,7 @@
-document.addEventListener("DOMContentLoaded", function(){
+document.addEventListener("DOMContentLoaded", function () {
 
 console.log("SecPack script loaded");
+
 
 
 /* =========================
@@ -19,13 +20,15 @@ localStorage.getItem("secpackStock")
 };
 
 
-const minimumStock={
+
+const minimumStock = {
 
 "Thermal Lamination Film":1000,
 "Water-Based Adhesive":200,
 "Packaging Materials":500
 
 };
+
 
 
 
@@ -41,83 +44,19 @@ JSON.stringify(stockData)
 
 
 
-
-window.addStock=function(product,quantity){
-
-quantity=Number(quantity);
-
-
-if(!product || !quantity){
-
-alert("Please enter product and quantity");
-return;
-
-}
-
-
-stockData[product]+=quantity;
-
-saveStock();
-
-alert("Stock added successfully");
-
-updateInventory();
-
-};
-
-
-
-
-
-window.removeStock=function(product,quantity){
-
-quantity=Number(quantity);
-
-
-if(!product || !quantity){
-
-alert("Please enter product and quantity");
-return;
-
-}
-
-
-stockData[product]-=quantity;
-
-
-if(stockData[product]<0){
-
-stockData[product]=0;
-
-}
-
-
-saveStock();
-
-alert("Stock removed successfully");
-
-updateInventory();
-
-};
-
-
-
-
-
-
 function getStatus(product){
 
-let value=stockData[product];
+let value = stockData[product];
 
 
-if(value<=minimumStock[product]){
+if(value <= minimumStock[product]){
 
 return "🔴 Low Stock";
 
 }
 
 
-if(value<=minimumStock[product]*2){
+if(value <= minimumStock[product] * 2){
 
 return "🟡 Monitor";
 
@@ -126,8 +65,81 @@ return "🟡 Monitor";
 
 return "🟢 Available";
 
+}
+
+
+
+
+
+
+window.addStock = function(product, quantity){
+
+
+quantity = Number(quantity);
+
+
+if(!product || !quantity){
+
+alert("Enter product and quantity");
+return;
 
 }
+
+
+stockData[product] += quantity;
+
+
+saveStock();
+
+
+alert("Stock added successfully");
+
+
+updateInventory();
+
+
+};
+
+
+
+
+
+
+
+window.removeStock = function(product, quantity){
+
+
+quantity = Number(quantity);
+
+
+if(!product || !quantity){
+
+alert("Enter product and quantity");
+return;
+
+}
+
+
+stockData[product] -= quantity;
+
+
+if(stockData[product] < 0){
+
+stockData[product] = 0;
+
+}
+
+
+saveStock();
+
+
+alert("Stock removed successfully");
+
+
+updateInventory();
+
+
+};
 
 
 
@@ -137,30 +149,27 @@ return "🟢 Available";
 function updateInventory(){
 
 
-let film=document.getElementById("filmStock");
-let glue=document.getElementById("glueStock");
-let pack=document.getElementById("packStock");
-
+let film = document.getElementById("filmStock");
+let glue = document.getElementById("glueStock");
+let pack = document.getElementById("packStock");
 
 
 if(film)
-film.innerHTML=stockData["Thermal Lamination Film"]+" kg";
+film.innerHTML = stockData["Thermal Lamination Film"]+" kg";
 
 
 if(glue)
-glue.innerHTML=stockData["Water-Based Adhesive"]+" kg";
+glue.innerHTML = stockData["Water-Based Adhesive"]+" kg";
 
 
 if(pack)
-pack.innerHTML=stockData["Packaging Materials"]+" pcs";
-
+pack.innerHTML = stockData["Packaging Materials"]+" pcs";
 
 
 
 let filmStatus=document.getElementById("filmStatus");
 let glueStatus=document.getElementById("glueStatus");
 let packStatus=document.getElementById("packStatus");
-
 
 
 if(filmStatus)
@@ -187,34 +196,12 @@ packStatus.innerHTML=getStatus("Packaging Materials");
 ========================= */
 
 
-let suppliers=JSON.parse(
+
+let suppliers = JSON.parse(
 
 localStorage.getItem("secpackSuppliers")
 
-) || [
-
-{
-name:"HiTech Resins",
-country:"Pakistan",
-product:"Water-Based Adhesive",
-price:"-",
-score:90,
-status:"Active"
-},
-
-
-{
-name:"Nantong Comens",
-country:"China",
-product:"Lamination Adhesive",
-price:"-",
-score:85,
-status:"Testing"
-}
-
-];
-
-
+) || [];
 
 
 
@@ -237,6 +224,36 @@ JSON.stringify(suppliers)
 
 
 
+function prepareSuppliers(){
+
+
+suppliers = suppliers.map(function(item){
+
+
+return {
+
+name:item.name || "",
+country:item.country || "",
+product:item.product || "",
+price:item.price || "-",
+score:item.score || 70,
+status:item.status || "New"
+
+};
+
+
+});
+
+
+saveSuppliers();
+
+
+}
+
+
+
+
+
 
 window.addSupplier=function(){
 
@@ -254,11 +271,9 @@ let price=document.getElementById("supplierPrice").value;
 if(!name){
 
 alert("Enter supplier name");
-
 return;
 
 }
-
 
 
 
@@ -270,7 +285,7 @@ country:country,
 
 product:product,
 
-price:price,
+price:price || "-",
 
 score:70,
 
@@ -281,6 +296,7 @@ status:"New"
 
 
 saveSuppliers();
+
 
 
 alert("Supplier saved successfully");
@@ -297,19 +313,19 @@ showSuppliers();
 
 
 
-
-
 window.deleteSupplier=function(index){
 
 
-let confirmDelete =
-confirm(
-"Are you sure you want to delete this supplier?"
+
+let answer = confirm(
+
+"Delete this supplier?"
+
 );
 
 
 
-if(confirmDelete){
+if(answer){
 
 
 suppliers.splice(index,1);
@@ -324,9 +340,7 @@ showSuppliers();
 }
 
 
-
 };
-
 
 
 
@@ -338,7 +352,9 @@ showSuppliers();
 function showSuppliers(){
 
 
+
 let list=document.getElementById("supplierList");
+
 
 
 if(!list)
@@ -415,11 +431,10 @@ Status: ${item.status}
 
 
 
-
 window.checkAlerts=function(){
 
 
-let message="";
+let result="";
 
 
 Object.keys(stockData).forEach(function(item){
@@ -427,9 +442,7 @@ Object.keys(stockData).forEach(function(item){
 
 if(getStatus(item)!=="🟢 Available"){
 
-
-message += item+" : "+getStatus(item)+"\n";
-
+result += item+" : "+getStatus(item)+"\n";
 
 }
 
@@ -437,11 +450,11 @@ message += item+" : "+getStatus(item)+"\n";
 });
 
 
-alert(message || "All stock levels are OK");
+
+alert(result || "All stock levels are OK");
 
 
 };
-
 
 
 
@@ -460,7 +473,7 @@ Object.keys(stockData).forEach(function(item){
 report += item+
 " : "+
 stockData[item]+
-" "+
+" | "+
 getStatus(item)+
 "\n";
 
@@ -477,6 +490,9 @@ alert(report);
 
 
 
+
+
+prepareSuppliers();
 
 updateInventory();
 
