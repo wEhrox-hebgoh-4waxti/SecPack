@@ -1,319 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>SecPack Enterprise</title>
-
 <link rel="stylesheet" href="style.css">
-
 </head>
-
-
 <body>
-
-
 <header class="topbar">
-
-
 <div class="logo-area">
-
-
 <div class="logo-box">
-
 <img src="logo.jpg" alt="SecPack Logo">
-
 </div>
-
-
 <div>
-
 <h1>SecPack</h1>
-
 <p>Professional Packaging Materials Supplier</p>
-
 </div>
-
-
 </div>
-
-
-
 <div class="languages">
-
 <button onclick="changeLanguage('en')">EN</button>
-
 <button onclick="changeLanguage('fa')">FA</button>
-
 <button onclick="changeLanguage('ar')">AR</button>
-
 </div>
-
-
 </header>
-
-
-
-
-
-<section class="hero">
-
-
-<h2 data-i18n="title">
-Smart Global Procurement Assistant
-</h2>
-
-
-<p data-i18n="subtitle">
-Find suppliers, compare prices and make better purchasing decisions.
-</p>
-
-
-
-<div class="actions">
-
-
-<a href="pages/dashboard.html">
-<button>📊 Dashboard</button>
-</a>
-
-
-<a href="pages/products.html">
-<button>📦 Products</button>
-</a>
-
-
-<a href="pages/suppliers.html">
-<button>🏭 Suppliers</button>
-</a>
-
-
-<a href="pages/ai.html">
-<button>🤖 AI Assistant</button>
-</a>
-
-
+<!-- =========================
+     SEC PACK HERO
+========================= -->
+<section class="hero secpack-hero">
+<div class="hero-content">
+<div class="hero-badge">
+<span>🌍</span>
+Global Procurement Intelligence
 </div>
-
-
+<h2 data-i18n="title">
+Smart Global Procurement
+<br>
+<span>Intelligence Platform</span>
+</h2>
+<p class="hero-description" data-i18n="subtitle">
+Manage suppliers, compare prices, monitor inventory
+and make smarter purchasing decisions in one professional workspace.
+</p>
+<div class="actions hero-actions">
+<a href="pages/dashboard.html">
+<button>
+📊 Open Dashboard
+</button>
+</a>
+<a href="pages/suppliers.html">
+<button class="secondary-action">
+🏭 Explore Suppliers
+</button>
+</a>
+</div>
+<div class="hero-stats">
+<div class="hero-stat">
+<strong>25+</strong>
+<span>Global Suppliers</span>
+</div>
+<div class="hero-stat">
+<strong>100+</strong>
+<span>Products</span>
+</div>
+<div class="hero-stat">
+<strong>3</strong>
+<span>Core Categories</span>
+</div>
+<div class="hero-stat">
+<strong>24/7</strong>
+<span>Procurement Control</span>
+</div>
+</div>
+</div>
+<!-- =========================
+     PROCUREMENT PREVIEW
+========================= -->
+<div class="hero-preview">
+<div class="preview-header">
+<div>
+<span class="preview-label">
+PROCUREMENT INTELLIGENCE
+</span>
+<h3>SecPack Control Center</h3>
+</div>
+<div class="preview-status">
+<span></span>
+Live
+</div>
+</div>
+<div class="preview-score">
+<div>
+<small>Supplier Performance</small>
+<strong>85<span>/100</span></strong>
+</div>
+<div class="score-ring">
+85%
+</div>
+</div>
+<div class="preview-suppliers">
+<div class="preview-row">
+<div class="preview-icon">
+🏭
+</div>
+<div class="preview-info">
+<strong>Comens</strong>
+<span>China · Lamination Adhesive</span>
+</div>
+<div class="preview-rating">
+85
+</div>
+</div>
+<div class="preview-row">
+<div class="preview-icon">
+🏭
+</div>
+<div class="preview-info">
+<strong>HiTech Resins</strong>
+<span>Pakistan · Water-Based Adhesive</span>
+</div>
+<div class="preview-rating">
+70
+</div>
+</div>
+<div class="preview-row">
+<div class="preview-icon">
+🎞️
+</div>
+<div class="preview-info">
+<strong>Giant Ming</strong>
+<span>China · BOPP Film</span>
+</div>
+<div class="preview-rating">
+76
+</div>
+</div>
+</div>
+<div class="preview-inventory">
+<div class="inventory-mini">
+<span>Thermal Film</span>
+<strong>4,400 kg</strong>
+<small>Available</small>
+</div>
+<div class="inventory-mini">
+<span>Water-Based Adhesive</span>
+<strong>1,100 kg</strong>
+<small>Monitor</small>
+</div>
+</div>
+</div>
 </section>
-
-
-
-
-
+<!-- =========================
+     WHY SECPACK
+========================= -->
 <section class="why">
-
-
 <h2 data-i18n="why_title">
 Why SecPack
 </h2>
-
-
 <div class="why-grid">
-
-
 <div class="why-card">
-
 <h3>⭐</h3>
-
 <h4 data-i18n="quality">
 Premium Quality
 </h4>
-
 <p data-i18n="quality_text">
 Carefully selected packaging materials with consistent performance.
 </p>
-
 </div>
-
-
-
 <div class="why-card">
-
 <h3>🚚</h3>
-
 <h4 data-i18n="supply">
 Reliable Supply
 </h4>
-
 <p data-i18n="supply_text">
 Stable sourcing and dependable delivery for long-term cooperation.
 </p>
-
 </div>
-
-
-
 <div class="why-card">
-
 <h3>🛠️</h3>
-
 <h4 data-i18n="support">
 Technical Support
 </h4>
-
 <p data-i18n="support_text">
 Professional assistance for selecting the right material.
 </p>
-
 </div>
-
-
-
 <div class="why-card">
-
 <h3>🌍</h3>
-
 <h4 data-i18n="standards">
 Global Standards
 </h4>
-
 <p data-i18n="standards_text">
 Products suitable for professional printing and packaging industries.
 </p>
-
 </div>
-
-
 </div>
-
-
 </section>
-
-
-
-
-
+<!-- =========================
+     PRODUCT CATEGORIES
+========================= -->
 <section class="categories">
-
-
 <h2 data-i18n="products_title">
 Our Products
 </h2>
-
-
 <div class="cards">
-
-
 <a href="pages/products.html" class="card">
-
 <h3>🎞️</h3>
-
 <h2 data-i18n="film">
 Thermal Lamination Film
 </h2>
-
 <p data-i18n="film_text">
 Premium lamination solutions.
 </p>
-
 </a>
-
-
-
 <a href="pages/products.html" class="card">
-
 <h3>🧪</h3>
-
 <h2 data-i18n="adhesive">
 Water-Based Adhesive
 </h2>
-
 <p data-i18n="adhesive_text">
 Reliable lamination adhesives.
 </p>
-
 </a>
-
-
-
 <a href="pages/products.html" class="card">
-
 <h3>📦</h3>
-
 <h2 data-i18n="materials">
 Packaging Materials
 </h2>
-
 <p data-i18n="materials_text">
 Professional packaging products.
 </p>
-
 </a>
-
-
-
 <a href="pages/products.html" class="card">
-
 <h3>🏭</h3>
-
 <h2 data-i18n="solutions">
 Industrial Solutions
 </h2>
-
 <p data-i18n="solutions_text">
 Packaging solutions for modern industries.
 </p>
-
 </a>
-
-
 </div>
-
-
 </section>
-
-
-
-
-
+<!-- =========================
+     REQUEST QUOTE
+========================= -->
 <section class="quote">
-
-
 <h2 data-i18n="quote_title">
 Need a Quote?
 </h2>
-
-
 <p data-i18n="quote_text">
 Tell us your requirements and our team will contact you with the best solution.
 </p>
-
-
-
 <a href="pages/contact.html">
-
 <button data-i18n="quote_button">
 Request Quote
 </button>
-
 </a>
-
-
 </section>
-
-
-
-
-
 <footer>
-
 SecPack Enterprise © 2026
-
 </footer>
-
-
-
 <script src="language.js"></script>
-
 <script src="script.js"></script>
-
-
 </body>
-
 </html>
