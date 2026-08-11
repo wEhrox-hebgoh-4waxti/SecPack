@@ -1,132 +1,310 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>SecPack Documents</title>
-
 <link rel="stylesheet" href="../style.css">
-
 </head>
 
-
 <body>
-
 
 <header class="topbar">
 
 <div class="logo-area">
-
 <div class="logo-box">
-
 <img src="../logo.jpg" alt="SecPack Logo">
-
 </div>
-
 
 <div>
-
 <h1>SecPack</h1>
-
-<p>Technical Document Intelligence</p>
-
+<p>Professional Packaging Materials Supplier</p>
+</div>
 </div>
 
+<div class="languages">
+<button onclick="changeLanguage('en')">EN</button>
+<button onclick="changeLanguage('fa')">FA</button>
+<button onclick="changeLanguage('ar')">AR</button>
 </div>
 
 </header>
 
 
+<main>
 
+<section class="hero secpack-hero">
 
-<section class="hero">
+<div class="hero-content">
 
-<h2>
-Document Analysis Center
+<div class="hero-badge">
+📋 SECPACK DOCUMENT CENTER
+</div>
+
+<h2 class="hero-title">
+Technical &amp; Procurement Documents
 </h2>
 
-<p>
-Analyze technical documents before purchasing.
+<p class="hero-description">
+Organize product information, technical documents,
+quality references and procurement records in one
+professional workspace.
 </p>
+
+<div class="actions hero-actions">
+
+<a href="products.html">
+<button>
+📦 Products
+</button>
+</a>
+
+<a href="contact.html">
+<button class="secondary-action">
+💬 Request Information
+</button>
+</a>
+
+</div>
+
+</div>
 
 </section>
 
 
+<section class="categories">
+
+<div class="section-heading">
+
+<span class="section-eyebrow">
+DOCUMENT CENTER
+</span>
+
+<h2>
+Professional Information Resources
+</h2>
+
+<p>
+Access the information required to evaluate products,
+technical suitability and procurement requirements.
+</p>
+
+</div>
 
 
-<section class="cards">
+<div class="cards">
 
-
-<div class="card">
+<article class="card">
 
 <h3>📄</h3>
 
 <h2>
-TDS Analysis
+Technical Data
 </h2>
 
 <p>
-Technical specifications evaluation.
+Product specifications, application information
+and technical characteristics.
 </p>
 
-</div>
+<a href="products.html">
+View Products
+</a>
+
+</article>
 
 
+<article class="card">
 
-<div class="card">
-
-<h3>🧾</h3>
+<h3>🔬</h3>
 
 <h2>
-COA Verification
+Quality Information
 </h2>
 
 <p>
-Quality certificate review.
+Quality references and performance information
+for professional material selection.
 </p>
 
-</div>
+<a href="supplier-profile.html">
+Review Suppliers
+</a>
+
+</article>
 
 
+<article class="card">
 
-<div class="card">
-
-<h3>🧪</h3>
+<h3>📦</h3>
 
 <h2>
-MSDS Review
+Product Information
 </h2>
 
 <p>
-Safety and compliance analysis.
+Organized information about packaging materials,
+applications and production requirements.
 </p>
 
-</div>
+<a href="products.html">
+Explore Products
+</a>
+
+</article>
 
 
+<article class="card">
 
-<div class="card">
-
-<h3>🤖</h3>
+<h3>📋</h3>
 
 <h2>
-AI Report
+Procurement Records
 </h2>
 
 <p>
-Automatic technical summary.
+Structured references for purchasing decisions,
+supplier evaluation and sourcing activities.
 </p>
 
-</div>
+<a href="dashboard.html">
+Open Dashboard
+</a>
 
+</article>
+
+</div>
 
 </section>
 
 
+<section class="knowledge-center">
+
+<div class="section-heading">
+
+<span class="section-eyebrow">
+TECHNICAL KNOWLEDGE
+</span>
+
+<h2>
+Information That Supports Better Decisions
+</h2>
+
+<p>
+The right technical information helps identify suitable
+materials before a purchasing decision is made.
+</p>
+
+</div>
+
+
+<div class="knowledge-grid">
+
+<article class="knowledge-card">
+
+<div class="knowledge-icon">
+01
+</div>
+
+<h3>
+Product Requirements
+</h3>
+
+<p>
+Review the application, substrate and production
+requirements before selecting a material.
+</p>
+
+</article>
+
+
+<article class="knowledge-card">
+
+<div class="knowledge-icon">
+02
+</div>
+
+<h3>
+Technical Evaluation
+</h3>
+
+<p>
+Compare relevant technical characteristics and
+application suitability.
+</p>
+
+</article>
+
+
+<article class="knowledge-card">
+
+<div class="knowledge-icon">
+03
+</div>
+
+<h3>
+Procurement Decision
+</h3>
+
+<p>
+Combine technical information with quality,
+supply and commercial considerations.
+</p>
+
+</article>
+
+</div>
+
+</section>
+
+
+<section class="professional-support">
+
+<div class="support-content">
+
+<span class="section-eyebrow">
+SECPACK DOCUMENT SUPPORT
+</span>
+
+<h2>
+Looking for a Specific Document?
+</h2>
+
+<p>
+Tell us which product or technical information
+you require and SecPack can help organize the
+relevant information for your application.
+</p>
+
+<a href="contact.html" class="support-action">
+Request Information
+</a>
+
+</div>
+
+</section>
+
+
+<section class="quote">
+
+<h2>
+Need Technical Information?
+</h2>
+
+<p>
+Send your product requirements and request
+the information needed for your evaluation.
+</p>
+
+<a href="contact.html">
+<button>
+Request Technical Information
+</button>
+</a>
+
+</section>
+
+</main>
 
 
 <footer>
@@ -136,6 +314,8 @@ SecPack Enterprise © 2026
 </footer>
 
 
-</body>
+<script src="../language.js"></script>
+<script src="../script.js"></script>
 
+</body>
 </html>
