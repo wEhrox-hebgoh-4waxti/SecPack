@@ -1,23 +1,34 @@
 [
-{
-"id":1,
-"name":"Water Based Lamination Adhesive",
-"category":"Adhesive",
-"application":"Film to Paper / Film to Film",
-"status":"Active"
-},
-{
-"id":2,
-"name":"BOPP Thermal Lamination Film",
-"category":"Film",
-"application":"Packaging Lamination",
-"status":"Active"
-},
-{
-"id":3,
-"name":"PU Lamination Adhesive",
-"category":"Adhesive",
-"application":"Flexible Packaging",
-"status":"Active"
-}
+  {
+    "id": 1,
+    "name": "Water-Based Lamination Adhesive",
+    "category": "Lamination Adhesive",
+    "application": "Paper to Film / Film to Film",
+    "description": "Water-based adhesive solutions for professional lamination and packaging applications.",
+    "status": "Active"
+  },
+  {
+    "id": 2,
+    "name": "Thermal Lamination Film",
+    "category": "Lamination Film",
+    "application": "Printing & Packaging Finishing",
+    "description": "Professional thermal lamination film for smooth finishing, reliable adhesion and high-quality printed materials.",
+    "status": "Active"
+  },
+  {
+    "id": 3,
+    "name": "Packaging Materials",
+    "category": "Packaging Materials",
+    "application": "Packaging Production",
+    "description": "Selected packaging materials designed to support professional printing, converting and packaging production.",
+    "status": "Active"
+  },
+  {
+    "id": 4,
+    "name": "Industrial Packaging Solutions",
+    "category": "Industrial Solutions",
+    "application": "Industrial Packaging",
+    "description": "Material solutions for specialized industrial packaging requirements and production applications.",
+    "status": "Active"
+  }
 ]
