@@ -1,59 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>SecPack Enterprise | Global Packaging Intelligence Platform</title>
-
-<meta
-name="description"
-content="SecPack Enterprise provides professional packaging materials, technical knowledge and practical solutions for printing, lamination and packaging professionals."
->
-
-<meta name="robots" content="index, follow">
-<meta name="author" content="SecPack Enterprise">
-
+<title>SecPack | Professional Packaging Materials</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-
-<!-- =========================
-     HEADER
-========================= -->
 
 <header class="topbar">
 
 <div class="logo-area">
 
 <div class="logo-box">
-
-<img
-src="logo.jpg"
-alt="SecPack Logo"
->
-
+<img src="logo.jpg" alt="SecPack Logo">
 </div>
 
 <div>
-
 <h1>SecPack</h1>
-
-<p>
-Professional Packaging Materials Supplier
-</p>
-
+<p>Professional Packaging Materials Supplier</p>
 </div>
 
 </div>
 
-
-<nav
-class="site-navigation"
-aria-label="Main Navigation"
->
+<nav class="site-navigation">
 
 <a href="index.html">
 Home
@@ -63,350 +34,64 @@ Home
 Products
 </a>
 
+<a href="pages/store.html">
+Store
+</a>
+
+<a href="pages/dashboard.html">
+Dashboard
+</a>
+
 <a href="pages/contact.html">
 Contact
 </a>
 
 </nav>
 
-
-<div
-class="languages"
-aria-label="Language Selection"
->
-
-<button
-type="button"
-onclick="changeLanguage('en')"
->
-EN
-</button>
-
-<button
-type="button"
-onclick="changeLanguage('fa')"
->
-FA
-</button>
-
-<button
-type="button"
-onclick="changeLanguage('ar')"
->
-AR
-</button>
-
+<div class="languages">
+<button onclick="changeLanguage('en')">EN</button>
+<button onclick="changeLanguage('fa')">FA</button>
+<button onclick="changeLanguage('ar')">AR</button>
 </div>
 
 </header>
 
 
-<!-- =========================
-     HERO
-========================= -->
+<main>
 
-<section
-class="hero secpack-hero"
-aria-labelledby="hero-title"
->
+<section class="hero secpack-hero">
 
 <div class="hero-content">
 
 <div class="hero-badge">
-
-<span aria-hidden="true">
-🌍
-</span>
-
-Global Packaging Intelligence
-
+SECPACK PROFESSIONAL PACKAGING
 </div>
 
-
-<h2
-class="hero-title"
-id="hero-title"
->
-
-Smart Packaging Materials.
-Technical Knowledge.
+<h2 class="hero-title">
+Smart Packaging Materials.<br>
+Technical Knowledge.<br>
 Professional Solutions.
-
 </h2>
 
-
 <p class="hero-description">
-
 SecPack provides professional packaging materials,
 technical information and practical solutions for
 printing, lamination and packaging applications.
-
 </p>
-
 
 <div class="actions hero-actions">
 
-<a
-href="pages/products.html"
-class="hero-link"
->
-
+<a href="pages/products.html">
+<button>
 📦 Explore Products
-
+</button>
 </a>
 
-
-<a
-href="pages/contact.html"
-class="hero-link secondary-action"
->
-
+<a href="pages/contact.html">
+<button class="secondary-action">
 💬 Request a Solution
-
+</button>
 </a>
-
-</div>
-
-
-<div class="hero-stats">
-
-<div class="hero-stat">
-
-<strong>
-100+
-</strong>
-
-<span>
-Products
-</span>
-
-</div>
-
-
-<div class="hero-stat">
-
-<strong>
-3
-</strong>
-
-<span>
-Core Categories
-</span>
-
-</div>
-
-
-<div class="hero-stat">
-
-<strong>
-24/7
-</strong>
-
-<span>
-Information Access
-</span>
-
-</div>
-
-
-<div class="hero-stat">
-
-<strong>
-Global
-</strong>
-
-<span>
-Industry Focus
-</span>
-
-</div>
-
-</div>
-
-</div>
-
-
-<!-- =========================
-     PLATFORM PREVIEW
-========================= -->
-
-<div
-class="hero-preview"
-aria-label="SecPack Platform Preview"
->
-
-<div class="preview-header">
-
-<div>
-
-<span class="preview-label">
-SECPACK PLATFORM
-</span>
-
-<h3>
-Packaging Intelligence Center
-</h3>
-
-</div>
-
-
-<div class="preview-status">
-
-<span aria-hidden="true"></span>
-
-Online
-
-</div>
-
-</div>
-
-
-<div class="preview-score">
-
-<div>
-
-<small>
-Professional Resources
-</small>
-
-<strong>
-100<span>+</span>
-</strong>
-
-</div>
-
-
-<div class="score-ring">
-INFO
-</div>
-
-</div>
-
-
-<div class="preview-suppliers">
-
-
-<div class="preview-row">
-
-<div
-class="preview-icon"
-aria-hidden="true"
->
-🎞️
-</div>
-
-<div class="preview-info">
-
-<strong>
-Lamination Films
-</strong>
-
-<span>
-Professional finishing materials
-</span>
-
-</div>
-
-<div class="preview-rating">
-01
-</div>
-
-</div>
-
-
-<div class="preview-row">
-
-<div
-class="preview-icon"
-aria-hidden="true"
->
-🧪
-</div>
-
-<div class="preview-info">
-
-<strong>
-Lamination Adhesives
-</strong>
-
-<span>
-Water-based adhesive solutions
-</span>
-
-</div>
-
-<div class="preview-rating">
-02
-</div>
-
-</div>
-
-
-<div class="preview-row">
-
-<div
-class="preview-icon"
-aria-hidden="true"
->
-📦
-</div>
-
-<div class="preview-info">
-
-<strong>
-Packaging Materials
-</strong>
-
-<span>
-Materials for professional production
-</span>
-
-</div>
-
-<div class="preview-rating">
-03
-</div>
-
-</div>
-
-
-</div>
-
-
-<div class="preview-inventory">
-
-<div class="inventory-mini">
-
-<span>
-Technical Knowledge
-</span>
-
-<strong>
-Growing
-</strong>
-
-<small>
-Updated continuously
-</small>
-
-</div>
-
-
-<div class="inventory-mini">
-
-<span>
-Industry Resources
-</span>
-
-<strong>
-Available
-</strong>
-
-<small>
-Professional access
-</small>
-
-</div>
 
 </div>
 
@@ -415,224 +100,137 @@ Professional access
 </section>
 
 
-<!-- =========================
-     WHY SECPACK
-========================= -->
+<section class="categories">
 
-<section
-class="why"
-aria-labelledby="why-title"
->
+<div class="section-heading">
 
-<h2
-id="why-title"
-data-i18n="why_title"
->
-Why SecPack
+<span class="section-eyebrow">
+SECPACK PLATFORM
+</span>
+
+<h2>
+Professional Packaging Materials
 </h2>
 
-
-<div class="why-grid">
-
-
-<div class="why-card">
-
-<h3 aria-hidden="true">
-⭐
-</h3>
-
-<h4 data-i18n="quality">
-Premium Quality
-</h4>
-
-<p data-i18n="quality_text">
-
-Carefully selected packaging materials
-with consistent performance.
-
+<p>
+Selected materials and practical information for
+printing, lamination and packaging professionals.
 </p>
 
 </div>
-
-
-<div class="why-card">
-
-<h3 aria-hidden="true">
-🚚
-</h3>
-
-<h4 data-i18n="supply">
-Reliable Supply
-</h4>
-
-<p data-i18n="supply_text">
-
-Professional supply solutions designed
-for long-term cooperation.
-
-</p>
-
-</div>
-
-
-<div class="why-card">
-
-<h3 aria-hidden="true">
-🛠️
-</h3>
-
-<h4 data-i18n="support">
-Technical Support
-</h4>
-
-<p data-i18n="support_text">
-
-Professional assistance for selecting
-the right material for your application.
-
-</p>
-
-</div>
-
-
-<div class="why-card">
-
-<h3 aria-hidden="true">
-🌍
-</h3>
-
-<h4 data-i18n="standards">
-Global Standards
-</h4>
-
-<p data-i18n="standards_text">
-
-Products and solutions suitable for
-professional printing and packaging industries.
-
-</p>
-
-</div>
-
-
-</div>
-
-</section><!-- =========================
-     PRODUCTS
-========================= -->
-
-<section
-class="categories"
-aria-labelledby="products-title"
->
-
-<h2
-id="products-title"
-data-i18n="products_title"
->
-Our Products
-</h2>
 
 
 <div class="cards">
 
+<article class="card">
 
-<a
-href="pages/products.html"
-class="card"
->
-
-<h3 aria-hidden="true">
+<div class="card-icon">
 🎞️
-</h3>
+</div>
 
-<h2 data-i18n="film">
-Thermal Lamination Film
+<h2>
+Lamination Films
 </h2>
 
-<p data-i18n="film_text">
-Premium lamination film solutions for
-professional printing and finishing.
+<p>
+Professional finishing materials for reliable
+lamination and high-quality printing applications.
 </p>
 
+<strong>
+Explore Products
+</strong>
+
+<a href="pages/products.html">
+View Products →
 </a>
 
+</article>
 
-<a
-href="pages/products.html"
-class="card"
->
 
-<h3 aria-hidden="true">
+<article class="card">
+
+<div class="card-icon">
 🧪
-</h3>
+</div>
 
-<h2 data-i18n="adhesive">
-Water-Based Adhesive
+<h2>
+Lamination Adhesives
 </h2>
 
-<p data-i18n="adhesive_text">
-Reliable adhesive solutions for
-professional lamination applications.
+<p>
+Water-based adhesive solutions for paper, film
+and packaging lamination applications.
 </p>
 
+<strong>
+Technical Solutions
+</strong>
+
+<a href="pages/products.html">
+View Products →
 </a>
 
+</article>
 
-<a
-href="pages/products.html"
-class="card"
->
 
-<h3 aria-hidden="true">
+<article class="card">
+
+<div class="card-icon">
 📦
-</h3>
+</div>
 
-<h2 data-i18n="materials">
+<h2>
 Packaging Materials
 </h2>
 
-<p data-i18n="materials_text">
-Professional materials designed for
-modern packaging production.
+<p>
+Professional materials supporting modern packaging
+production and converting requirements.
 </p>
 
+<strong>
+Production Materials
+</strong>
+
+<a href="pages/products.html">
+View Products →
 </a>
 
+</article>
 
-<a
-href="pages/products.html"
-class="card"
->
 
-<h3 aria-hidden="true">
+<article class="card">
+
+<div class="card-icon">
 🏭
-</h3>
+</div>
 
-<h2 data-i18n="solutions">
+<h2>
 Industrial Solutions
 </h2>
 
-<p data-i18n="solutions_text">
-Practical packaging solutions for
-different industries and applications.
+<p>
+Practical packaging material solutions for different
+industrial applications and production needs.
 </p>
 
+<strong>
+Professional Support
+</strong>
+
+<a href="pages/contact.html">
+Discuss Requirements →
 </a>
+
+</article>
 
 </div>
 
 </section>
 
 
-<!-- =========================
-     KNOWLEDGE CENTER
-========================= -->
-
-<section
-class="knowledge-center"
-aria-labelledby="knowledge-title"
->
+<section class="knowledge-center">
 
 <div class="section-heading">
 
@@ -640,7 +238,7 @@ aria-labelledby="knowledge-title"
 SECPACK KNOWLEDGE
 </span>
 
-<h2 id="knowledge-title">
+<h2>
 Packaging Knowledge Center
 </h2>
 
@@ -654,13 +252,9 @@ lamination and packaging professionals.
 
 <div class="knowledge-grid">
 
-
 <article class="knowledge-card">
 
-<div
-class="knowledge-icon"
-aria-hidden="true"
->
+<div class="knowledge-icon">
 📚
 </div>
 
@@ -673,8 +267,8 @@ Understand packaging materials, applications,
 production processes and technical fundamentals.
 </p>
 
-<a href="pages/products.html">
-Explore Products
+<a href="pages/documents.html">
+Explore Information →
 </a>
 
 </article>
@@ -682,10 +276,7 @@ Explore Products
 
 <article class="knowledge-card">
 
-<div
-class="knowledge-icon"
-aria-hidden="true"
->
+<div class="knowledge-icon">
 🔬
 </div>
 
@@ -694,12 +285,12 @@ Technical Insights
 </h3>
 
 <p>
-Learn how material selection, quality and
-production conditions affect final results.
+Learn how material selection, quality and production
+conditions affect final results.
 </p>
 
-<a href="pages/products.html">
-Technical Information
+<a href="pages/documents.html">
+Technical Information →
 </a>
 
 </article>
@@ -707,10 +298,7 @@ Technical Information
 
 <article class="knowledge-card">
 
-<div
-class="knowledge-icon"
-aria-hidden="true"
->
+<div class="knowledge-icon">
 🌍
 </div>
 
@@ -719,12 +307,12 @@ Industry Intelligence
 </h3>
 
 <p>
-Follow important developments and understand
-the changing needs of the global packaging industry.
+Follow important developments and understand the
+changing needs of the global packaging industry.
 </p>
 
-<a href="pages/products.html">
-Explore Solutions
+<a href="pages/market.html">
+Explore Market Intelligence →
 </a>
 
 </article>
@@ -734,22 +322,15 @@ Explore Solutions
 </section>
 
 
-<!-- =========================
-     PROFESSIONAL SOLUTIONS
-========================= -->
+<section class="professional-support">
 
-<section
-class="solutions-preview"
-aria-labelledby="solutions-title"
->
-
-<div class="section-heading">
+<div class="support-content">
 
 <span class="section-eyebrow">
 PROFESSIONAL SOLUTIONS
 </span>
 
-<h2 id="solutions-title">
+<h2>
 Built Around Your Production Needs
 </h2>
 
@@ -758,18 +339,11 @@ SecPack connects professional packaging materials
 with practical technical requirements.
 </p>
 
-</div>
+<div class="knowledge-grid">
 
+<article class="knowledge-card">
 
-<div class="solutions-grid">
-
-
-<article class="solution-card">
-
-<div
-class="solution-icon"
-aria-hidden="true"
->
+<div class="knowledge-icon">
 🎞️
 </div>
 
@@ -785,12 +359,9 @@ and finishing applications.
 </article>
 
 
-<article class="solution-card">
+<article class="knowledge-card">
 
-<div
-class="solution-icon"
-aria-hidden="true"
->
+<div class="knowledge-icon">
 🖨️
 </div>
 
@@ -799,19 +370,16 @@ Printing &amp; Finishing
 </h3>
 
 <p>
-Packaging materials selected for reliable
-printing and finishing performance.
+Packaging materials selected for reliable printing
+and finishing performance.
 </p>
 
 </article>
 
 
-<article class="solution-card">
+<article class="knowledge-card">
 
-<div
-class="solution-icon"
-aria-hidden="true"
->
+<div class="knowledge-icon">
 📦
 </div>
 
@@ -828,22 +396,14 @@ printers and packaging manufacturers.
 
 </div>
 
-</section><!-- =========================
-     PROFESSIONAL SUPPORT
-========================= -->
+</div>
 
-<section
-class="professional-support"
-aria-labelledby="support-title"
->
+</section>
 
-<div class="support-content">
 
-<span class="section-eyebrow">
-SECPACK SUPPORT
-</span>
+<section class="quote">
 
-<h2 id="support-title">
+<h2>
 Need Help Selecting the Right Material?
 </h2>
 
@@ -853,167 +413,16 @@ and material requirements. SecPack can help you
 identify the most suitable solution.
 </p>
 
-<a
-href="pages/contact.html"
-class="support-action"
->
+<a href="pages/contact.html">
+<button>
 Talk to SecPack
-</a>
-
-</div>
-
-</section>
-
-
-<!-- =========================
-     PROFESSIONAL TRUST
-========================= -->
-
-<section
-class="trust-section"
-aria-labelledby="trust-title"
->
-
-<div class="section-heading">
-
-<span class="section-eyebrow">
-WHY PROFESSIONALS CHOOSE SECPACK
-</span>
-
-<h2 id="trust-title">
-Professional Standards. Practical Solutions.
-</h2>
-
-<p>
-Our approach is built around product quality,
-technical understanding and long-term cooperation.
-</p>
-
-</div>
-
-
-<div class="trust-grid">
-
-
-<div class="trust-item">
-
-<strong>
-01
-</strong>
-
-<h3>
-Quality Focus
-</h3>
-
-<p>
-Materials are selected with attention to
-performance, consistency and application requirements.
-</p>
-
-</div>
-
-
-<div class="trust-item">
-
-<strong>
-02
-</strong>
-
-<h3>
-Technical Understanding
-</h3>
-
-<p>
-We focus on the real production requirements
-behind every packaging material.
-</p>
-
-</div>
-
-
-<div class="trust-item">
-
-<strong>
-03
-</strong>
-
-<h3>
-Reliable Cooperation
-</h3>
-
-<p>
-Our goal is to build dependable,
-long-term professional relationships.
-</p>
-
-</div>
-
-
-<div class="trust-item">
-
-<strong>
-04
-</strong>
-
-<h3>
-Continuous Improvement
-</h3>
-
-<p>
-We continuously expand our technical knowledge,
-products and industry resources.
-</p>
-
-</div>
-
-</div>
-
-</section>
-
-
-<!-- =========================
-     REQUEST QUOTE
-========================= -->
-
-<section
-class="quote"
-aria-labelledby="quote-title"
->
-
-<h2
-id="quote-title"
-data-i18n="quote_title"
->
-Need a Quote?
-</h2>
-
-<p data-i18n="quote_text">
-Tell us your requirements and our team will contact
-you with the best solution.
-</p>
-
-<a
-href="pages/contact.html"
-class="quote-action"
->
-
-<span data-i18n="quote_button">
-Request a Quote
-</span>
-
+</button>
 </a>
 
 </section>
 
 
-<!-- =========================
-     FINAL CALL TO ACTION
-========================= -->
-
-<section
-class="final-cta"
-aria-labelledby="final-cta-title"
->
+<section class="final-cta">
 
 <div class="final-cta-content">
 
@@ -1021,7 +430,7 @@ aria-labelledby="final-cta-title"
 SECPACK ENTERPRISE
 </span>
 
-<h2 id="final-cta-title">
+<h2>
 Let's Build Better Packaging Solutions
 </h2>
 
@@ -1033,27 +442,26 @@ our team is ready to understand your requirements.
 
 <div class="final-cta-actions">
 
-<a
-href="pages/contact.html"
-class="primary-action"
->
+<a href="pages/contact.html">
+<button>
 Request a Quote
+</button>
 </a>
 
-<a
-href="pages/products.html"
-class="secondary-action"
->
+<a href="pages/products.html">
+<button class="secondary-action">
 Explore Products
+</button>
 </a>
 
 </div>
 
 </div>
 
-</section><!-- =========================
-     FOOTER
-========================= -->
+</section>
+
+</main>
+
 
 <footer class="site-footer">
 
@@ -1074,7 +482,6 @@ for the printing and packaging industry.
 
 
 <div class="footer-links">
-
 
 <div>
 
@@ -1103,12 +510,16 @@ Packaging Materials
 Platform
 </h3>
 
-<a href="pages/products.html">
-Products
+<a href="index.html">
+Home
 </a>
 
-<a href="pages/contact.html">
-Contact
+<a href="pages/dashboard.html">
+Dashboard
+</a>
+
+<a href="pages/store.html">
+Store
 </a>
 
 </div>
@@ -1120,12 +531,16 @@ Contact
 Resources
 </h3>
 
-<a href="pages/products.html">
+<a href="pages/documents.html">
 Knowledge Center
 </a>
 
-<a href="pages/products.html">
-Technical Information
+<a href="pages/market.html">
+Market Intelligence
+</a>
+
+<a href="pages/supplier-profile.html">
+Supplier Intelligence
 </a>
 
 </div>
@@ -1150,12 +565,8 @@ Professional Packaging Materials &amp; Solutions
 </footer>
 
 
-<!-- =========================
-     JAVASCRIPT
-========================= -->
-
 <script src="language.js"></script>
-
 <script src="script.js"></script>
 
-</body></html>
+</body>
+</html>
