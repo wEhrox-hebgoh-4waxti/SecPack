@@ -1,628 +1,145 @@
-document.addEventListener("DOMContentLoaded", function(){
+document.addEventListener("DOMContentLoaded", function () {
 
-console.log("SecPack script loaded");
+    const body = document.body;
 
+    body.classList.add("secpack-ready");
 
+    const cards = document.querySelectorAll(
+        ".card, .knowledge-card, .why-card"
+    );
 
-/* =========================
-   INVENTORY SYSTEM
-========================= */
+    cards.forEach(function (card, index) {
+        card.style.setProperty(
+            "--card-delay",
+            `${index * 70}ms`
+        );
+    });
 
 
-let stockData = JSON.parse(
-localStorage.getItem("secpackStock")
-) || {
+    const buttons = document.querySelectorAll(
+        "button, .primary-action, .secondary-action, .support-action, .hero-link"
+    );
 
-"Thermal Lamination Film":4400,
-"Water-Based Adhesive":1100,
-"Packaging Materials":2500
+    buttons.forEach(function (button) {
 
-};
+        button.addEventListener("click", function () {
 
+            button.classList.add("secpack-clicked");
 
+            setTimeout(function () {
+                button.classList.remove("secpack-clicked");
+            }, 180);
 
-const minimumStock = {
+        });
 
-"Thermal Lamination Film":1000,
-"Water-Based Adhesive":200,
-"Packaging Materials":500
+    });
 
-};
 
+    const currentPath = window.location.pathname;
 
+    document.querySelectorAll(".site-navigation a").forEach(function (link) {
 
+        const linkPath = new URL(
+            link.href,
+            window.location.origin
+        ).pathname;
 
+        if (linkPath === currentPath) {
+            link.classList.add("active");
+        }
 
-function saveStock(){
+    });
 
-localStorage.setItem(
-"secpackStock",
-JSON.stringify(stockData)
-);
 
-}
+    const languageButtons = document.querySelectorAll(
+        ".languages button"
+    );
 
+    const savedLanguage =
+        localStorage.getItem("secpack_language") || "en";
 
+    languageButtons.forEach(function (button) {
 
+        const language = button.textContent
+            .trim()
+            .toLowerCase();
 
+        if (language === savedLanguage) {
+            button.classList.add("active-language");
+        }
 
+        button.addEventListener("click", function () {
 
-function getStatus(product){
+            languageButtons.forEach(function (item) {
+                item.classList.remove("active-language");
+            });
 
-let value = stockData[product];
+            button.classList.add("active-language");
 
+        });
 
-if(value <= minimumStock[product]){
+    });
 
-return "🔴 Low Stock";
 
-}
+    const internalLinks = document.querySelectorAll(
+        'a[href$=".html"]'
+    );
 
+    internalLinks.forEach(function (link) {
 
-if(value <= minimumStock[product] * 2){
+        link.addEventListener("click", function () {
 
-return "🟡 Monitor";
+            const destination = link.getAttribute("href");
 
-}
+            if (!destination || destination.startsWith("#")) {
+                return;
+            }
 
+            sessionStorage.setItem(
+                "secpack_last_page",
+                window.location.pathname
+            );
 
-return "🟢 Available";
+        });
 
-}
+    });
 
 
+    const sections = document.querySelectorAll(
+        "section"
+    );
 
+    if ("IntersectionObserver" in window) {
 
+        const observer = new IntersectionObserver(
+            function (entries) {
 
+                entries.forEach(function (entry) {
 
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add(
+                            "section-visible"
+                        );
+                    }
 
-function updateInventory(){
+                });
 
+            },
+            {
+                threshold: 0.08
+            }
+        );
 
-let film=document.getElementById("filmStock");
-let glue=document.getElementById("glueStock");
-let pack=document.getElementById("packStock");
+        sections.forEach(function (section) {
+            observer.observe(section);
+        });
 
+    } else {
 
+        sections.forEach(function (section) {
+            section.classList.add("section-visible");
+        });
 
-if(film){
-
-film.innerHTML =
-stockData["Thermal Lamination Film"]+" kg";
-
-}
-
-
-
-if(glue){
-
-glue.innerHTML =
-stockData["Water-Based Adhesive"]+" kg";
-
-}
-
-
-
-if(pack){
-
-pack.innerHTML =
-stockData["Packaging Materials"]+" pcs";
-
-}
-
-
-}
-
-
-
-
-
-
-
-window.addStock=function(product,quantity){
-
-
-quantity=Number(quantity);
-
-
-
-if(!product || !quantity){
-
-alert("Enter product and quantity");
-
-return;
-
-}
-
-
-
-stockData[product]+=quantity;
-
-
-saveStock();
-
-
-alert("Stock added successfully");
-
-
-updateInventory();
-
-
-};
-
-
-
-
-
-
-
-window.removeStock=function(product,quantity){
-
-
-quantity=Number(quantity);
-
-
-
-if(!product || !quantity){
-
-alert("Enter product and quantity");
-
-return;
-
-}
-
-
-
-stockData[product]-=quantity;
-
-
-
-if(stockData[product]<0){
-
-stockData[product]=0;
-
-}
-
-
-
-saveStock();
-
-
-alert("Stock removed successfully");
-
-
-updateInventory();
-
-
-};/* =========================
-   SUPPLIER SYSTEM
-========================= */
-
-
-let suppliers = JSON.parse(
-localStorage.getItem("secpackSuppliers")
-) || [];
-
-
-
-
-
-function saveSuppliers(){
-
-localStorage.setItem(
-"secpackSuppliers",
-JSON.stringify(suppliers)
-);
-
-}
-
-
-
-
-
-
-
-function fixSupplierData(){
-
-
-suppliers = suppliers.map(function(item){
-
-
-return {
-
-name:item.name || "",
-country:item.country || "",
-product:item.product || "",
-price:item.price || "-",
-score:item.score || 70,
-status:item.status || "New"
-
-};
-
-
-});
-
-
-saveSuppliers();
-
-
-}
-
-
-
-
-
-
-
-
-window.addSupplier=function(){
-
-
-
-let name=document.getElementById("supplierName").value;
-
-let country=document.getElementById("supplierCountry").value;
-
-let product=document.getElementById("supplierProduct").value;
-
-let price=document.getElementById("supplierPrice").value;
-
-
-
-if(!name){
-
-alert("Enter supplier name");
-
-return;
-
-}
-
-
-
-
-suppliers.push({
-
-name:name,
-
-country:country,
-
-product:product,
-
-price:price || "-",
-
-score:70,
-
-status:"New"
-
-});
-
-
-
-saveSuppliers();
-
-
-alert("Supplier saved successfully");
-
-
-showSuppliers();
-
-
-};
-
-
-
-
-
-
-
-
-
-window.editSupplier=function(index){
-
-
-
-let item=suppliers[index];
-
-
-
-let name=prompt(
-"Supplier Name:",
-item.name
-);
-
-
-
-if(name===null)
-return;
-
-
-
-
-let country=prompt(
-"Country:",
-item.country
-);
-
-
-
-if(country===null)
-return;
-
-
-
-
-
-let product=prompt(
-"Product:",
-item.product
-);
-
-
-
-if(product===null)
-return;
-
-
-
-
-
-let price=prompt(
-"Price:",
-item.price
-);
-
-
-
-if(price===null)
-return;
-
-
-
-
-
-let score=prompt(
-"Score:",
-item.score
-);
-
-
-
-if(score===null)
-return;
-
-
-
-
-
-let status=prompt(
-"Status:",
-item.status
-);
-
-
-
-if(status===null)
-return;
-
-
-
-
-
-suppliers[index]={
-
-name:name,
-
-country:country,
-
-product:product,
-
-price:price,
-
-score:Number(score),
-
-status:status
-
-};
-
-
-
-saveSuppliers();
-
-
-showSuppliers();
-
-
-
-};
-
-
-
-
-
-
-
-
-
-window.deleteSupplier=function(index){
-
-
-
-let result = confirm(
-"Delete this supplier?"
-);
-
-
-
-if(result){
-
-
-suppliers.splice(index,1);
-
-
-saveSuppliers();
-
-
-showSuppliers();
-
-
-}
-
-
-
-};
-
-
-
-
-
-
-
-
-
-function showSuppliers(){
-
-
-
-let list=document.getElementById("supplierList");
-
-
-
-if(!list)
-return;
-
-
-
-
-list.innerHTML="";
-
-
-
-
-suppliers.forEach(function(item,index){
-
-
-
-list.innerHTML += `
-
-
-<div class="card">
-
-
-<h2>${item.name}</h2>
-
-
-<p>
-Country: ${item.country}
-</p>
-
-
-<p>
-Product: ${item.product}
-</p>
-
-
-<p>
-Price: ${item.price}
-</p>
-
-
-<p>
-Score: ${item.score} / 100
-</p>
-
-
-<p>
-Status: ${item.status}
-</p>
-
-
-
-
-<button onclick="editSupplier(${index})">
-
-✏️ Edit
-
-</button>
-
-
-
-<button onclick="deleteSupplier(${index})">
-
-🗑 Delete
-
-</button>
-
-
-
-</div>
-
-
-`;
-
-
-
-});
-
-
-
-}
-
-
-
-
-
-
-
-
-window.checkAlerts=function(){
-
-
-alert("Stock alert system active");
-
-
-};
-
-
-
-
-
-
-window.viewReport=function(){
-
-
-let report="SecPack Inventory Report\n\n";
-
-
-Object.keys(stockData).forEach(function(item){
-
-
-report += item+
-" : "+
-stockData[item]+
-"\n";
-
-
-});
-
-
-
-alert(report);
-
-
-};
-
-
-
-
-
-
-
-fixSupplierData();
-
-updateInventory();
-
-showSuppliers();
-
-
+    }
 
 });
