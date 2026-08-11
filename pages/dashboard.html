@@ -1,20 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>SecPack Dashboard</title>
-
 <link rel="stylesheet" href="../style.css">
-
 </head>
 
-
 <body>
-
 
 <header class="topbar">
 
@@ -25,38 +18,68 @@
 </div>
 
 <div>
-<h1>SecPack Dashboard</h1>
-<p>Private Management System</p>
+<h1>SecPack</h1>
+<p>Professional Packaging Materials Supplier</p>
 </div>
 
+</div>
+
+<div class="languages">
+<button onclick="changeLanguage('en')">EN</button>
+<button onclick="changeLanguage('fa')">FA</button>
+<button onclick="changeLanguage('ar')">AR</button>
 </div>
 
 </header>
 
 
+<main>
 
+<section class="hero secpack-hero">
 
+<div class="hero-content">
 
-<section class="hero">
+<div class="hero-badge">
+📊 SECPACK CONTROL CENTER
+</div>
 
-<h2>
-Procurement & Inventory Dashboard
+<h2 class="hero-title">
+Procurement &amp; Supply Dashboard
 </h2>
 
-<p>
-Manage products, suppliers, stock and purchasing decisions.
+<p class="hero-description">
+A professional workspace for monitoring products,
+supplier activity, purchasing priorities and inventory status.
 </p>
+
+</div>
 
 </section>
 
 
+<section class="categories">
+
+<div class="section-heading">
+
+<span class="section-eyebrow">
+PROCUREMENT OVERVIEW
+</span>
+
+<h2>
+Supply Performance at a Glance
+</h2>
+
+<p>
+Monitor the key information needed for professional
+packaging material procurement.
+</p>
+
+</div>
 
 
+<div class="cards">
 
-<section class="cards">
-
-
-<div class="card">
+<article class="card">
 
 <h3>📦</h3>
 
@@ -64,20 +87,23 @@ Manage products, suppliers, stock and purchasing decisions.
 Products
 </h2>
 
+<strong>
+100+
+</strong>
+
 <p>
-Manage packaging materials and product information.
+Packaging materials and product references
+available across the SecPack platform.
 </p>
 
-</div>
+<a href="products.html">
+View Products
+</a>
+
+</article>
 
 
-
-
-
-<div class="card"
-onclick="window.location.href='suppliers.html'"
-style="cursor:pointer;">
-
+<article class="card">
 
 <h3>🏭</h3>
 
@@ -85,279 +111,233 @@ style="cursor:pointer;">
 Suppliers
 </h2>
 
+<strong>
+25+
+</strong>
+
 <p>
-Manage supplier information and sourcing data.
+Supplier information organized for sourcing
+and procurement evaluation.
 </p>
 
-</div>
+<a href="supplier-profile.html">
+Supplier Center
+</a>
+
+</article>
 
 
+<article class="card">
+
+<h3>📋</h3>
+
+<h2>
+Documents
+</h2>
+
+<strong>
+Active
+</strong>
+
+<p>
+Technical documents, product information and
+procurement references.
+</p>
+
+<a href="documents.html">
+Open Documents
+</a>
+
+</article>
 
 
-
-<div class="card">
+<article class="card">
 
 <h3>📊</h3>
 
 <h2>
-Inventory
+Market Intelligence
 </h2>
 
-<p>
-Monitor stock levels and product availability.
-</p>
-
-</div>
-
-
-
-
-
-<div class="card">
-
-<h3>⚠️</h3>
-
-<h2>
-Stock Alerts
-</h2>
+<strong>
+Live
+</strong>
 
 <p>
-Receive warnings when inventory reaches minimum level.
+Market information and purchasing intelligence
+for better sourcing decisions.
 </p>
 
-</div>
+<a href="market.html">
+Open Market
+</a>
 
-
-
-
-
-<div class="card">
-
-<h3>💰</h3>
-
-<h2>
-Purchasing
-</h2>
-
-<p>
-Track purchase orders and cost information.
-</p>
+</article>
 
 </div>
-
-
-
-
-
-<div class="card">
-
-<h3>🤖</h3>
-
-<h2>
-AI Assistant
-</h2>
-
-<p>
-Support for procurement analysis and decisions.
-</p>
-
-</div>
-
 
 </section>
 
 
+<section class="knowledge-center">
 
+<div class="section-heading">
 
-
-<section class="hero">
+<span class="section-eyebrow">
+INVENTORY CONTROL
+</span>
 
 <h2>
-Inventory Actions
+Current Material Status
 </h2>
 
 <p>
-Stock entry and exit management.
+Monitor inventory levels and identify materials
+that may require purchasing attention.
 </p>
+
+</div>
+
+
+<div class="knowledge-grid">
+
+<article class="knowledge-card">
+
+<div class="knowledge-icon">
+🎞️
+</div>
+
+<h3>
+Thermal Lamination Film
+</h3>
+
+<p>
+Current status: Available
+</p>
+
+<strong>
+4,400 kg
+</strong>
+
+</article>
+
+
+<article class="knowledge-card">
+
+<div class="knowledge-icon">
+🧪
+</div>
+
+<h3>
+Water-Based Adhesive
+</h3>
+
+<p>
+Current status: Monitor
+</p>
+
+<strong>
+1,100 kg
+</strong>
+
+</article>
+
+
+<article class="knowledge-card">
+
+<div class="knowledge-icon">
+📦
+</div>
+
+<h3>
+Packaging Materials
+</h3>
+
+<p>
+Current status: Available
+</p>
+
+<strong>
+In Stock
+</strong>
+
+</article>
+
+</div>
 
 </section>
 
 
+<section class="professional-support">
 
+<div class="support-content">
 
+<span class="section-eyebrow">
+PROCUREMENT PRIORITIES
+</span>
 
-<section class="cards">
+<h2>
+Make Better Purchasing Decisions
+</h2>
 
+<p>
+Review supplier information, technical documents,
+market conditions and inventory status before placing
+your next procurement request.
+</p>
 
-<div class="card">
+<div class="actions">
 
-<h3>➕</h3>
-
-<h2>Add Stock</h2>
-
-<select id="addProduct">
-
-<option>Thermal Lamination Film</option>
-<option>Water-Based Adhesive</option>
-<option>Packaging Materials</option>
-
-</select>
-
-
-<br><br>
-
-
-<input id="addQuantity"
-type="number"
-placeholder="Quantity">
-
-
-<br><br>
-
-
-<button onclick="addStock(
-document.getElementById('addProduct').value,
-document.getElementById('addQuantity').value
-)">
-Save Stock
+<a href="supplier-profile.html">
+<button>
+🏭 Review Suppliers
 </button>
+</a>
 
-
-</div>
-
-
-
-
-
-<div class="card">
-
-<h3>➖</h3>
-
-<h2>Remove Stock</h2>
-
-<select id="removeProduct">
-
-<option>Thermal Lamination Film</option>
-<option>Water-Based Adhesive</option>
-<option>Packaging Materials</option>
-
-</select>
-
-
-<br><br>
-
-
-<input id="removeQuantity"
-type="number"
-placeholder="Quantity">
-
-
-<br><br>
-
-
-<button onclick="removeStock(
-document.getElementById('removeProduct').value,
-document.getElementById('removeQuantity').value
-)">
-Save Removal
+<a href="market.html">
+<button class="secondary-action">
+🌍 Market Intelligence
 </button>
-
+</a>
 
 </div>
 
+</div>
 
 </section>
 
 
-
-
-
-<section class="cards">
-
-
-<div class="card">
+<section class="quote">
 
 <h2>
-🎞️ Thermal Lamination Film
+Need Procurement Support?
 </h2>
 
-<p>Current Stock</p>
-
-<h1 class="stock-number">
-<b id="filmStock">4400 kg</b>
-</h1>
-
-<p id="filmStatus">
-🟢 Available
+<p>
+Send your material requirements to SecPack and
+request a professional sourcing solution.
 </p>
 
-
-</div>
-
-
-
-
-
-<div class="card">
-
-<h2>
-🧪 Water-Based Adhesive
-</h2>
-
-<p>Current Stock</p>
-
-<h1 class="stock-number">
-<b id="glueStock">1100 kg</b>
-</h1>
-
-<p id="glueStatus">
-🟢 Available
-</p>
-
-
-</div>
-
-
-
-
-
-<div class="card">
-
-<h2>
-📦 Packaging Materials
-</h2>
-
-<p>Current Stock</p>
-
-<h1 class="stock-number">
-<b id="packStock">2500 pcs</b>
-</h1>
-
-<p id="packStatus">
-🟢 Available
-</p>
-
-
-</div>
-
+<a href="contact.html">
+<button>
+Request a Solution
+</button>
+</a>
 
 </section>
 
-
-
+</main>
 
 
 <footer>
 
-SecPack Private System © 2026
+SecPack Enterprise © 2026
 
 </footer>
 
 
-
+<script src="../language.js"></script>
 <script src="../script.js"></script>
 
-
 </body>
-
 </html>
