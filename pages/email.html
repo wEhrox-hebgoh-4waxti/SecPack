@@ -1,153 +1,323 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>SecPack AI Email Composer</title>
-
+<title>SecPack Email Center</title>
 <link rel="stylesheet" href="../style.css">
-
 </head>
 
-
 <body>
-
 
 <header class="topbar">
 
 <div class="logo-area">
 
 <div class="logo-box">
-
 <img src="../logo.jpg" alt="SecPack Logo">
-
 </div>
-
 
 <div>
-
 <h1>SecPack</h1>
-
-<p>AI Business Communication</p>
+<p>Professional Packaging Materials Supplier</p>
+</div>
 
 </div>
 
+<div class="languages">
+<button onclick="changeLanguage('en')">EN</button>
+<button onclick="changeLanguage('fa')">FA</button>
+<button onclick="changeLanguage('ar')">AR</button>
 </div>
 
 </header>
 
 
+<main>
 
-<section class="hero">
+<section class="hero secpack-hero">
+
+<div class="hero-content">
+
+<div class="hero-badge">
+✉️ SECPACK COMMUNICATION CENTER
+</div>
+
+<h2 class="hero-title">
+Supplier Communication Workspace
+</h2>
+
+<p class="hero-description">
+Organize supplier communication, technical requests,
+quotations and procurement follow-ups in one professional
+workspace.
+</p>
+
+<div class="actions hero-actions">
+
+<a href="supplier-profile.html">
+<button>
+🏭 Suppliers
+</button>
+</a>
+
+<a href="contact.html">
+<button class="secondary-action">
+💬 New Request
+</button>
+</a>
+
+</div>
+
+</div>
+
+</section>
+
+
+<section class="categories">
+
+<div class="section-heading">
+
+<span class="section-eyebrow">
+COMMUNICATION WORKFLOW
+</span>
 
 <h2>
-AI Email Composer
+Manage Procurement Communication
 </h2>
 
 <p>
-Create professional supplier negotiation emails
+Keep important supplier interactions organized around
+the purchasing process.
 </p>
 
+</div>
+
+
+<div class="cards">
+
+<article class="card">
+
+<h3>📨</h3>
+
+<h2>
+Supplier Inquiries
+</h2>
+
+<p>
+Prepare and organize requests for product information,
+availability and commercial terms.
+</p>
+
+<strong>
+PROCUREMENT
+</strong>
+
+</article>
+
+
+<article class="card">
+
+<h3>📋</h3>
+
+<h2>
+Quotation Follow-Up
+</h2>
+
+<p>
+Track quotation discussions and follow up on outstanding
+commercial information.
+</p>
+
+<strong>
+COMMERCIAL
+</strong>
+
+</article>
+
+
+<article class="card">
+
+<h3>🔬</h3>
+
+<h2>
+Technical Requests
+</h2>
+
+<p>
+Keep technical questions, specifications and product
+documents connected to supplier discussions.
+</p>
+
+<strong>
+TECHNICAL
+</strong>
+
+</article>
+
+
+<article class="card">
+
+<h3>🤝</h3>
+
+<h2>
+Cooperation
+</h2>
+
+<p>
+Maintain structured communication for long-term supplier
+relationships and sourcing opportunities.
+</p>
+
+<strong>
+RELATIONSHIP
+</strong>
+
+</article>
+
+</div>
+
 </section>
 
 
+<section class="knowledge-center">
+
+<div class="section-heading">
+
+<span class="section-eyebrow">
+COMMUNICATION PRIORITIES
+</span>
+
+<h2>
+A Clear Procurement Conversation
+</h2>
+
+<p>
+Effective supplier communication starts with clear
+requirements and organized follow-up.
+</p>
+
+</div>
 
 
-<section class="card">
+<div class="knowledge-grid">
+
+<article class="knowledge-card">
+
+<div class="knowledge-icon">
+01
+</div>
+
+<h3>
+Define Requirements
+</h3>
+
+<p>
+Specify the product, application, quantity and
+technical requirements before contacting a supplier.
+</p>
+
+</article>
 
 
-<h3>Supplier Company</h3>
+<article class="knowledge-card">
 
-<input id="supplier-name" placeholder="Example: HiTech Resins">
+<div class="knowledge-icon">
+02
+</div>
 
+<h3>
+Exchange Information
+</h3>
 
-<h3>Contact Person</h3>
+<p>
+Collect product data, technical documents, quotations
+and availability information.
+</p>
 
-<input id="contact-name" placeholder="Example: Imran">
-
-
-<h3>Product</h3>
-
-<input id="product-name" placeholder="Example: Water Based Lamination Adhesive">
-
-
-<h3>Market</h3>
-
-<select id="market">
-
-<option>Iran</option>
-
-<option>Iraq</option>
-
-<option>Pakistan</option>
-
-</select>
+</article>
 
 
+<article class="knowledge-card">
 
-<h3>Purchase Volume</h3>
+<div class="knowledge-icon">
+03
+</div>
 
-<select id="volume">
+<h3>
+Follow Up
+</h3>
 
-<option>Sample Evaluation</option>
+<p>
+Keep supplier responses organized and identify the
+next action required for each procurement opportunity.
+</p>
 
-<option>1 Ton Trial Order</option>
+</article>
 
-<option>20ft Container</option>
+</div>
 
-</select>
-
-
-
-
-<h3>Email Goal</h3>
-
-<select id="goal">
-
-<option value="price">
-Negotiate Best Price
-</option>
-
-<option value="sample">
-Request Sample
-</option>
-
-<option value="technical">
-Request Technical Documents
-</option>
-
-<option value="cooperation">
-Long Term Cooperation
-</option>
-
-</select>
+</section>
 
 
+<section class="professional-support">
 
+<div class="support-content">
 
-<button onclick="generateBusinessEmail()">
+<span class="section-eyebrow">
+SECPACK COMMUNICATION SUPPORT
+</span>
 
-Generate Business Email
+<h2>
+Need to Contact a Supplier?
+</h2>
 
+<p>
+Use the supplier information and technical requirements
+to prepare a clear professional procurement request.
+</p>
+
+<div class="actions">
+
+<a href="supplier-profile.html">
+<button>
+🏭 Review Suppliers
 </button>
+</a>
 
+<a href="documents.html">
+<button class="secondary-action">
+📋 Review Documents
+</button>
+</a>
 
+</div>
 
-<textarea 
-id="email-result"
-rows="18"
-placeholder="Generated email">
-
-</textarea>
-
-
+</div>
 
 </section>
 
+
+<section class="quote">
+
+<h2>
+Start a Procurement Conversation
+</h2>
+
+<p>
+Tell SecPack what you need and organize the next step
+toward a professional supply solution.
+</p>
+
+<a href="contact.html">
+<button>
+Start a Request
+</button>
+</a>
+
+</section>
+
+</main>
 
 
 <footer>
@@ -157,10 +327,8 @@ SecPack Enterprise © 2026
 </footer>
 
 
-
+<script src="../language.js"></script>
 <script src="../script.js"></script>
 
-
 </body>
-
 </html>
