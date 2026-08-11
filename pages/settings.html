@@ -1,132 +1,295 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>SecPack Settings</title>
-
 <link rel="stylesheet" href="../style.css">
-
 </head>
 
-
 <body>
-
 
 <header class="topbar">
 
 <div class="logo-area">
 
 <div class="logo-box">
-
 <img src="../logo.jpg" alt="SecPack Logo">
-
 </div>
-
 
 <div>
-
 <h1>SecPack</h1>
-
-<p>System Configuration</p>
+<p>Professional Packaging Materials Supplier</p>
+</div>
 
 </div>
 
+<div class="languages">
+<button onclick="changeLanguage('en')">EN</button>
+<button onclick="changeLanguage('fa')">FA</button>
+<button onclick="changeLanguage('ar')">AR</button>
 </div>
 
 </header>
 
 
+<main>
 
+<section class="hero secpack-hero">
 
-<section class="hero">
+<div class="hero-content">
 
-<h2>
-SecPack Settings
+<div class="hero-badge">
+⚙️ SECPACK SETTINGS
+</div>
+
+<h2 class="hero-title">
+Platform Preferences
 </h2>
 
-<p>
-Manage your platform preferences.
+<p class="hero-description">
+Manage language, workspace preferences and basic
+SecPack platform settings.
 </p>
+
+</div>
 
 </section>
 
 
+<section class="categories">
 
+<div class="section-heading">
 
-<section class="cards">
-
-
-<div class="card">
-
-<h3>🌐</h3>
+<span class="section-eyebrow">
+LANGUAGE
+</span>
 
 <h2>
-Language
+Choose Your Language
 </h2>
 
 <p>
-English / فارسی / العربية
+SecPack is designed to support international packaging
+professionals across multiple markets.
 </p>
 
 </div>
 
 
+<div class="cards">
 
-<div class="card">
+<article class="card">
 
-<h3>🎨</h3>
+<h3>🇬🇧</h3>
 
 <h2>
-Appearance
+English
 </h2>
 
 <p>
-Theme and interface settings.
+Professional international interface and
+technical terminology.
 </p>
 
-</div>
+<button onclick="changeLanguage('en')">
+Use English
+</button>
+
+</article>
 
 
+<article class="card">
 
-<div class="card">
-
-<h3>🔐</h3>
+<h3>🇮🇷</h3>
 
 <h2>
-Security
+فارسی
 </h2>
 
 <p>
-Account and access management.
+رابط فارسی برای کاربران و مشتریان فارسی‌زبان.
 </p>
 
-</div>
+<button onclick="changeLanguage('fa')">
+استفاده از فارسی
+</button>
+
+</article>
 
 
+<article class="card">
 
-<div class="card">
-
-<h3>⚙️</h3>
+<h3>🇸🇦</h3>
 
 <h2>
-System
+العربية
 </h2>
 
 <p>
-Platform configuration.
+واجهة عربية للعملاء والأسواق الناطقة بالعربية.
 </p>
 
-</div>
+<button onclick="changeLanguage('ar')">
+استخدام العربية
+</button>
 
+</article>
+
+</div>
 
 </section>
 
 
+<section class="knowledge-center">
+
+<div class="section-heading">
+
+<span class="section-eyebrow">
+WORKSPACE
+</span>
+
+<h2>
+SecPack Workspace
+</h2>
+
+<p>
+Your platform preferences can be organized around
+professional procurement and packaging workflows.
+</p>
+
+</div>
+
+
+<div class="knowledge-grid">
+
+<article class="knowledge-card">
+
+<div class="knowledge-icon">
+🌍
+</div>
+
+<h3>
+International Access
+</h3>
+
+<p>
+Designed for professional packaging activities
+across international markets.
+</p>
+
+<strong>
+Global
+</strong>
+
+</article>
+
+
+<article class="knowledge-card">
+
+<div class="knowledge-icon">
+📊
+</div>
+
+<h3>
+Procurement Workspace
+</h3>
+
+<p>
+Connect products, suppliers, documents and market
+information through the SecPack platform.
+</p>
+
+<strong>
+Active
+</strong>
+
+</article>
+
+
+<article class="knowledge-card">
+
+<div class="knowledge-icon">
+🔒
+</div>
+
+<h3>
+Professional Information
+</h3>
+
+<p>
+Platform information is organized around product,
+technical and procurement requirements.
+</p>
+
+<strong>
+Protected
+</strong>
+
+</article>
+
+</div>
+
+</section>
+
+
+<section class="professional-support">
+
+<div class="support-content">
+
+<span class="section-eyebrow">
+PLATFORM NAVIGATION
+</span>
+
+<h2>
+Continue Working With SecPack
+</h2>
+
+<p>
+Access products, suppliers, documents and procurement
+intelligence from the main platform.
+</p>
+
+<div class="actions">
+
+<a href="../index.html">
+<button>
+🏠 Home
+</button>
+</a>
+
+<a href="dashboard.html">
+<button class="secondary-action">
+📊 Dashboard
+</button>
+</a>
+
+</div>
+
+</div>
+
+</section>
+
+
+<section class="quote">
+
+<h2>
+SecPack Platform</h2>
+
+<p>
+Professional packaging materials, technical knowledge
+and procurement intelligence in one workspace.
+</p>
+
+<a href="products.html">
+<button>
+Explore Products
+</button>
+</a>
+
+</section>
+
+</main>
 
 
 <footer>
@@ -136,6 +299,8 @@ SecPack Enterprise © 2026
 </footer>
 
 
-</body>
+<script src="../language.js"></script>
+<script src="../script.js"></script>
 
+</body>
 </html>
