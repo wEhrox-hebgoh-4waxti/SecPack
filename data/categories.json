@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "name": "Lamination Adhesives",
+    "code": "LAM-ADH",
+    "description": "Water-based and other lamination adhesive products.",
+    "status": "Active"
+  },
+  {
+    "id": 2,
+    "name": "Lamination Films",
+    "code": "LAM-FILM",
+    "description": "Thermal and professional lamination films.",
+    "status": "Active"
+  },
+  {
+    "id": 3,
+    "name": "Packaging Materials",
+    "code": "PACK-MAT",
+    "description": "Materials used in professional packaging production.",
+    "status": "Active"
+  },
+  {
+    "id": 4,
+    "name": "Industrial Solutions",
+    "code": "IND-SOL",
+    "description": "Specialized industrial packaging solutions.",
+    "status": "Active"
+  }
+]
