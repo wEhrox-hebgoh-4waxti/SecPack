@@ -1,0 +1,83 @@
+[
+  {
+    "id": 1,
+    "supplierId": 1,
+    "productId": 1,
+
+    "commercial": {
+      "price": 1.98,
+      "currency": "USD",
+      "unit": "kg",
+      "incoterm": "FOB Shanghai",
+      "targetPrice": 1.40,
+      "purchaseVolume": "10 MT / Month",
+      "moq": "",
+      "packaging": "",
+      "leadTime": ""
+    },
+
+    "technical": {
+      "sample": "Requested",
+      "tds": "Available",
+      "coa": "Pending",
+      "msds": "Pending"
+    },
+
+    "status": "Negotiating",
+    "lastUpdate": "2026-07-15"
+  },
+  {
+    "id": 2,
+    "supplierId": 2,
+    "productId": 2,
+
+    "commercial": {
+      "price": 2.20,
+      "currency": "USD",
+      "unit": "kg",
+      "incoterm": "FOB Qingdao",
+      "targetPrice": 2.00,
+      "purchaseVolume": "Container",
+      "moq": "",
+      "packaging": "",
+      "leadTime": ""
+    },
+
+    "technical": {
+      "sample": "Not Requested",
+      "tds": "Available",
+      "coa": "Pending",
+      "msds": "Pending"
+    },
+
+    "status": "Review",
+    "lastUpdate": ""
+  },
+  {
+    "id": 3,
+    "supplierId": 3,
+    "productId": 2,
+
+    "commercial": {
+      "price": null,
+      "currency": "USD",
+      "unit": "kg",
+      "incoterm": "",
+      "targetPrice": null,
+      "purchaseVolume": "Container",
+      "moq": "",
+      "packaging": "",
+      "leadTime": ""
+    },
+
+    "technical": {
+      "sample": "Pending",
+      "tds": "Pending",
+      "coa": "Pending",
+      "msds": "Pending"
+    },
+
+    "status": "Review",
+    "lastUpdate": ""
+  }
+]
