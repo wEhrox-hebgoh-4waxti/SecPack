@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "name": "Paper to Film Lamination",
+    "category": "Lamination",
+    "description": "Laminating paper or paperboard with plastic film using water-based adhesive.",
+    "products": [1]
+  },
+  {
+    "id": 2,
+    "name": "Film to Film Lamination",
+    "category": "Lamination",
+    "description": "Laminating flexible plastic films for packaging applications.",
+    "products": [1]
+  },
+  {
+    "id": 3,
+    "name": "Thermal Lamination",
+    "category": "Printing & Finishing",
+    "description": "Thermal lamination for printed materials and packaging.",
+    "products": [2]
+  },
+  {
+    "id": 4,
+    "name": "Packaging Production",
+    "category": "Packaging",
+    "description": "Professional packaging material applications for industrial production.",
+    "products": [3, 4]
+  }
+]
