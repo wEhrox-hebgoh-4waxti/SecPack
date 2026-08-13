@@ -1,73 +1,87 @@
 [
   {
     "id": 1,
-    "name": "HiTech Resins & Chemicals",
+    "company": "HiTech Resins & Chemicals",
     "country": "Pakistan",
     "city": "Lahore",
-    "contact": "Imran Saeed",
-    "position": "Sales Manager",
-    "email": "",
-    "phone": "",
-    "website": "",
-    "product": "Water Based Lamination Adhesive",
-    "category": "Adhesive",
-    "lastPrice": "1.98 USD/kg FOB Shanghai",
-    "targetPrice": "1.40 USD/kg",
-    "purchaseVolume": "10 MT / Month",
-    "sample": "Requested",
-    "tds": "Available",
-    "coa": "Pending",
-    "msds": "Pending",
+
+    "contact": {
+      "name": "Imran Saeed",
+      "position": "Sales Manager",
+      "email": "",
+      "phone": "",
+      "website": ""
+    },
+
     "status": "Negotiating",
-    "score": 82,
+
+    "score": {
+      "overall": 82,
+      "costEfficiency": 0,
+      "qualityStability": 0,
+      "batchConsistency": 0,
+      "responseSpeed": 0,
+      "technicalSupport": 0
+    },
+
     "lastContact": "2026-07-15",
     "notes": "Main supplier under evaluation."
   },
+
   {
     "id": 2,
-    "name": "Shandong Birch Green",
+    "company": "Shandong Birch Green",
     "country": "China",
     "city": "Shandong",
-    "contact": "Jessica",
-    "position": "Sales Manager",
-    "email": "",
-    "phone": "",
-    "website": "",
-    "product": "BOPP Thermal Lamination Film",
-    "category": "Film",
-    "lastPrice": "2.20 USD/kg FOB Qingdao",
-    "targetPrice": "2.00 USD/kg",
-    "purchaseVolume": "Container",
-    "sample": "Not Requested",
-    "tds": "Available",
-    "coa": "Pending",
-    "msds": "Pending",
+
+    "contact": {
+      "name": "Jessica",
+      "position": "Sales Manager",
+      "email": "",
+      "phone": "",
+      "website": ""
+    },
+
     "status": "Review",
-    "score": 78,
+
+    "score": {
+      "overall": 78,
+      "costEfficiency": 0,
+      "qualityStability": 0,
+      "batchConsistency": 0,
+      "responseSpeed": 0,
+      "technicalSupport": 0
+    },
+
     "lastContact": "",
     "notes": "Price negotiation required."
   },
+
   {
     "id": 3,
-    "name": "Tianjin Glory Tang",
+    "company": "Tianjin Glory Tang",
     "country": "China",
     "city": "Tianjin",
-    "contact": "",
-    "position": "",
-    "email": "",
-    "phone": "",
-    "website": "",
-    "product": "Thermal Lamination Film",
-    "category": "Film",
-    "lastPrice": "",
-    "targetPrice": "",
-    "purchaseVolume": "Container",
-    "sample": "Pending",
-    "tds": "Pending",
-    "coa": "Pending",
-    "msds": "Pending",
+
+    "contact": {
+      "name": "",
+      "position": "",
+      "email": "",
+      "phone": "",
+      "website": ""
+    },
+
     "status": "Review",
-    "score": 80,
+
+    "score": {
+      "overall": 80,
+      "costEfficiency": 0,
+      "qualityStability": 0,
+      "batchConsistency": 0,
+      "responseSpeed": 0,
+      "technicalSupport": 0
+    },
+
     "lastContact": "",
     "notes": "Waiting for commercial offer."
   }
