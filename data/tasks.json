@@ -1,0 +1,46 @@
+[
+  {
+    "id": 1,
+    "supplierId": 1,
+    "productId": 1,
+    "title": "Negotiate Price",
+    "priority": "High",
+    "assignedTo": "",
+    "dueDate": "",
+    "status": "Open",
+    "notes": "Target price: 1.40 USD/kg."
+  },
+  {
+    "id": 2,
+    "supplierId": 1,
+    "productId": 1,
+    "title": "Receive COA",
+    "priority": "Medium",
+    "assignedTo": "",
+    "dueDate": "",
+    "status": "Pending",
+    "notes": ""
+  },
+  {
+    "id": 3,
+    "supplierId": 2,
+    "productId": 2,
+    "title": "Request Better Commercial Terms",
+    "priority": "High",
+    "assignedTo": "",
+    "dueDate": "",
+    "status": "Open",
+    "notes": ""
+  },
+  {
+    "id": 4,
+    "supplierId": 3,
+    "productId": 2,
+    "title": "Follow Up Supplier",
+    "priority": "Medium",
+    "assignedTo": "",
+    "dueDate": "",
+    "status": "Pending",
+    "notes": ""
+  }
+]
