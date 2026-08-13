@@ -1,0 +1,54 @@
+[
+  {
+    "id": 1,
+    "productId": 1,
+    "warehouse": "Main Warehouse",
+    "unit": "kg",
+    "currentStock": 0,
+    "reservedStock": 0,
+    "availableStock": 0,
+    "minimumStock": 0,
+    "reorderPoint": 0,
+    "lastUpdated": "",
+    "status": "Out of Stock"
+  },
+  {
+    "id": 2,
+    "productId": 2,
+    "warehouse": "Main Warehouse",
+    "unit": "kg",
+    "currentStock": 0,
+    "reservedStock": 0,
+    "availableStock": 0,
+    "minimumStock": 0,
+    "reorderPoint": 0,
+    "lastUpdated": "",
+    "status": "Out of Stock"
+  },
+  {
+    "id": 3,
+    "productId": 3,
+    "warehouse": "Main Warehouse",
+    "unit": "pcs",
+    "currentStock": 0,
+    "reservedStock": 0,
+    "availableStock": 0,
+    "minimumStock": 0,
+    "reorderPoint": 0,
+    "lastUpdated": "",
+    "status": "Out of Stock"
+  },
+  {
+    "id": 4,
+    "productId": 4,
+    "warehouse": "Main Warehouse",
+    "unit": "pcs",
+    "currentStock": 0,
+    "reservedStock": 0,
+    "availableStock": 0,
+    "minimumStock": 0,
+    "reorderPoint": 0,
+    "lastUpdated": "",
+    "status": "Out of Stock"
+  }
+]
