@@ -1,46 +1,57 @@
 [
   {
     "id": 1,
+    "title": "Continue adhesive price negotiation",
+    "type": "Supplier",
     "supplierId": 1,
     "productId": 1,
-    "title": "Negotiate Price",
     "priority": "High",
-    "assignedTo": "",
-    "dueDate": "",
     "status": "Open",
-    "notes": "Target price: 1.40 USD/kg."
+    "dueDate": "",
+    "notes": "Continue commercial negotiation for water-based lamination adhesive."
   },
   {
     "id": 2,
-    "supplierId": 1,
-    "productId": 1,
-    "title": "Receive COA",
-    "priority": "Medium",
-    "assignedTo": "",
+    "title": "Request improved film quotation",
+    "type": "Supplier",
+    "supplierId": 2,
+    "productId": 2,
+    "priority": "High",
+    "status": "Open",
     "dueDate": "",
-    "status": "Pending",
-    "notes": ""
+    "notes": "Request better commercial terms for thermal lamination film."
   },
   {
     "id": 3,
-    "supplierId": 2,
+    "title": "Follow up with Tianjin Glory Tang",
+    "type": "Supplier",
+    "supplierId": 3,
     "productId": 2,
-    "title": "Request Better Commercial Terms",
-    "priority": "High",
-    "assignedTo": "",
+    "priority": "Medium",
+    "status": "Pending",
     "dueDate": "",
-    "status": "Open",
-    "notes": ""
+    "notes": "Follow up for commercial offer."
   },
   {
     "id": 4,
-    "supplierId": 3,
-    "productId": 2,
-    "title": "Follow Up Supplier",
-    "priority": "Medium",
-    "assignedTo": "",
-    "dueDate": "",
+    "title": "Evaluate adhesive sample",
+    "type": "Sample",
+    "supplierId": 1,
+    "productId": 1,
+    "priority": "High",
     "status": "Pending",
-    "notes": ""
+    "dueDate": "",
+    "notes": "Complete technical evaluation after sample receipt."
+  },
+  {
+    "id": 5,
+    "title": "Update supplier scorecard",
+    "type": "Evaluation",
+    "supplierId": 1,
+    "productId": 1,
+    "priority": "Medium",
+    "status": "Open",
+    "dueDate": "",
+    "notes": "Update quality, batch consistency, response speed and technical support scores."
   }
 ]
