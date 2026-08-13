@@ -3,30 +3,36 @@
     "id": 1,
     "supplierId": 1,
     "productId": 1,
-    "sampleCode": "SMP-2026-0001",
-    "quantity": 50,
+    "quantity": 10,
     "unit": "kg",
-    "requestDate": "2026-07-15",
-    "shipDate": "",
-    "receiveDate": "",
-    "testStatus": "Pending",
-    "result": "",
     "status": "Requested",
-    "notes": "50 kg sample approved for testing."
+    "requestDate": "2026-07-15",
+    "receivedDate": "",
+    "evaluationStatus": "Pending",
+    "notes": "Water-based lamination adhesive sample requested for technical evaluation."
   },
   {
     "id": 2,
     "supplierId": 2,
     "productId": 2,
-    "sampleCode": "SMP-2026-0002",
     "quantity": 0,
     "unit": "kg",
-    "requestDate": "",
-    "shipDate": "",
-    "receiveDate": "",
-    "testStatus": "Not Started",
-    "result": "",
     "status": "Not Requested",
-    "notes": ""
+    "requestDate": "",
+    "receivedDate": "",
+    "evaluationStatus": "Not Started",
+    "notes": "Thermal lamination film sample not yet requested."
+  },
+  {
+    "id": 3,
+    "supplierId": 3,
+    "productId": 2,
+    "quantity": 0,
+    "unit": "kg",
+    "status": "Pending",
+    "requestDate": "",
+    "receivedDate": "",
+    "evaluationStatus": "Not Started",
+    "notes": "Sample status pending supplier response."
   }
 ]
