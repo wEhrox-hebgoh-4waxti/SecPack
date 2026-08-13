@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "supplierId": 1,
+    "productId": 1,
+    "sampleCode": "SMP-2026-0001",
+    "quantity": 50,
+    "unit": "kg",
+    "requestDate": "2026-07-15",
+    "shipDate": "",
+    "receiveDate": "",
+    "testStatus": "Pending",
+    "result": "",
+    "status": "Requested",
+    "notes": "50 kg sample approved for testing."
+  },
+  {
+    "id": 2,
+    "supplierId": 2,
+    "productId": 2,
+    "sampleCode": "SMP-2026-0002",
+    "quantity": 0,
+    "unit": "kg",
+    "requestDate": "",
+    "shipDate": "",
+    "receiveDate": "",
+    "testStatus": "Not Started",
+    "result": "",
+    "status": "Not Requested",
+    "notes": ""
+  }
+]
