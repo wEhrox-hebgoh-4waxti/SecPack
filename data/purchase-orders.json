@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "poNumber": "PO-2026-0001",
+    "supplierId": 1,
+    "productId": 1,
+    "quantity": 10000,
+    "unit": "kg",
+    "unitPrice": 1.98,
+    "currency": "USD",
+    "incoterm": "FOB Shanghai",
+    "orderDate": "",
+    "expectedDelivery": "",
+    "status": "Draft",
+    "notes": ""
+  },
+  {
+    "id": 2,
+    "poNumber": "PO-2026-0002",
+    "supplierId": 2,
+    "productId": 2,
+    "quantity": 0,
+    "unit": "kg",
+    "unitPrice": 2.20,
+    "currency": "USD",
+    "incoterm": "FOB Qingdao",
+    "orderDate": "",
+    "expectedDelivery": "",
+    "status": "Draft",
+    "notes": ""
+  }
+]
