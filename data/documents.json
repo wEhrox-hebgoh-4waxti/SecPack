@@ -1,0 +1,46 @@
+[
+  {
+    "id": 1,
+    "productId": 1,
+    "supplierId": 1,
+    "type": "TDS",
+    "title": "Water-Based Lamination Adhesive TDS",
+    "status": "Available",
+    "version": "",
+    "date": "",
+    "file": ""
+  },
+  {
+    "id": 2,
+    "productId": 1,
+    "supplierId": 1,
+    "type": "COA",
+    "title": "Certificate of Analysis",
+    "status": "Pending",
+    "version": "",
+    "date": "",
+    "file": ""
+  },
+  {
+    "id": 3,
+    "productId": 1,
+    "supplierId": 1,
+    "type": "MSDS",
+    "title": "Material Safety Data Sheet",
+    "status": "Pending",
+    "version": "",
+    "date": "",
+    "file": ""
+  },
+  {
+    "id": 4,
+    "productId": 2,
+    "supplierId": 2,
+    "type": "TDS",
+    "title": "Thermal Lamination Film TDS",
+    "status": "Available",
+    "version": "",
+    "date": "",
+    "file": ""
+  }
+]
