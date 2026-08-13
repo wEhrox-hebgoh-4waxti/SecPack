@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "supplierId": 1,
+    "productId": 1,
+    "price": 1.98,
+    "currency": "USD",
+    "unit": "kg",
+    "incoterm": "FOB Shanghai",
+    "moq": "",
+    "paymentTerms": "",
+    "leadTime": "",
+    "quotationDate": "2026-07-15",
+    "validUntil": "",
+    "status": "Valid",
+    "notes": "Initial quotation."
+  },
+  {
+    "id": 2,
+    "supplierId": 2,
+    "productId": 2,
+    "price": 2.20,
+    "currency": "USD",
+    "unit": "kg",
+    "incoterm": "FOB Qingdao",
+    "moq": "",
+    "paymentTerms": "",
+    "leadTime": "",
+    "quotationDate": "",
+    "validUntil": "",
+    "status": "Under Review",
+    "notes": ""
+  }
+]
