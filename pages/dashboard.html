@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>SecPack Dashboard</title>
+
 <link rel="stylesheet" href="../style.css">
 </head>
 
@@ -26,22 +29,45 @@
 
 <nav class="site-navigation">
 
-<a href="../index.html">Home</a>
-<a href="products.html">Products</a>
-<a href="store.html">Store</a>
-<a href="dashboard.html">Dashboard</a>
-<a href="contact.html">Contact</a>
+<a href="../index.html">
+Home
+</a>
+
+<a href="products.html">
+Products
+</a>
+
+<a href="store.html">
+Store
+</a>
+
+<a href="dashboard.html">
+Dashboard
+</a>
+
+<a href="contact.html">
+Contact
+</a>
 
 </nav>
 
 <div class="languages">
-<button onclick="changeLanguage('en')">EN</button>
-<button onclick="changeLanguage('fa')">FA</button>
-<button onclick="changeLanguage('ar')">AR</button>
+
+<button onclick="changeLanguage('en')">
+EN
+</button>
+
+<button onclick="changeLanguage('fa')">
+FA
+</button>
+
+<button onclick="changeLanguage('ar')">
+AR
+</button>
+
 </div>
 
 </header>
-
 
 <main>
 
@@ -83,7 +109,6 @@ professional procurement activities.
 
 </section>
 
-
 <section class="categories">
 
 <div class="section-heading">
@@ -102,7 +127,6 @@ professional packaging material sourcing.
 </p>
 
 </div>
-
 
 <div class="cards">
 
@@ -127,7 +151,6 @@ Open Products →
 
 </article>
 
-
 <article class="card">
 
 <div class="card-icon">
@@ -149,7 +172,6 @@ Supplier Intelligence →
 
 </article>
 
-
 <article class="card">
 
 <div class="card-icon">
@@ -170,7 +192,6 @@ Document Center →
 </a>
 
 </article>
-
 
 <article class="card">
 
@@ -197,7 +218,6 @@ Market Intelligence →
 
 </section>
 
-
 <section class="knowledge-center">
 
 <div class="section-heading">
@@ -216,7 +236,6 @@ commercial and supply information.
 </p>
 
 </div>
-
 
 <div class="knowledge-grid">
 
@@ -237,7 +256,6 @@ quantity and required performance.
 
 </article>
 
-
 <article class="knowledge-card">
 
 <div class="knowledge-icon">
@@ -254,7 +272,6 @@ response speed and technical support.
 </p>
 
 </article>
-
 
 <article class="knowledge-card">
 
@@ -275,10 +292,7 @@ and commercial information before purchasing.
 
 </div>
 
-</section>
-
-
-<section class="professional-support">
+</section><section class="professional-support">
 
 <div class="support-content">
 
@@ -316,7 +330,6 @@ intelligence and procurement decisions.
 
 </section>
 
-
 <section class="quote">
 
 <h2>
@@ -338,14 +351,15 @@ Start a Request
 
 </main>
 
-
 <footer class="site-footer">
 
 <div class="footer-content">
 
 <div class="footer-brand">
 
-<h2>SecPack</h2>
+<h2>
+SecPack
+</h2>
 
 <p>
 Global Packaging Intelligence Platform
@@ -354,12 +368,13 @@ for the printing and packaging industry.
 
 </div>
 
-
 <div class="footer-links">
 
 <div>
 
-<h3>Products</h3>
+<h3>
+Products
+</h3>
 
 <a href="products.html">
 Thermal Lamination Film
@@ -375,10 +390,11 @@ Packaging Materials
 
 </div>
 
-
 <div>
 
-<h3>Platform</h3>
+<h3>
+Platform
+</h3>
 
 <a href="../index.html">
 Home
@@ -394,10 +410,11 @@ Store
 
 </div>
 
-
 <div>
 
-<h3>Resources</h3>
+<h3>
+Resources
+</h3>
 
 <a href="documents.html">
 Knowledge Center
@@ -417,7 +434,6 @@ Supplier Intelligence
 
 </div>
 
-
 <div class="footer-bottom">
 
 <p>
@@ -430,10 +446,80 @@ Professional Packaging Materials &amp; Solutions
 
 </div>
 
-</footer>
+</footer><script src="../language.js"></script>
+<script src="../data-engine.js"></script>
 
+<script>
 
-<script src="../language.js"></script>
+document.addEventListener("DOMContentLoaded", async function () {
+
+    try {
+
+        if (!window.SecPack) {
+            throw new Error("SecPack Data Engine is not available.");
+        }
+
+        await window.SecPack.initialize();
+
+        const stats = {
+
+            products:
+                Array.isArray(window.SecPack.products)
+                    ? window.SecPack.products.length
+                    : 0,
+
+            suppliers:
+                Array.isArray(window.SecPack.suppliers)
+                    ? window.SecPack.suppliers.length
+                    : 0,
+
+            documents:
+                Array.isArray(window.SecPack.documents)
+                    ? window.SecPack.documents.length
+                    : 0,
+
+            quotes:
+                Array.isArray(window.SecPack.quotes)
+                    ? window.SecPack.quotes.length
+                    : 0,
+
+            inventory:
+                Array.isArray(window.SecPack.inventory)
+                    ? window.SecPack.inventory.length
+                    : 0,
+
+            tasks:
+                Array.isArray(window.SecPack.tasks)
+                    ? window.SecPack.tasks.length
+                    : 0,
+
+            samples:
+                Array.isArray(window.SecPack.samples)
+                    ? window.SecPack.samples.length
+                    : 0,
+
+            purchaseOrders:
+                Array.isArray(window.SecPack.purchaseOrders)
+                    ? window.SecPack.purchaseOrders.length
+                    : 0
+
+        };
+
+        console.log("SecPack Dashboard Data:", stats);
+
+    } catch (error) {
+
+        console.error(
+            "SecPack Dashboard initialization failed:",
+            error
+        );
+
+    }
+
+});
+
+</script>
+
 <script src="../script.js"></script>
 
 </body>
