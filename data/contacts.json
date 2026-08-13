@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "supplierId": 1,
+    "date": "2026-07-15",
+    "type": "Email",
+    "person": "Imran Saeed",
+    "subject": "Water-Based Lamination Adhesive",
+    "summary": "Initial quotation received.",
+    "nextAction": "Continue price negotiation.",
+    "status": "Open"
+  },
+  {
+    "id": 2,
+    "supplierId": 2,
+    "date": "",
+    "type": "Email",
+    "person": "Jessica",
+    "subject": "Thermal Lamination Film",
+    "summary": "Price quotation received.",
+    "nextAction": "Request better commercial terms.",
+    "status": "Open"
+  },
+  {
+    "id": 3,
+    "supplierId": 3,
+    "date": "",
+    "type": "Email",
+    "person": "",
+    "subject": "Commercial Offer",
+    "summary": "Waiting for supplier response.",
+    "nextAction": "Follow up.",
+    "status": "Pending"
+  }
+]
