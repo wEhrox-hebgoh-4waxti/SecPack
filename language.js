@@ -1,428 +1,332 @@
 (function () {
 
-    const dictionary = {
+    const translations = {
+
+        en: {
+            badge: "SECPACK PROFESSIONAL PACKAGING",
+            heroLine1: "Materials.",
+            heroLine2: "Technical Knowledge.",
+            heroLine3: "Professional Solutions.",
+            heroDescription: "SecPack provides professional packaging materials, technical information and practical solutions for printing, lamination and packaging applications.",
+
+            platform: "SECPACK PLATFORM",
+            platformTitle: "Professional Packaging Materials",
+            platformDescription: "Selected materials and practical information for printing, lamination and packaging professionals.",
+
+            filmTitle: "Lamination Films",
+            filmDescription: "Professional finishing materials for reliable lamination and high-quality printing applications.",
+            filmLabel: "Explore Products",
+
+            adhesiveTitle: "Lamination Adhesives",
+            adhesiveDescription: "Water-based adhesive solutions for paper, film and packaging lamination applications.",
+            adhesiveLabel: "Technical Solutions",
+
+            packagingTitle: "Packaging Materials",
+            packagingDescription: "Professional materials supporting modern packaging production and converting requirements.",
+            packagingLabel: "Production Materials",
+
+            industrialTitle: "Industrial Solutions",
+            industrialDescription: "Practical packaging material solutions for different industrial applications and production needs.",
+            industrialLabel: "Professional Support",
+
+            viewProducts: "View Products →",
+            discussRequirements: "Discuss Requirements →",
+
+            knowledge: "SECPACK KNOWLEDGE",
+            knowledgeTitle: "Packaging Knowledge Center",
+            knowledgeDescription: "Professional technical knowledge for printing, lamination and packaging professionals.",
+
+            technologyTitle: "Packaging Technology",
+            technologyDescription: "Understand packaging materials, applications, production processes and technical fundamentals.",
+
+            insightsTitle: "Technical Insights",
+            insightsDescription: "Learn how material selection, quality and production conditions affect final results.",
+
+            industryTitle: "Industry Intelligence",
+            industryDescription: "Follow important developments and understand the changing needs of the global packaging industry.",
+
+            exploreInformation: "Explore Information →",
+            technicalInformation: "Technical Information →",
+            marketIntelligence: "Explore Market Intelligence →",
+
+            solutions: "PROFESSIONAL SOLUTIONS",
+            solutionsTitle: "Built Around Your Production Needs",
+            solutionsDescription: "SecPack connects professional packaging materials with practical technical requirements.",
+
+            lamination: "Lamination",
+            laminationDescription: "Material solutions for professional lamination and finishing applications.",
+
+            printing: "Printing & Finishing",
+            printingDescription: "Packaging materials selected for reliable printing and finishing performance.",
+
+            production: "Packaging Production",
+            productionDescription: "Practical material solutions for converters, printers and packaging manufacturers.",
+
+            helpTitle: "Need Help Selecting the Right Material?",
+            helpDescription: "Tell us about your application, production process and material requirements. SecPack can help you identify the most suitable solution.",
+            talkToSecPack: "Talk to SecPack",
+
+            enterprise: "SECPACK ENTERPRISE",
+            enterpriseTitle: "Let's Build Better Packaging Solutions",
+            enterpriseDescription: "Whether you need a specific packaging material, technical guidance or a professional supply solution, our team is ready to understand your requirements.",
+
+            requestQuote: "Request a Quote",
+            exploreProducts: "Explore Products",
+            requestSolution: "Request a Solution",
+
+            footerDescription: "Global Packaging Intelligence Platform for the printing and packaging industry.",
+            footerTagline: "Professional Packaging Materials & Solutions",
+
+            products: "Products",
+            thermalFilm: "Thermal Lamination Film",
+            waterAdhesive: "Water-Based Adhesive",
+            packagingMaterials: "Packaging Materials",
+
+            platformNav: "Platform",
+            home: "Home",
+            dashboard: "Dashboard",
+            store: "Store",
+
+            resources: "Resources",
+            knowledgeCenter: "Knowledge Center",
+            supplierIntelligence: "Supplier Intelligence"
+        },
+
 
         fa: {
-            "Home": "خانه",
-            "Products": "محصولات",
-            "Store": "فروشگاه",
-            "Dashboard": "داشبورد",
-            "Contact": "تماس با ما",
+            badge: "بسته‌بندی حرفه‌ای SECPACK",
+            heroLine1: "مواد بسته‌بندی.",
+            heroLine2: "دانش فنی.",
+            heroLine3: "راهکارهای حرفه‌ای.",
+            heroDescription: "SecPack مواد بسته‌بندی حرفه‌ای، اطلاعات فنی و راهکارهای کاربردی برای چاپ، لمینیشن و بسته‌بندی ارائه می‌دهد.",
 
-            "Professional Packaging Materials Supplier":
-                "تأمین‌کننده حرفه‌ای مواد بسته‌بندی",
+            platform: "پلتفرم SECPACK",
+            platformTitle: "مواد بسته‌بندی حرفه‌ای",
+            platformDescription: "مواد منتخب و اطلاعات کاربردی برای متخصصان چاپ، لمینیشن و بسته‌بندی.",
 
-            "SECPACK PROFESSIONAL PACKAGING":
-                "بسته‌بندی حرفه‌ای SECPACK",
+            filmTitle: "فیلم‌های لمینیشن",
+            filmDescription: "مواد حرفه‌ای برای لمینیشن مطمئن و چاپ باکیفیت.",
+            filmLabel: "مشاهده محصولات",
 
-            "Smart Packaging Materials.":
-                "مواد بسته‌بندی هوشمند.",
+            adhesiveTitle: "چسب‌های لمینیشن",
+            adhesiveDescription: "راهکارهای چسب پایه آب برای لمینیشن کاغذ، فیلم و بسته‌بندی.",
+            adhesiveLabel: "راهکارهای فنی",
 
-            "Technical Knowledge.":
-                "دانش فنی.",
+            packagingTitle: "مواد بسته‌بندی",
+            packagingDescription: "مواد حرفه‌ای برای تولید مدرن بسته‌بندی و فرآیندهای تبدیلی.",
+            packagingLabel: "مواد تولیدی",
 
-            "Professional Solutions.":
-                "راهکارهای حرفه‌ای.",
+            industrialTitle: "راهکارهای صنعتی",
+            industrialDescription: "راهکارهای کاربردی مواد بسته‌بندی برای کاربردهای صنعتی و نیازهای مختلف تولید.",
+            industrialLabel: "پشتیبانی حرفه‌ای",
 
-            "SecPack provides professional packaging materials, technical information and practical solutions for printing, lamination and packaging applications.":
-                "SecPack مواد بسته‌بندی حرفه‌ای، اطلاعات فنی و راهکارهای کاربردی برای چاپ، لمینیشن و بسته‌بندی ارائه می‌کند.",
+            viewProducts: "مشاهده محصولات ←",
+            discussRequirements: "بررسی نیازمندی‌ها ←",
 
-            "Explore Products":
-                "مشاهده محصولات",
+            knowledge: "دانش SECPACK",
+            knowledgeTitle: "مرکز دانش بسته‌بندی",
+            knowledgeDescription: "دانش فنی حرفه‌ای برای متخصصان چاپ، لمینیشن و بسته‌بندی.",
 
-            "Request a Solution":
-                "درخواست راهکار",
+            technologyTitle: "فناوری بسته‌بندی",
+            technologyDescription: "با مواد بسته‌بندی، کاربردها، فرآیندهای تولید و مبانی فنی آشنا شوید.",
 
-            "SECPACK PLATFORM":
-                "پلتفرم SECPACK",
+            insightsTitle: "بینش فنی",
+            insightsDescription: "با تأثیر انتخاب مواد، کیفیت و شرایط تولید بر نتیجه نهایی آشنا شوید.",
 
-            "Selected materials and practical information for printing, lamination and packaging professionals.":
-                "مواد منتخب و اطلاعات کاربردی برای متخصصان چاپ، لمینیشن و بسته‌بندی.",
+            industryTitle: "اطلاعات صنعت",
+            industryDescription: "تحولات مهم و نیازهای در حال تغییر صنعت جهانی بسته‌بندی را دنبال کنید.",
 
-            "Lamination Films":
-                "فیلم‌های لمینیشن",
+            exploreInformation: "مشاهده اطلاعات ←",
+            technicalInformation: "اطلاعات فنی ←",
+            marketIntelligence: "مشاهده اطلاعات بازار ←",
 
-            "Professional finishing materials for reliable lamination and high-quality printing applications.":
-                "مواد حرفه‌ای برای لمینیشن مطمئن و چاپ باکیفیت.",
+            solutions: "راهکارهای حرفه‌ای",
+            solutionsTitle: "طراحی‌شده بر اساس نیازهای تولید شما",
+            solutionsDescription: "SecPack مواد بسته‌بندی حرفه‌ای را با نیازهای واقعی و فنی تولید مرتبط می‌کند.",
 
-            "Explore Products":
-                "مشاهده محصولات",
+            lamination: "لمینیشن",
+            laminationDescription: "راهکارهای مواد برای لمینیشن و تکمیل حرفه‌ای.",
 
-            "View Products →":
-                "مشاهده محصولات ←",
+            printing: "چاپ و تکمیل",
+            printingDescription: "مواد بسته‌بندی انتخاب‌شده برای عملکرد مطمئن در چاپ و تکمیل.",
 
-            "Lamination Adhesives":
-                "چسب‌های لمینیشن",
+            production: "تولید بسته‌بندی",
+            productionDescription: "راهکارهای کاربردی مواد برای کانورترها، چاپخانه‌ها و تولیدکنندگان بسته‌بندی.",
 
-            "Water-based adhesive solutions for paper, film and packaging lamination applications.":
-                "راهکارهای چسب پایه آب برای لمینیشن کاغذ، فیلم و بسته‌بندی.",
+            helpTitle: "برای انتخاب ماده مناسب نیاز به کمک دارید؟",
+            helpDescription: "درباره کاربرد، فرآیند تولید و نیازهای مواد خود به ما بگویید. SecPack می‌تواند به شما در شناسایی مناسب‌ترین راهکار کمک کند.",
+            talkToSecPack: "با SecPack تماس بگیرید",
 
-            "Technical Solutions":
-                "راهکارهای فنی",
+            enterprise: "SECPACK ENTERPRISE",
+            enterpriseTitle: "بیایید راهکارهای بهتری برای بسته‌بندی بسازیم",
+            enterpriseDescription: "چه به یک ماده بسته‌بندی خاص، راهنمایی فنی یا یک راهکار حرفه‌ای تأمین نیاز داشته باشید، تیم ما آماده بررسی نیازهای شماست.",
 
-            "Packaging Materials":
-                "مواد بسته‌بندی",
+            requestQuote: "درخواست قیمت",
+            exploreProducts: "مشاهده محصولات",
+            requestSolution: "درخواست راهکار",
 
-            "Professional materials supporting modern packaging production and converting requirements.":
-                "مواد حرفه‌ای برای تولید مدرن بسته‌بندی و فرآیندهای تبدیلی.",
+            footerDescription: "پلتفرم جهانی اطلاعات بسته‌بندی برای صنعت چاپ و بسته‌بندی.",
+            footerTagline: "مواد و راهکارهای حرفه‌ای بسته‌بندی",
 
-            "Production Materials":
-                "مواد تولیدی",
+            products: "محصولات",
+            thermalFilm: "فیلم لمینیشن حرارتی",
+            waterAdhesive: "چسب پایه آب",
+            packagingMaterials: "مواد بسته‌بندی",
 
-            "Industrial Solutions":
-                "راهکارهای صنعتی",
+            platformNav: "پلتفرم",
+            home: "خانه",
+            dashboard: "داشبورد",
+            store: "فروشگاه",
 
-            "Practical packaging material solutions for different industrial applications and production needs.":
-                "راهکارهای کاربردی مواد بسته‌بندی برای کاربردهای صنعتی و نیازهای مختلف تولید.",
-
-            "Professional Support":
-                "پشتیبانی حرفه‌ای",
-
-            "Discuss Requirements →":
-                "بررسی نیازمندی‌ها ←",
-
-            "SECPACK KNOWLEDGE":
-                "دانش SECPACK",
-
-            "Packaging Knowledge Center":
-                "مرکز دانش بسته‌بندی",
-
-            "Professional technical knowledge for printing, lamination and packaging professionals.":
-                "دانش فنی حرفه‌ای برای متخصصان چاپ، لمینیشن و بسته‌بندی.",
-
-            "Packaging Technology":
-                "فناوری بسته‌بندی",
-
-            "Understand packaging materials, applications, production processes and technical fundamentals.":
-                "با مواد بسته‌بندی، کاربردها، فرآیندهای تولید و مبانی فنی آشنا شوید.",
-
-            "Explore Information →":
-                "مشاهده اطلاعات ←",
-
-            "Technical Insights":
-                "بینش فنی",
-
-            "Learn how material selection, quality and production conditions affect final results.":
-                "یاد بگیرید انتخاب مواد، کیفیت و شرایط تولید چگونه بر نتیجه نهایی تأثیر می‌گذارند.",
-
-            "Technical Information →":
-                "اطلاعات فنی ←",
-
-            "Industry Intelligence":
-                "اطلاعات صنعت",
-
-            "Follow important developments and understand the changing needs of the global packaging industry.":
-                "تحولات مهم را دنبال کنید و نیازهای در حال تغییر صنعت جهانی بسته‌بندی را بشناسید.",
-
-            "Explore Market Intelligence →":
-                "مشاهده اطلاعات بازار ←",
-
-            "PROFESSIONAL SOLUTIONS":
-                "راهکارهای حرفه‌ای",
-
-            "Built Around Your Production Needs":
-                "طراحی‌شده بر اساس نیازهای تولید شما",
-
-            "SecPack connects professional packaging materials with practical technical requirements.":
-                "SecPack مواد بسته‌بندی حرفه‌ای را با نیازهای واقعی و فنی تولید مرتبط می‌کند.",
-
-            "Lamination":
-                "لمینیشن",
-
-            "Material solutions for professional lamination and finishing applications.":
-                "راهکارهای مواد برای لمینیشن و تکمیل حرفه‌ای.",
-
-            "Printing & Finishing":
-                "چاپ و تکمیل",
-
-            "Packaging materials selected for reliable printing and finishing performance.":
-                "مواد بسته‌بندی انتخاب‌شده برای عملکرد مطمئن در چاپ و تکمیل.",
-
-            "Packaging Production":
-                "تولید بسته‌بندی",
-
-            "Practical material solutions for converters, printers and packaging manufacturers.":
-                "راهکارهای کاربردی مواد برای کانورترها، چاپخانه‌ها و تولیدکنندگان بسته‌بندی.",
-
-            "Need Help Selecting the Right Material?":
-                "برای انتخاب ماده مناسب نیاز به کمک دارید؟",
-
-            "Tell us about your application, production process and material requirements. SecPack can help you identify the most suitable solution.":
-                "درباره کاربرد، فرآیند تولید و نیازهای مواد خود به ما بگویید. SecPack می‌تواند به شما در شناسایی مناسب‌ترین راهکار کمک کند.",
-
-            "Talk to SecPack":
-                "با SecPack تماس بگیرید",
-
-            "SECPACK ENTERPRISE":
-                "SECPACK ENTERPRISE",
-
-            "Let's Build Better Packaging Solutions":
-                "بیایید راهکارهای بهتری برای بسته‌بندی بسازیم",
-
-            "Whether you need a specific packaging material, technical guidance or a professional supply solution, our team is ready to understand your requirements.":
-                "چه به یک ماده بسته‌بندی خاص، راهنمایی فنی یا یک راهکار حرفه‌ای تأمین نیاز داشته باشید، تیم ما آماده بررسی نیازهای شماست.",
-
-            "Request a Quote":
-                "درخواست قیمت",
-
-            "Global Packaging Intelligence Platform for the printing and packaging industry.":
-                "پلتفرم جهانی اطلاعات بسته‌بندی برای صنعت چاپ و بسته‌بندی.",
-
-            "Thermal Lamination Film":
-                "فیلم لمینیشن حرارتی",
-
-            "Water-Based Adhesive":
-                "چسب پایه آب",
-
-            "Knowledge Center":
-                "مرکز دانش",
-
-            "Market Intelligence":
-                "اطلاعات بازار",
-
-            "Supplier Intelligence":
-                "اطلاعات تأمین‌کنندگان",
-
-            "Professional Packaging Materials & Solutions":
-                "مواد و راهکارهای حرفه‌ای بسته‌بندی",
-
-            "SecPack Enterprise © 2026":
-                "SecPack Enterprise © 2026"
+            resources: "منابع",
+            knowledgeCenter: "مرکز دانش",
+            supplierIntelligence: "اطلاعات تأمین‌کنندگان"
         },
 
 
         ar: {
-            "Home": "الرئيسية",
-            "Products": "المنتجات",
-            "Store": "المتجر",
-            "Dashboard": "لوحة التحكم",
-            "Contact": "اتصل بنا",
+            badge: "SECPACK للتغليف الاحترافي",
+            heroLine1: "مواد التغليف.",
+            heroLine2: "المعرفة التقنية.",
+            heroLine3: "الحلول الاحترافية.",
+            heroDescription: "توفر SecPack مواد تغليف احترافية ومعلومات تقنية وحلولاً عملية لتطبيقات الطباعة والتصفيح والتغليف.",
 
-            "Professional Packaging Materials Supplier":
-                "مورد محترف لمواد التغليف",
+            platform: "منصة SECPACK",
+            platformTitle: "مواد تغليف احترافية",
+            platformDescription: "مواد مختارة ومعلومات عملية لمحترفي الطباعة والتصفيح والتغليف.",
 
-            "SECPACK PROFESSIONAL PACKAGING":
-                "SECPACK للتغليف الاحترافي",
+            filmTitle: "أفلام التصفيح",
+            filmDescription: "مواد تشطيب احترافية للتصفيح الموثوق وتطبيقات الطباعة عالية الجودة.",
+            filmLabel: "استكشف المنتجات",
 
-            "Smart Packaging Materials.":
-                "مواد تغليف ذكية.",
+            adhesiveTitle: "مواد لاصقة للتصفيح",
+            adhesiveDescription: "حلول لاصقة مائية لتطبيقات تصفيح الورق والأفلام والتغليف.",
+            adhesiveLabel: "حلول تقنية",
 
-            "Technical Knowledge.":
-                "معرفة تقنية.",
+            packagingTitle: "مواد التغليف",
+            packagingDescription: "مواد احترافية تدعم إنتاج التغليف الحديث ومتطلبات التحويل.",
+            packagingLabel: "مواد الإنتاج",
 
-            "Professional Solutions.":
-                "حلول احترافية.",
+            industrialTitle: "حلول صناعية",
+            industrialDescription: "حلول عملية لمواد التغليف لمختلف التطبيقات الصناعية واحتياجات الإنتاج.",
+            industrialLabel: "دعم احترافي",
 
-            "SecPack provides professional packaging materials, technical information and practical solutions for printing, lamination and packaging applications.":
-                "توفر SecPack مواد تغليف احترافية ومعلومات تقنية وحلولاً عملية لتطبيقات الطباعة والتصفيح والتغليف.",
+            viewProducts: "عرض المنتجات ←",
+            discussRequirements: "مناقشة المتطلبات ←",
 
-            "Explore Products":
-                "استكشف المنتجات",
+            knowledge: "معرفة SECPACK",
+            knowledgeTitle: "مركز معرفة التغليف",
+            knowledgeDescription: "معرفة تقنية احترافية لمحترفي الطباعة والتصفيح والتغليف.",
 
-            "Request a Solution":
-                "اطلب حلاً",
+            technologyTitle: "تقنيات التغليف",
+            technologyDescription: "تعرف على مواد التغليف والتطبيقات وعمليات الإنتاج والأساسيات التقنية.",
 
-            "SECPACK PLATFORM":
-                "منصة SECPACK",
+            insightsTitle: "رؤى تقنية",
+            insightsDescription: "تعرف على تأثير اختيار المواد والجودة وظروف الإنتاج على النتائج النهائية.",
 
-            "Selected materials and practical information for printing, lamination and packaging professionals.":
-                "مواد مختارة ومعلومات عملية لمحترفي الطباعة والتصفيح والتغليف.",
+            industryTitle: "معلومات الصناعة",
+            industryDescription: "تابع التطورات المهمة وافهم الاحتياجات المتغيرة لصناعة التغليف العالمية.",
 
-            "Lamination Films":
-                "أفلام التصفيح",
+            exploreInformation: "استكشف المعلومات ←",
+            technicalInformation: "المعلومات التقنية ←",
+            marketIntelligence: "استكشف معلومات السوق ←",
 
-            "Professional finishing materials for reliable lamination and high-quality printing applications.":
-                "مواد تشطيب احترافية للتصفيح الموثوق وتطبيقات الطباعة عالية الجودة.",
+            solutions: "حلول احترافية",
+            solutionsTitle: "مصممة وفق احتياجات إنتاجك",
+            solutionsDescription: "تربط SecPack مواد التغليف الاحترافية بالمتطلبات التقنية العملية.",
 
-            "View Products →":
-                "عرض المنتجات ←",
+            lamination: "التصفيح",
+            laminationDescription: "حلول مواد لتطبيقات التصفيح والتشطيب الاحترافية.",
 
-            "Lamination Adhesives":
-                "مواد لاصقة للتصفيح",
+            printing: "الطباعة والتشطيب",
+            printingDescription: "مواد تغليف مختارة لأداء موثوق في الطباعة والتشطيب.",
 
-            "Water-based adhesive solutions for paper, film and packaging lamination applications.":
-                "حلول لاصقة مائية لتطبيقات تصفيح الورق والأفلام والتغليف.",
+            production: "إنتاج التغليف",
+            productionDescription: "حلول عملية للمواد للمحولين والطابعين ومصنعي التغليف.",
 
-            "Technical Solutions":
-                "حلول تقنية",
+            helpTitle: "هل تحتاج إلى مساعدة في اختيار المادة المناسبة؟",
+            helpDescription: "أخبرنا عن تطبيقك وعملية الإنتاج ومتطلبات المواد لديك. يمكن لـ SecPack مساعدتك في تحديد الحل الأنسب.",
+            talkToSecPack: "تواصل مع SecPack",
 
-            "Packaging Materials":
-                "مواد التغليف",
+            enterprise: "SECPACK ENTERPRISE",
+            enterpriseTitle: "لنقدم حلول تغليف أفضل",
+            enterpriseDescription: "سواء كنت بحاجة إلى مادة تغليف محددة أو إرشاد تقني أو حل توريد احترافي، فإن فريقنا مستعد لفهم متطلباتك.",
 
-            "Professional materials supporting modern packaging production and converting requirements.":
-                "مواد احترافية تدعم إنتاج التغليف الحديث ومتطلبات التحويل.",
+            requestQuote: "طلب عرض سعر",
+            exploreProducts: "استكشف المنتجات",
+            requestSolution: "اطلب حلاً",
 
-            "Production Materials":
-                "مواد الإنتاج",
+            footerDescription: "منصة عالمية لمعلومات التغليف لصناعة الطباعة والتغليف.",
+            footerTagline: "مواد وحلول تغليف احترافية",
 
-            "Industrial Solutions":
-                "حلول صناعية",
+            products: "المنتجات",
+            thermalFilm: "فيلم التصفيح الحراري",
+            waterAdhesive: "لاصق مائي",
+            packagingMaterials: "مواد التغليف",
 
-            "Practical packaging material solutions for different industrial applications and production needs.":
-                "حلول عملية لمواد التغليف لمختلف التطبيقات الصناعية واحتياجات الإنتاج.",
+            platformNav: "المنصة",
+            home: "الرئيسية",
+            dashboard: "لوحة التحكم",
+            store: "المتجر",
 
-            "Professional Support":
-                "دعم احترافي",
-
-            "Discuss Requirements →":
-                "ناقش المتطلبات ←",
-
-            "SECPACK KNOWLEDGE":
-                "معرفة SECPACK",
-
-            "Packaging Knowledge Center":
-                "مركز معرفة التغليف",
-
-            "Professional technical knowledge for printing, lamination and packaging professionals.":
-                "معرفة تقنية احترافية لمحترفي الطباعة والتصفيح والتغليف.",
-
-            "Packaging Technology":
-                "تقنيات التغليف",
-
-            "Understand packaging materials, applications, production processes and technical fundamentals.":
-                "تعرف على مواد التغليف والتطبيقات وعمليات الإنتاج والأساسيات التقنية.",
-
-            "Explore Information →":
-                "استكشف المعلومات ←",
-
-            "Technical Insights":
-                "رؤى تقنية",
-
-            "Learn how material selection, quality and production conditions affect final results.":
-                "تعرف على كيفية تأثير اختيار المواد والجودة وظروف الإنتاج على النتائج النهائية.",
-
-            "Technical Information →":
-                "المعلومات التقنية ←",
-
-            "Industry Intelligence":
-                "معلومات الصناعة",
-
-            "Follow important developments and understand the changing needs of the global packaging industry.":
-                "تابع التطورات المهمة وافهم الاحتياجات المتغيرة لصناعة التغليف العالمية.",
-
-            "Explore Market Intelligence →":
-                "استكشف معلومات السوق ←",
-
-            "PROFESSIONAL SOLUTIONS":
-                "حلول احترافية",
-
-            "Built Around Your Production Needs":
-                "حلول مصممة وفق احتياجات إنتاجك",
-
-            "SecPack connects professional packaging materials with practical technical requirements.":
-                "تربط SecPack مواد التغليف الاحترافية بالمتطلبات التقنية العملية.",
-
-            "Lamination":
-                "التصفيح",
-
-            "Material solutions for professional lamination and finishing applications.":
-                "حلول مواد لتطبيقات التصفيح والتشطيب الاحترافية.",
-
-            "Printing & Finishing":
-                "الطباعة والتشطيب",
-
-            "Packaging materials selected for reliable printing and finishing performance.":
-                "مواد تغليف مختارة لأداء موثوق في الطباعة والتشطيب.",
-
-            "Packaging Production":
-                "إنتاج التغليف",
-
-            "Practical material solutions for converters, printers and packaging manufacturers.":
-                "حلول عملية للمواد للمحولين والطابعين ومصنعي التغليف.",
-
-            "Need Help Selecting the Right Material?":
-                "هل تحتاج إلى مساعدة في اختيار المادة المناسبة؟",
-
-            "Tell us about your application, production process and material requirements. SecPack can help you identify the most suitable solution.":
-                "أخبرنا عن تطبيقك وعملية الإنتاج ومتطلبات المواد لديك. يمكن لـ SecPack مساعدتك في تحديد الحل الأنسب.",
-
-            "Talk to SecPack":
-                "تواصل مع SecPack",
-
-            "SECPACK ENTERPRISE":
-                "SECPACK ENTERPRISE",
-
-            "Let's Build Better Packaging Solutions":
-                "لنقدم حلول تغليف أفضل",
-
-            "Whether you need a specific packaging material, technical guidance or a professional supply solution, our team is ready to understand your requirements.":
-                "سواء كنت بحاجة إلى مادة تغليف محددة أو إرشاد تقني أو حل توريد احترافي، فإن فريقنا مستعد لفهم متطلباتك.",
-
-            "Request a Quote":
-                "طلب عرض سعر",
-
-            "Global Packaging Intelligence Platform for the printing and packaging industry.":
-                "منصة عالمية لمعلومات التغليف لصناعة الطباعة والتغليف.",
-
-            "Thermal Lamination Film":
-                "فيلم التصفيح الحراري",
-
-            "Water-Based Adhesive":
-                "لاصق مائي",
-
-            "Knowledge Center":
-                "مركز المعرفة",
-
-            "Market Intelligence":
-                "معلومات السوق",
-
-            "Supplier Intelligence":
-                "معلومات الموردين",
-
-            "Professional Packaging Materials & Solutions":
-                "مواد وحلول تغليف احترافية",
-
-            "SecPack Enterprise © 2026":
-                "SecPack Enterprise © 2026"
+            resources: "المصادر",
+            knowledgeCenter: "مركز المعرفة",
+            supplierIntelligence: "معلومات الموردين"
         }
 
     };
 
 
-    function getCurrentLanguage() {
+    function getLanguage() {
 
-        return localStorage.getItem(
-            "secpack-language"
-        ) || "en";
-
-    }
-
-
-    function changeLanguage(language) {
+        const saved =
+            localStorage.getItem("secpack-language");
 
         if (
-            language !== "en" &&
-            language !== "fa" &&
-            language !== "ar"
+            saved === "en" ||
+            saved === "fa" ||
+            saved === "ar"
         ) {
-            language = "en";
+            return saved;
         }
 
-        localStorage.setItem(
-            "secpack-language",
-            language
-        );
+        const browser =
+            navigator.language ||
+            navigator.userLanguage ||
+            "en";
 
-        applyLanguage(language);
+        if (
+            browser.toLowerCase().startsWith("fa")
+        ) {
+            return "fa";
+        }
 
+        if (
+            browser.toLowerCase().startsWith("ar")
+        ) {
+            return "ar";
+        }
+
+        return "en";
     }
 
 
     function applyLanguage(language) {
 
-        const selectedDictionary =
-            dictionary[language];
+        const lang =
+            translations[language]
+                ? language
+                : "en";
 
-        if (!selectedDictionary) {
-            return;
-        }
+        const data =
+            translations[lang];
 
 
         document.documentElement.lang =
-            language;
+            lang;
 
         document.documentElement.dir =
-            language === "en"
+            lang === "en"
                 ? "ltr"
                 : "rtl";
 
@@ -434,139 +338,37 @@
         );
 
         document.body.classList.add(
-            "lang-" + language
+            "lang-" + lang
         );
 
 
-        translateElement(
-            document.body,
-            selectedDictionary
-        );
+        document
+            .querySelectorAll("[data-i18n]")
+            .forEach(function (element) {
 
-
-        updateLanguageButtons(
-            language
-        );
-
-    }
-
-
-    function translateElement(
-        element,
-        selectedDictionary
-    ) {
-
-        const walker =
-            document.createTreeWalker(
-                element,
-                NodeFilter.SHOW_TEXT,
-                {
-                    acceptNode: function (node) {
-
-                        const parent =
-                            node.parentElement;
-
-                        if (!parent) {
-                            return NodeFilter.FILTER_REJECT;
-                        }
-
-                        const tag =
-                            parent.tagName;
-
-                        if (
-                            tag === "SCRIPT" ||
-                            tag === "STYLE" ||
-                            tag === "NOSCRIPT"
-                        ) {
-                            return NodeFilter.FILTER_REJECT;
-                        }
-
-                        return NodeFilter.FILTER_ACCEPT;
-                    }
-                }
-            );
-
-
-        const textNodes = [];
-
-        let node;
-
-        while (
-            node = walker.nextNode()
-        ) {
-            textNodes.push(node);
-        }
-
-
-        textNodes.forEach(function (textNode) {
-
-            const original =
-                textNode.nodeValue;
-
-            const clean =
-                original.trim();
-
-            if (!clean) {
-                return;
-            }
-
-
-            if (
-                selectedDictionary[
-                    clean
-                ]
-            ) {
-
-                textNode.nodeValue =
-                    original.replace(
-                        clean,
-                        selectedDictionary[clean]
-                    );
-
-            }
-
-        });
-
-
-        /*
-         * Translate common attributes
-         */
-
-        element
-            .querySelectorAll(
-                "input, textarea, button"
-            )
-            .forEach(function (item) {
-
-                const placeholder =
-                    item.getAttribute(
-                        "placeholder"
+                const key =
+                    element.getAttribute(
+                        "data-i18n"
                     );
 
                 if (
-                    placeholder &&
-                    selectedDictionary[
-                        placeholder
-                    ]
+                    data[key] !== undefined
                 ) {
 
-                    item.setAttribute(
-                        "placeholder",
-                        selectedDictionary[
-                            placeholder
-                        ]
-                    );
+                    element.textContent =
+                        data[key];
 
                 }
 
             });
 
+
+        updateLanguageButtons(lang);
+
     }
 
 
-    function updateLanguageButtons(
-        language
-    ) {
+    function updateLanguageButtons(language) {
 
         const buttons =
             document.querySelectorAll(
@@ -576,19 +378,22 @@
 
         buttons.forEach(function (button) {
 
-            const code =
-                button.getAttribute(
-                    "data-language"
-                );
-
-
             button.classList.remove(
                 "active-language"
             );
 
 
+            const onclick =
+                button.getAttribute(
+                    "onclick"
+                );
+
+
             if (
-                code === language
+                onclick &&
+                onclick.includes(
+                    "'" + language + "'"
+                )
             ) {
 
                 button.classList.add(
@@ -603,14 +408,32 @@
 
 
     window.changeLanguage =
-        changeLanguage;
+        function (language) {
+
+            localStorage.setItem(
+                "secpack-language",
+                language
+            );
+
+            applyLanguage(language);
+
+        };
 
 
     window.SecPackLanguage = {
 
-        get: getCurrentLanguage,
+        get: getLanguage,
 
-        set: changeLanguage,
+        set: function (language) {
+
+            localStorage.setItem(
+                "secpack-language",
+                language
+            );
+
+            applyLanguage(language);
+
+        },
 
         apply: applyLanguage
 
@@ -621,11 +444,8 @@
         "DOMContentLoaded",
         function () {
 
-            const language =
-                getCurrentLanguage();
-
             applyLanguage(
-                language
+                getLanguage()
             );
 
         }
