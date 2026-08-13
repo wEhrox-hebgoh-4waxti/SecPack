@@ -1,34 +1,104 @@
 [
   {
     "id": 1,
+    "sku": "SP-P-0001",
     "name": "Water-Based Lamination Adhesive",
     "category": "Lamination Adhesive",
-    "application": "Paper to Film / Film to Film",
-    "description": "Water-based adhesive solutions for professional lamination and packaging applications.",
-    "status": "Active"
+    "status": "Active",
+
+    "applications": [
+      "Paper to Film",
+      "Film to Film"
+    ],
+
+    "technical": {
+      "description": "Water-based adhesive solutions for professional lamination and packaging applications.",
+      "machineCompatibility": [],
+      "substrates": [],
+      "features": [],
+      "storage": ""
+    },
+
+    "documents": {
+      "tds": [],
+      "coa": [],
+      "msds": []
+    }
   },
   {
     "id": 2,
+    "sku": "SP-P-0002",
     "name": "Thermal Lamination Film",
     "category": "Lamination Film",
-    "application": "Printing & Packaging Finishing",
-    "description": "Professional thermal lamination film for smooth finishing, reliable adhesion and high-quality printed materials.",
-    "status": "Active"
+    "status": "Active",
+
+    "applications": [
+      "Printing",
+      "Packaging Finishing"
+    ],
+
+    "technical": {
+      "description": "Professional thermal lamination film for smooth finishing and reliable adhesion.",
+      "machineCompatibility": [],
+      "substrates": [],
+      "features": [],
+      "storage": ""
+    },
+
+    "documents": {
+      "tds": [],
+      "coa": [],
+      "msds": []
+    }
   },
   {
     "id": 3,
+    "sku": "SP-P-0003",
     "name": "Packaging Materials",
     "category": "Packaging Materials",
-    "application": "Packaging Production",
-    "description": "Selected packaging materials designed to support professional printing, converting and packaging production.",
-    "status": "Active"
+    "status": "Active",
+
+    "applications": [
+      "Packaging Production"
+    ],
+
+    "technical": {
+      "description": "Selected packaging materials for professional converting and packaging production.",
+      "machineCompatibility": [],
+      "substrates": [],
+      "features": [],
+      "storage": ""
+    },
+
+    "documents": {
+      "tds": [],
+      "coa": [],
+      "msds": []
+    }
   },
   {
     "id": 4,
+    "sku": "SP-P-0004",
     "name": "Industrial Packaging Solutions",
     "category": "Industrial Solutions",
-    "application": "Industrial Packaging",
-    "description": "Material solutions for specialized industrial packaging requirements and production applications.",
-    "status": "Active"
+    "status": "Active",
+
+    "applications": [
+      "Industrial Packaging"
+    ],
+
+    "technical": {
+      "description": "Material solutions for specialized industrial packaging requirements.",
+      "machineCompatibility": [],
+      "substrates": [],
+      "features": [],
+      "storage": ""
+    },
+
+    "documents": {
+      "tds": [],
+      "coa": [],
+      "msds": []
+    }
   }
 ]
