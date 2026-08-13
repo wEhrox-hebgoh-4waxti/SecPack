@@ -65,16 +65,21 @@ AR
 
 <main>
 
-<section class="hero">
+<section class="hero secpack-hero">
 
 <div class="hero-content">
 
-<h1>
-Products
+<div class="hero-badge">
+📦 SECPACK PRODUCTS
+</div>
+
+<h1 class="hero-title">
+Professional Packaging Materials
 </h1>
 
-<p>
-Professional packaging materials and technical solutions.
+<p class="hero-description">
+Selected packaging materials and practical solutions
+for printing, lamination and packaging applications.
 </p>
 
 </div>
@@ -83,9 +88,26 @@ Professional packaging materials and technical solutions.
 
 <section class="categories">
 
+<div class="section-heading">
+
+<span class="section-eyebrow">
+PRODUCT PORTFOLIO
+</span>
+
+<h2>
+Available Materials
+</h2>
+
+<p>
+Explore SecPack materials by category and application.
+</p>
+
+</div>
+
 <div
 id="products-container"
-class="cards"></div>
+class="cards">
+</div>
 
 </section>
 
@@ -93,52 +115,229 @@ class="cards"></div>
 
 <footer class="site-footer">
 
+<div class="footer-content">
+
+<div class="footer-brand">
+
+<h2>
+SecPack
+</h2>
+
+<p>
+Global Packaging Intelligence Platform
+for the printing and packaging industry.
+</p>
+
+</div>
+
+<div class="footer-links">
+
+<div>
+
+<h3>
+Products
+</h3>
+
+<a href="products.html">
+Thermal Lamination Film
+</a>
+
+<a href="products.html">
+Water-Based Adhesive
+</a>
+
+<a href="products.html">
+Packaging Materials
+</a>
+
+</div>
+
+<div>
+
+<h3>
+Platform
+</h3>
+
+<a href="../index.html">
+Home
+</a>
+
+<a href="dashboard.html">
+Dashboard
+</a>
+
+<a href="store.html">
+Store
+</a>
+
+</div>
+
+<div>
+
+<h3>
+Resources
+</h3>
+
+<a href="documents.html">
+Knowledge Center
+</a>
+
+<a href="market.html">
+Market Intelligence
+</a>
+
+</div>
+
+</div>
+
+</div>
+
 <div class="footer-bottom">
 
 <p>
 SecPack Enterprise © 2026
 </p>
 
+<p>
+Professional Packaging Materials &amp; Solutions
+</p>
+
 </div>
 
-</footer>
-
-<script src="../language.js"></script>
+</footer><script src="../language.js"></script>
 <script src="../data-engine.js"></script>
 
 <script>
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", async function () {
 
-    await window.SecPack.initialize();
+    const container =
+        document.getElementById("products-container");
 
-    const container = document.getElementById("products-container");
+    if (!container) {
+        return;
+    }
 
-    container.innerHTML = "";
+    try {
 
-    window.SecPack.products.forEach(product => {
+        if (!window.SecPack) {
+            throw new Error(
+                "SecPack Data Engine is not available."
+            );
+        }
 
-        container.innerHTML += `
+        await window.SecPack.initialize();
 
-        <article class="card">
+        const products =
+            Array.isArray(window.SecPack.products)
+                ? window.SecPack.products
+                : [];
 
-            <h2>${product.name}</h2>
+        if (products.length === 0) {
 
-            <p>${product.technical.description}</p>
+            container.innerHTML = `
+                <article class="card">
+                    <h2>No Products Available</h2>
+                    <p>
+                        Product information is currently
+                        unavailable.
+                    </p>
+                </article>
+            `;
 
-            <strong>${product.category}</strong>
+            return;
+        }
 
-            <br><br>
+        container.innerHTML = "";
 
-            <a href="supplier-profile.html?product=${product.id}">
-                View Details →
-            </a>
+        products.forEach(function (product) {
 
-        </article>
+            const description =
+                product.description ||
+                "Professional packaging material solution.";
+
+            const category =
+                product.category ||
+                "Packaging Materials";
+
+            const application =
+                product.application ||
+                "";
+
+            container.innerHTML += `
+
+                <article class="card">
+
+                    <div class="card-icon">
+                        📦
+                    </div>
+
+                    <h2>
+                        ${product.name || "Product"}
+                    </h2>
+
+                    <p>
+                        ${description}
+                    </p>
+
+                    <strong>
+                        ${category}
+                    </strong>
+
+                    ${
+                        application
+                            ? `
+                                <p>
+                                    <strong>
+                                        Application:
+                                    </strong>
+                                    ${application}
+                                </p>
+                              `
+                            : ""
+                    }
+
+                    <a
+                        href="supplier-profile.html?product=${product.id}"
+                    >
+                        View Product Intelligence →
+                    </a>
+
+                </article>
+
+            `;
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "SecPack Products initialization failed:",
+            error
+        );
+
+        container.innerHTML = `
+
+            <article class="card">
+
+                <div class="card-icon">
+                    ⚠️
+                </div>
+
+                <h2>
+                    Product Data Unavailable
+                </h2>
+
+                <p>
+                    The product data could not be loaded.
+                    Please try again later.
+                </p>
+
+            </article>
 
         `;
 
-    });
+    }
 
 });
 
