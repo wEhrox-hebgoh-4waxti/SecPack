@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "supplierId": 1,
+    "productId": 1,
+    "date": "2026-07-15",
+    "price": 1.98,
+    "currency": "USD",
+    "unit": "kg",
+    "incoterm": "FOB Shanghai",
+    "source": "Quotation",
+    "notes": "Initial quotation received."
+  },
+  {
+    "id": 2,
+    "supplierId": 2,
+    "productId": 2,
+    "date": "",
+    "price": 2.20,
+    "currency": "USD",
+    "unit": "kg",
+    "incoterm": "FOB Qingdao",
+    "source": "Quotation",
+    "notes": "Current quoted price."
+  }
+]
