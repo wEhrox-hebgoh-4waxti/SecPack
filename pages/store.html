@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>SecPack Supply Center</title>
+
 <link rel="stylesheet" href="../style.css">
+
 </head>
 
 <body>
@@ -28,20 +33,21 @@
 
 <a href="../index.html">Home</a>
 <a href="products.html">Products</a>
-<a href="store.html">Store</a>
+<a href="store.html" class="active">Store</a>
 <a href="dashboard.html">Dashboard</a>
 <a href="contact.html">Contact</a>
 
 </nav>
 
 <div class="languages">
+
 <button onclick="changeLanguage('en')">EN</button>
 <button onclick="changeLanguage('fa')">FA</button>
 <button onclick="changeLanguage('ar')">AR</button>
+
 </div>
 
 </header>
-
 
 <main>
 
@@ -84,7 +90,6 @@ long-term supply.
 
 </section>
 
-
 <section class="categories">
 
 <div class="section-heading">
@@ -104,120 +109,12 @@ your application and production requirements.
 
 </div>
 
-
-<div class="cards">
-
-<article class="card">
-
-<div class="card-icon">
-🎞️
-</div>
-
-<h2>
-Thermal Lamination Film
-</h2>
-
-<p>
-Professional film solutions for printing,
-finishing and thermal lamination applications.
-</p>
-
-<div class="card-meta">
-<span>FILM</span>
-<span>LAMINATION</span>
-</div>
-
-<a href="contact.html">
-Request Supply →
-</a>
-
-</article>
-
-
-<article class="card">
-
-<div class="card-icon">
-🧪
-</div>
-
-<h2>
-Water-Based Adhesive
-</h2>
-
-<p>
-Adhesive solutions for paper, film and
-professional lamination applications.
-</p>
-
-<div class="card-meta">
-<span>ADHESIVE</span>
-<span>WATER-BASED</span>
-</div>
-
-<a href="contact.html">
-Request Supply →
-</a>
-
-</article>
-
-
-<article class="card">
-
-<div class="card-icon">
-📦
-</div>
-
-<h2>
-Packaging Materials
-</h2>
-
-<p>
-Selected materials for modern packaging,
-printing and converting operations.
-</p>
-
-<div class="card-meta">
-<span>PACKAGING</span>
-<span>PRODUCTION</span>
-</div>
-
-<a href="contact.html">
-Request Supply →
-</a>
-
-</article>
-
-
-<article class="card">
-
-<div class="card-icon">
-🏭
-</div>
-
-<h2>
-Industrial Solutions
-</h2>
-
-<p>
-Specialized material solutions for industrial
-packaging and production requirements.
-</p>
-
-<div class="card-meta">
-<span>INDUSTRIAL</span>
-<span>CUSTOM</span>
-</div>
-
-<a href="contact.html">
-Discuss Requirements →
-</a>
-
-</article>
-
+<div
+id="store-products-container"
+class="cards">
 </div>
 
 </section>
-
 
 <section class="knowledge-center">
 
@@ -238,7 +135,6 @@ match the material with the actual production need.
 
 </div>
 
-
 <div class="knowledge-grid">
 
 <article class="knowledge-card">
@@ -258,7 +154,6 @@ quantity and important production conditions.
 
 </article>
 
-
 <article class="knowledge-card">
 
 <div class="knowledge-icon">
@@ -275,7 +170,6 @@ characteristics and application suitability.
 </p>
 
 </article>
-
 
 <article class="knowledge-card">
 
@@ -297,7 +191,6 @@ based on technical and commercial requirements.
 </div>
 
 </section>
-
 
 <section class="professional-support">
 
@@ -338,7 +231,6 @@ the real application.
 
 </section>
 
-
 <section class="quote">
 
 <h2>
@@ -358,10 +250,7 @@ Request a Quote
 
 </section>
 
-</main>
-
-
-<footer class="site-footer">
+</main><footer class="site-footer">
 
 <div class="footer-content">
 
@@ -375,7 +264,6 @@ for the printing and packaging industry.
 </p>
 
 </div>
-
 
 <div class="footer-links">
 
@@ -397,7 +285,6 @@ Packaging Materials
 
 </div>
 
-
 <div>
 
 <h3>Platform</h3>
@@ -415,7 +302,6 @@ Store
 </a>
 
 </div>
-
 
 <div>
 
@@ -439,7 +325,6 @@ Supplier Intelligence
 
 </div>
 
-
 <div class="footer-bottom">
 
 <p>
@@ -454,8 +339,141 @@ Professional Packaging Materials &amp; Solutions
 
 </footer>
 
-
 <script src="../language.js"></script>
+<script src="../data-engine.js"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", async function () {
+
+    const container =
+        document.getElementById("store-products-container");
+
+    if (!container) {
+        return;
+    }
+
+    try {
+
+        await window.SecPack.initialize();
+
+        const products =
+            Array.isArray(window.SecPack.products)
+                ? window.SecPack.products
+                : [];
+
+        container.innerHTML = "";
+
+        products.forEach(function (product) {
+
+            container.innerHTML += `
+
+                <article class="card">
+
+                    <div class="card-icon">
+                        📦
+                    </div>
+
+                    <h2>
+                        ${product.name || "Packaging Material"}
+                    </h2>
+
+                    <p>
+                        ${
+                            product.description ||
+                            "Professional packaging material solution."
+                        }
+                    </p>
+
+                    <div class="card-meta">
+
+                        <span>
+                            ${product.category || "PACKAGING"}
+                        </span>
+
+                        <span>
+                            ${product.status || "ACTIVE"}
+                        </span>
+
+                    </div>
+
+                    <a href="contact.html">
+                        Request Supply →
+                    </a>
+
+                </article>
+
+            `;
+
+        });
+
+        if (products.length === 0) {
+
+            container.innerHTML = `
+
+                <article class="card">
+
+                    <div class="card-icon">
+                        📦
+                    </div>
+
+                    <h2>
+                        Supply Catalog
+                    </h2>
+
+                    <p>
+                        Product information is currently
+                        unavailable.
+                    </p>
+
+                    <a href="contact.html">
+                        Contact SecPack →
+                    </a>
+
+                </article>
+
+            `;
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "SecPack Store initialization failed:",
+            error
+        );
+
+        container.innerHTML = `
+
+            <article class="card">
+
+                <div class="card-icon">
+                    ⚠️
+                </div>
+
+                <h2>
+                    Supply Catalog Unavailable
+                </h2>
+
+                <p>
+                    Product data could not be loaded.
+                    Please contact SecPack for supply information.
+                </p>
+
+                <a href="contact.html">
+                    Contact SecPack →
+                </a>
+
+            </article>
+
+        `;
+
+    }
+
+});
+
+</script>
+
 <script src="../script.js"></script>
 
 </body>
