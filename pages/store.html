@@ -1,23 +1,53 @@
 <!doctype html>
-<html lang="en" dir="ltr"><head>
+<html lang="en" dir="ltr">
+<head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Explore SecPack material categories and submit a requirement for professional supply support.">
-<title>SecPack | Supply Center</title><link rel="icon" href="../logo.jpg"><link rel="stylesheet" href="../style.css">
-</head><body>
-<header class="topbar"><a class="logo-area" href="../index.html" aria-label="SecPack Home"><div class="logo-box"><img src="../logo.jpg" alt="SecPack Logo"></div><div><h1>SecPack</h1><p>Professional Packaging Materials Supplier</p></div></a>
-<nav class="site-navigation" aria-label="Primary"><a href="../index.html">Home</a><a href="products.html">Products</a><a href="market.html">Market Intelligence</a><a href="documents.html">Resources</a><a href="contact.html">Contact</a></nav>
-<div class="languages"><button onclick="changeLanguage('en')">EN</button><button onclick="changeLanguage('fa')">FA</button><button onclick="changeLanguage('ar')">AR</button></div></header>
+<meta name="description" content="SEC PACK online supply center — A4 copy paper, lamination films, water-based adhesives and packaging materials.">
+<meta name="keywords" content="SEC PACK, Sec Pack, A4 copy paper, online order, packaging materials">
+<link rel="canonical" href="https://wehrox-hebgoh-4waxti.github.io/SecPack/pages/store.html">
+<title>SEC PACK | Online Supply Center</title><link rel="icon" href="../logo.jpg"><link rel="stylesheet" href="../style.css">
+<style>
+.store-bar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:20px 0;flex-wrap:wrap}
+.cart-button{border:1px solid var(--line);background:var(--paper);padding:12px 16px;border-radius:12px;font-weight:700;cursor:pointer}
+.order-panel{display:none;margin:24px 0;padding:24px;border:1px solid var(--line);border-radius:18px;background:#fff}
+.order-panel.open{display:block}.cart-row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.qty{display:flex;align-items:center;gap:8px}.qty button{width:32px;height:32px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.checkout-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}.checkout-grid input,.checkout-grid textarea,.checkout-grid select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:inherit}.checkout-grid textarea{min-height:110px;grid-column:1/-1}.full{grid-column:1/-1}
+@media(max-width:700px){.checkout-grid{grid-template-columns:1fr}.full,.checkout-grid textarea{grid-column:auto}}
+</style>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="../index.html"><img src="../logo.jpg" alt="SEC PACK"><span><b>SEC PACK</b><small>International Trade & Sourcing</small></span></a>
+<nav><a href="../index.html">Home</a><a href="products.html">Products</a><a class="active" href="store.html">Online Store</a><a href="market.html">Market Insights</a><a href="contact.html">Contact</a></nav>
+<div class="langs"><button data-lang="en">EN</button><button data-lang="fa">FA</button><button data-lang="ar">AR</button></div></header>
 <main>
-<section class="page-hero"><div class="page-hero-inner"><span class="eyebrow">SUPPLY CENTER</span><h2>Packaging materials supply</h2><p>Explore SecPack material categories and submit a requirement for professional supply support.</p></div></section>
-
-<section class="categories"><div class="section-heading"><span class="section-eyebrow">PRODUCT PORTFOLIO</span><h2>Materials for professional applications</h2><p>SecPack works with selected packaging and printing material categories. Availability depends on specification, market and procurement program.</p></div>
+<section class="page-hero"><span class="eyebrow">ONLINE SUPPLY CENTER</span><h1>Choose a product, add your quantity, and prepare your order online.</h1><p>For B2B products, final price and availability are confirmed after specification, destination and quantity review.</p></section>
+<section class="section">
+<div class="store-bar"><div><span class="section-eyebrow">PRODUCTS</span><h2>Order-ready supply categories</h2></div><button class="cart-button" onclick="toggleCart()">Cart (<span id="cartCount">0</span>)</button></div>
 <div class="product-grid">
-<article class="product-feature"><span class="tag">A4 · 75–80 GSM</span><h2>Copy Paper</h2><p>Cut-size office paper for professional printing and everyday document applications.</p><ul><li>210 × 297 mm</li><li>500 sheets / ream</li><li>Virgin or wood-pulp programs</li><li>OEM / private label where available</li></ul><a href="contact.html">Request supply →</a></article>
-<article class="product-feature"><span class="tag">BOPP · PET · MPET</span><h2>Lamination Films</h2><p>Film solutions for paper and board lamination, selected around equipment and finishing requirements.</p><ul><li>Industrial converting</li><li>Surface and bonding requirements</li><li>Application-specific evaluation</li></ul><a href="contact.html">Discuss application →</a></article>
-<article class="product-feature"><span class="tag">WATER-BASED</span><h2>Adhesives</h2><p>Water-based adhesive programs for dry lamination and paper/film/board applications.</p><ul><li>Technical compatibility review</li><li>TDS / COA where applicable</li><li>Process-oriented evaluation</li></ul><a href="contact.html">Request technical information →</a></article>
-<article class="product-feature"><span class="tag">B2B SUPPLY</span><h2>Packaging Materials</h2><p>Additional packaging materials can be sourced according to application, specification and volume.</p><ul><li>Requirement-based sourcing</li><li>Manufacturer identification</li><li>Procurement coordination</li></ul><a href="contact.html">Send your requirement →</a></article>
-</div></section>
-<section class="professional-support"><div class="support-content"><span class="section-eyebrow">SUPPLY PRINCIPLE</span><h2>The application comes first</h2><p>The same material category can require different specifications depending on equipment, substrate, production speed and final use. SecPack starts from those variables.</p><div class="actions"><a href="contact.html"><button>Request Information</button></a><a href="documents.html"><button class="secondary-action">Review Resources</button></a></div></div></section>
+<article class="product-feature"><span class="tag">A4 · 75–80 GSM</span><h2>A4 Copy Paper</h2><p>210 × 297 mm · 500 sheets/ream · 5 reams/carton</p><button class="btn primary" onclick="addToCart('paper','A4 Copy Paper')">Add to order</button></article><article class="product-feature"><span class="tag">BOPP · PET · MPET</span><h2>Lamination Films</h2><p>Film solutions for paper and board lamination</p><button class="btn primary" onclick="addToCart('film','Lamination Films')">Add to order</button></article><article class="product-feature"><span class="tag">TECHNICAL SUPPLY</span><h2>Water-Based Adhesives</h2><p>Dry-lamination applications · TDS/COA where applicable</p><button class="btn primary" onclick="addToCart('adhesive','Water-Based Adhesives')">Add to order</button></article><article class="product-feature"><span class="tag">B2B SUPPLY</span><h2>Packaging Materials</h2><p>Specification-led sourcing for converters and manufacturers</p><button class="btn primary" onclick="addToCart('packaging','Packaging Materials')">Add to order</button></article>
+</div>
+<div id="orderPanel" class="order-panel"><h2>Your online order</h2><div id="cartRows"></div><p><strong>Final quotation:</strong> SEC PACK will confirm price, availability, specifications, delivery terms and payment method before order acceptance.</p>
+<div class="checkout-grid">
+<input id="customerName" placeholder="Name / Company">
+<input id="customerEmail" type="email" placeholder="Email">
+<input id="customerPhone" placeholder="Phone / WhatsApp">
+<input id="destination" placeholder="Delivery destination">
+<select id="payment"><option value="">Preferred payment method</option><option>Bank transfer</option><option>Local online payment</option><option>International payment</option></select>
+<textarea id="notes" placeholder="Quantity, packaging, specification, destination and any special requirements"></textarea>
+<button class="btn primary full" onclick="prepareOrder()">Prepare order request</button>
+</div><div id="orderResult"></div></div>
+</section>
+<section class="cta"><span class="eyebrow">B2B CHECKOUT</span><h2>Online ordering, with commercial confirmation.</h2><p>We keep the checkout practical: you submit the order online, then SEC PACK confirms the commercial terms before payment or dispatch.</p></section>
 </main>
-<footer class="site-footer"><div class="footer-content"><div class="footer-brand"><h2>SecPack</h2><p>International Trade · Sourcing · Procurement · Packaging Materials</p></div><div class="footer-links"><div><h3>Products</h3><a href="products.html">Copy Paper</a><a href="products.html">Lamination Films</a><a href="products.html">Water-Based Adhesives</a></div><div><h3>Resources</h3><a href="market.html">Market Intelligence</a><a href="documents.html">Knowledge Center</a><a href="supplier-profile.html">Supplier Intelligence</a></div><div><h3>Contact</h3><a href="contact.html">Request Information</a><a href="../index.html">Home</a></div></div></div><div class="footer-bottom"><span>SecPack Enterprise © 2026</span><span>Professional Packaging Materials &amp; Trade Solutions</span></div></footer>
-<script src="../language.js"></script><script src="../data-engine.js"></script><script src="../script.js"></script></body></html>
+<footer><div class="footer-main"><div><a class="brand footer-brand" href="../index.html"><img src="../logo.jpg" alt="SEC PACK"><span><b>SEC PACK</b><small>International Trade & Sourcing</small></span></a></div><div><h4>Explore</h4><a href="products.html">Products</a><a href="store.html">Online Store</a><a href="documents.html">Resources</a></div><div><h4>Connect</h4><a href="contact.html">Contact</a></div></div><div class="footer-bottom">SEC PACK © 2026 <span>International Trade · Sourcing · Procurement</span></div></footer>
+<script>
+const items=JSON.parse(localStorage.getItem("secpack-cart")||"[]");
+function save(){localStorage.setItem("secpack-cart",JSON.stringify(items));render()}
+function addToCart(id,name){const x=items.find(i=>i.id===id);if(x)x.qty++;else items.push({id,name,qty:1});save();document.getElementById("orderPanel").classList.add("open")}
+function changeQty(id,d){const x=items.find(i=>i.id===id);if(!x)return;x.qty+=d;if(x.qty<1)items.splice(items.indexOf(x),1);save()}
+function render(){document.getElementById("cartCount").textContent=items.reduce((a,b)=>a+b.qty,0);document.getElementById("cartRows").innerHTML=items.length?items.map(i=>'<div class="cart-row"><strong>'+i.name+'</strong><span class="qty"><button onclick="changeQty(\''+i.id+'\',-1)">−</button>'+i.qty+'<button onclick="changeQty(\''+i.id+'\',1)">+</button></span></div>').join(""):"<p>Your order is empty.</p>"}
+function toggleCart(){document.getElementById("orderPanel").classList.toggle("open");render()}
+function prepareOrder(){if(!items.length){alert("Add at least one product.");return}const data={customer:document.getElementById("customerName").value,email:document.getElementById("customerEmail").value,phone:document.getElementById("customerPhone").value,destination:document.getElementById("destination").value,payment:document.getElementById("payment").value,notes:document.getElementById("notes").value,items};localStorage.setItem("secpack-last-order",JSON.stringify(data));document.getElementById("orderResult").innerHTML='<div class="quote"><strong>Order prepared.</strong><p>Your order details are saved on this device. The next production step is connecting this checkout to SEC PACK\'s confirmed order/payment endpoint.</p></div>'}
+render();
+</script><script src="../language.js"></script></body></html>
