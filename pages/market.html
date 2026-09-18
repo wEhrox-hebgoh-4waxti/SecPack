@@ -16,58 +16,11 @@
 
 <header class="topbar">
 
-<div class="logo-area">
+<a class="brand" href="../index.html"><img src="../logo.jpg" alt="SEC PACK"><span><b>SEC PACK</b><small>International Trade & Sourcing</small></span></a>
 
-<div class="logo-box">
-<img src="../logo.jpg" alt="SecPack Logo">
-</div>
+<nav><a href="../index.html">Home</a><a href="products.html">Products</a><a href="market.html">Market Insights</a><a href="documents.html">Resources</a><a href="contact.html">Contact</a></nav>
 
-<div>
-<h1>SecPack</h1>
-<p>Professional Packaging Materials Supplier</p>
-</div>
-
-</div>
-
-<nav class="site-navigation">
-
-<a href="../index.html">
-Home
-</a>
-
-<a href="products.html">
-Products
-</a>
-
-<a href="store.html">
-Store
-</a>
-
-<a href="dashboard.html">
-Dashboard
-</a>
-
-<a href="contact.html">
-Contact
-</a>
-
-</nav>
-
-<div class="languages">
-
-<button onclick="changeLanguage('en')">
-EN
-</button>
-
-<button onclick="changeLanguage('fa')">
-FA
-</button>
-
-<button onclick="changeLanguage('ar')">
-AR
-</button>
-
-</div>
+<div class="langs"><button data-lang="en">EN</button><button data-lang="fa">FA</button><button data-lang="ar">AR</button></div>
 
 </header>
 
@@ -459,9 +412,11 @@ Professional Packaging Materials &amp; Solutions
 
 </footer>
 
-<script src="../language.js"></script>
-<script src="../data-engine.js"></script>
-<script src="../script.js"></script>
 
-</body>
-</html>
+
+
+
+<script>
+document.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>{const l=b.dataset.lang;document.documentElement.lang=l;document.documentElement.dir=l==="fa"||l==="ar"?"rtl":"ltr";localStorage.setItem("secpack-lang",l);document.querySelectorAll("[data-lang]").forEach(x=>x.classList.toggle("on",x.dataset.lang===l));}));
+const l=localStorage.getItem("secpack-lang")||"en";document.documentElement.lang=l;document.documentElement.dir=l==="fa"||l==="ar"?"rtl":"ltr";document.querySelectorAll("[data-lang]").forEach(x=>x.classList.toggle("on",x.dataset.lang===l));
+</script></body></html>
