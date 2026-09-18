@@ -1,0 +1,16 @@
+# Never commit local secrets or private procurement data
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+private/
+internal/
+credentials/
+data/private/
+data/internal/
+*.sqlite
+*.db
+.DS_Store
