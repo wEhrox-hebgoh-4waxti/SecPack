@@ -4,3 +4,5 @@ Disallow: /data/
 Disallow: /pages/dashboard.html
 Disallow: /pages/supplier-profile.html
 Disallow: /pages/ai.html
+Disallow: /pages/email.html
+Disallow: /pages/settings.html
