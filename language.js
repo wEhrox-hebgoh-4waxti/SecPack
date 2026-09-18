@@ -125,7 +125,49 @@
             "Water-Based Adhesive":
                 "Water-Based Adhesive",
 
-            "SecPack Enterprise © 2026":
+            
+            "Procurement workspace":"Procurement workspace",
+            "CONTROL CENTER":"CONTROL CENTER",
+            "SUPPLIER INTELLIGENCE":"SUPPLIER INTELLIGENCE",
+            "How SecPack evaluates supply partners":"How SecPack evaluates supply partners",
+            "SUPPLY CENTER":"SUPPLY CENTER",
+            "Packaging materials supply":"Packaging materials supply",
+            "INTELLIGENCE WORKSPACE":"INTELLIGENCE WORKSPACE",
+            "Structured procurement intelligence":"Structured procurement intelligence",
+            "Technical documents":"Technical documents",
+            "Categories":"Categories",
+            "Languages":"Languages",
+            "Request Supplier Support":"Request Supplier Support",
+
+
+            "Procurement workspace":"محیط کاری تأمین و خرید",
+            "CONTROL CENTER":"مرکز کنترل",
+            "SUPPLIER INTELLIGENCE":"اطلاعات تأمین‌کنندگان",
+            "How SecPack evaluates supply partners":"روش ارزیابی شرکای تأمین در SecPack",
+            "SUPPLY CENTER":"مرکز تأمین",
+            "Packaging materials supply":"تأمین مواد بسته‌بندی",
+            "INTELLIGENCE WORKSPACE":"محیط اطلاعات و تحلیل",
+            "Structured procurement intelligence":"اطلاعات ساختاریافته برای تأمین و خرید",
+            "Technical documents":"اسناد فنی",
+            "Categories":"دسته‌بندی‌ها",
+            "Languages":"زبان‌ها",
+            "Request Supplier Support":"درخواست پشتیبانی تأمین",
+
+
+            "Procurement workspace":"مساحة عمل المشتريات",
+            "CONTROL CENTER":"مركز التحكم",
+            "SUPPLIER INTELLIGENCE":"معلومات الموردين",
+            "How SecPack evaluates supply partners":"كيفية تقييم SecPack لشركاء التوريد",
+            "SUPPLY CENTER":"مركز التوريد",
+            "Packaging materials supply":"توريد مواد التغليف",
+            "INTELLIGENCE WORKSPACE":"مساحة ذكاء المشتريات",
+            "Structured procurement intelligence":"معلومات منظمة للمشتريات والتوريد",
+            "Technical documents":"الوثائق التقنية",
+            "Categories":"الفئات",
+            "Languages":"اللغات",
+            "Request Supplier Support":"طلب دعم التوريد",
+
+"SecPack Enterprise © 2026":
                 "SecPack Enterprise © 2026"
         },
 
@@ -597,8 +639,10 @@
                     "SecPack | Documents",
                 market:
                     "SecPack | Market Intelligence",
-                supplier:
-                    "SecPack | Supplier Intelligence",
+                supplier: "SecPack | Supplier Intelligence",
+                dashboard: "SecPack | Dashboard",
+                store: "SecPack | Supply Center",
+                ai: "SecPack | Intelligence",
                 contact:
                     "SecPack | Contact",
                 default:
@@ -612,8 +656,10 @@
                     "SecPack | اسناد",
                 market:
                     "SecPack | اطلاعات بازار",
-                supplier:
-                    "SecPack | اطلاعات تأمین‌کنندگان",
+                supplier: "SecPack | اطلاعات تأمین‌کنندگان",
+                dashboard: "SecPack | داشبورد",
+                store: "SecPack | مرکز تأمین",
+                ai: "SecPack | هوش تأمین",
                 contact:
                     "SecPack | تماس",
                 default:
@@ -627,8 +673,10 @@
                     "SecPack | الوثائق",
                 market:
                     "SecPack | معلومات السوق",
-                supplier:
-                    "SecPack | معلومات الموردين",
+                supplier: "SecPack | معلومات الموردين",
+                dashboard: "SecPack | لوحة التحكم",
+                store: "SecPack | مركز التوريد",
+                ai: "SecPack | ذكاء المشتريات",
                 contact:
                     "SecPack | اتصل بنا",
                 default:
@@ -648,6 +696,12 @@
             path.includes("supplier-profile.html")
         ) {
             type = "supplier";
+        } else if (path.includes("dashboard.html")) {
+            type = "dashboard";
+        } else if (path.includes("store.html")) {
+            type = "store";
+        } else if (path.includes("ai.html")) {
+            type = "ai";
         } else if (path.includes("contact.html")) {
             type = "contact";
         }
