@@ -9,6 +9,7 @@
             "Home": "Home",
             "Products": "Products",
             "Store": "Store",
+            "Online Store": "Online Store",
             "Dashboard": "Dashboard",
             "Contact": "Contact",
             "Resources": "Resources",
@@ -175,6 +176,7 @@
             "Home": "خانه",
             "Products": "محصولات",
             "Store": "فروشگاه",
+            "Online Store": "فروشگاه آنلاین",
             "Dashboard": "داشبورد",
             "Contact": "تماس با ما",
             "Resources": "منابع",
@@ -313,6 +315,7 @@
             "Home": "الرئيسية",
             "Products": "المنتجات",
             "Store": "المتجر",
+            "Online Store": "المتجر الإلكتروني",
             "Dashboard": "لوحة التحكم",
             "Contact": "اتصل بنا",
             "Resources": "المصادر",
@@ -610,18 +613,41 @@
     function updateButtons(language) {
 
         document
-            .querySelectorAll(".languages button")
+            .querySelectorAll(".languages button, .langs button[data-lang]")
             .forEach(function (button) {
 
                 const onclick =
                     button.getAttribute("onclick") || "";
 
+                const dataLanguage =
+                    button.getAttribute("data-lang") || "";
+
                 button.classList.toggle(
                     "active-language",
-                    onclick.indexOf(
-                        "'" + language + "'"
-                    ) !== -1
+                    dataLanguage === language ||
+                    onclick.indexOf("'" + language + "'") !== -1
                 );
+
+                button.classList.toggle(
+                    "on",
+                    dataLanguage === language
+                );
+            });
+    }
+
+    function bindLanguageButtons() {
+        document
+            .querySelectorAll(".langs button[data-lang]")
+            .forEach(function (button) {
+                if (button.dataset.secpackLanguageBound === "true") {
+                    return;
+                }
+
+                button.dataset.secpackLanguageBound = "true";
+
+                button.addEventListener("click", function () {
+                    applyLanguage(button.getAttribute("data-lang"));
+                });
             });
     }
 
@@ -809,6 +835,7 @@
     document.addEventListener(
         "DOMContentLoaded",
         function () {
+            bindLanguageButtons();
             applyLanguage(
                 detectLanguage()
             );
