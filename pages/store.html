@@ -42,6 +42,7 @@
 </main>
 <footer><div class="footer-main"><div><a class="brand footer-brand" href="../index.html"><img src="../logo.jpg" alt="SEC PACK"><span><b>SEC PACK</b><small>International Trade & Sourcing</small></span></a></div><div><h4>Explore</h4><a href="products.html">Products</a><a href="store.html">Online Store</a><a href="documents.html">Resources</a></div><div><h4>Connect</h4><a href="contact.html">Contact</a></div></div><div class="footer-bottom">SEC PACK © 2026 <span>International Trade · Sourcing · Procurement</span></div></footer>
 <script>
+localStorage.removeItem("secpack-last-order");
 const items=JSON.parse(localStorage.getItem("secpack-cart")||"[]");
 function save(){localStorage.setItem("secpack-cart",JSON.stringify(items));render()}
 function addToCart(id,name){const x=items.find(i=>i.id===id);if(x)x.qty++;else items.push({id,name,qty:1});save();document.getElementById("orderPanel").classList.add("open")}
