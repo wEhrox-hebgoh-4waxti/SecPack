@@ -6,5 +6,5 @@ Disallow: /pages/supplier-profile.html
 Disallow: /pages/ai.html
 Disallow: /pages/email.html
 Disallow: /pages/settings.html
+
 Sitemap: https://wehrox-hebgoh-4waxti.github.io/SecPack/sitemap.xml
-Host: https://wehrox-hebgoh-4waxti.github.io/SecPack/
