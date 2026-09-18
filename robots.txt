@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /data/
+Disallow: /pages/dashboard.html
+Disallow: /pages/supplier-profile.html
+Disallow: /pages/ai.html
