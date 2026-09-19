@@ -157,24 +157,21 @@ function applyDocumentMeta(lang){
  const meta=document.querySelector('meta[name="description"][data-i18n]');if(meta)meta.content=t(meta.dataset.i18n,lang);
 }
 function captureLegacyOriginals(){document.querySelectorAll("body *").forEach(el=>{if(el.children.length||el.hasAttribute("data-i18n")||el.hasAttribute("data-i18n-html"))return;const raw=(el.textContent||"").replace(/\s+/g," ").trim();if(raw&&!el.dataset.legacyOriginal)el.dataset.legacyOriginal=raw})}
-function applyLegacyTranslations(lang){ return; /* legacy engine retired; all migrated UI uses stable keys. */ /*
- document.querySelectorAll("body *").forEach(el=>{
-  if(el.children.length||el.hasAttribute("data-i18n")||el.hasAttribute("data-i18n-html"))return;
-  const raw=(el.textContent||"").replace(/\s+/g," ").trim();if(!raw)return;
-  if(!el.dataset.legacyOriginal)el.dataset.legacyOriginal=raw;
-  const original=el.dataset.legacyOriginal;
-  if(lang==="en"){el.textContent=original;return}
-  const path=(location.pathname||"").toLowerCase(), file=Object.keys(PAGE_TEXT||{}).find(k=>path.endsWith(k));
-  const row=(typeof D!=="undefined"&&D[original])||(file&&PAGE_TEXT[file]?PAGE_TEXT[file][original]:null);
-  if(row&&row[LANG_INDEX[lang]])el.textContent=row[LANG_INDEX[lang]];
- });
-}
 function applyLanguage(lang){
  if(!SUPPORTED.includes(lang))lang="en";
- currentLanguage=lang;document.documentElement.lang=lang;document.documentElement.dir=(lang==="fa"||lang==="ar")?"rtl":"ltr";
- applyCoreKeys(lang);applyLegacyTranslations(lang);applyDocumentMeta(lang);
- document.querySelectorAll("[data-lang]").forEach(b=>{const on=b.dataset.lang===lang;b.classList.toggle("on",on);b.classList.toggle("active-language",on);b.setAttribute("aria-pressed",on?"true":"false")});
- localStorage.setItem(KEY,lang);window.dispatchEvent(new CustomEvent("secpack:languagechange",{detail:{lang}}));
+ currentLanguage=lang;
+ document.documentElement.lang=lang;
+ document.documentElement.dir=(lang==="fa"||lang==="ar")?"rtl":"ltr";
+ applyCoreKeys(lang);
+ applyDocumentMeta(lang);
+ document.querySelectorAll("[data-lang]").forEach(b=>{
+  const on=b.dataset.lang===lang;
+  b.classList.toggle("on",on);
+  b.classList.toggle("active-language",on);
+  b.setAttribute("aria-pressed",on?"true":"false");
+ });
+ localStorage.setItem(KEY,lang);
+ window.dispatchEvent(new CustomEvent("secpack:languagechange",{detail:{lang}}));
 }
 function setLanguage(lang){applyLanguage(lang)}
 window.secpackSetLanguage=setLanguage;
