@@ -364,6 +364,7 @@ function applyDocumentMeta(lang){
  const titleKey=document.documentElement.dataset.i18nTitleKey;if(titleKey)document.title=t(titleKey,lang);
  const meta=document.querySelector('meta[name="description"][data-i18n]');if(meta)meta.content=t(meta.dataset.i18n,lang);
 }
+function captureLegacyOriginals(){document.querySelectorAll("body *").forEach(el=>{if(el.children.length||el.hasAttribute("data-i18n")||el.hasAttribute("data-i18n-html"))return;const raw=(el.textContent||"").replace(/\s+/g," ").trim();if(raw&&!el.dataset.legacyOriginal)el.dataset.legacyOriginal=raw})}
 function applyLegacyTranslations(lang){
  document.querySelectorAll("body *").forEach(el=>{
   if(el.children.length||el.hasAttribute("data-i18n")||el.hasAttribute("data-i18n-html"))return;
@@ -385,6 +386,6 @@ function applyLanguage(lang){
 }
 function setLanguage(lang){applyLanguage(lang)}
 window.secpackSetLanguage=setLanguage;
-function init(){document.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>setLanguage(b.dataset.lang)));const saved=localStorage.getItem(KEY);applyLanguage(SUPPORTED.includes(saved)?saved:"en")}
+function init(){document.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>setLanguage(b.dataset.lang)));captureLegacyOriginals();const saved=localStorage.getItem(KEY);applyLanguage(SUPPORTED.includes(saved)?saved:"en")}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
