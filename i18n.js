@@ -346,7 +346,7 @@ function applyDocumentMeta(lang){
 }
 function applyLegacyTranslations(lang){
  document.querySelectorAll("body *").forEach(el=>{
-  if(el.children.length)return;
+  if(el.children.length||el.hasAttribute("data-i18n")||el.hasAttribute("data-i18n-html"))return;
   const raw=(el.textContent||"").replace(/\s+/g," ").trim();if(!raw)return;
   if(!el.dataset.legacyOriginal)el.dataset.legacyOriginal=raw;
   const original=el.dataset.legacyOriginal;
