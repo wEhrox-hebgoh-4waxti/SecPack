@@ -226,7 +226,9 @@ function translateNode(el,lang){
  if(!el.hasAttribute("data-original-text")) el.setAttribute("data-original-text",raw);
  const original=el.getAttribute("data-original-text")||raw;
  if(lang==="en"){ el.textContent=original; return; }
- const v=D[original];
+ const path=(location.pathname||"").toLowerCase();
+ const file=Object.keys(PAGE_TEXT).find(k=>path.endsWith(k));
+ const v=D[original] || (file && PAGE_TEXT[file] ? PAGE_TEXT[file][original] : null);
  if(v && v[lang==="fa"?0:1]) el.textContent=v[lang==="fa"?0:1];
 }
 
@@ -471,11 +473,33 @@ function applyPageTranslations(lang){
 }
 function setLanguage(lang){
  lang=SUPPORTED.includes(lang)?lang:"en";
+ currentLanguage=lang;
  applyExact(lang);
  applyPageTranslations(lang);
  if(typeof window.setHomepageLanguage==="function") window.setHomepageLanguage(lang);
 }
+let currentLanguage=localStorage.getItem(KEY)||"en";
+const translationObserver=new MutationObserver(mutations=>{
+  if(!currentLanguage || currentLanguage==="en") return;
+  for(const m of mutations){
+    for(const n of m.addedNodes){
+      if(n.nodeType!==1) continue;
+      if(n.matches?.("[data-i18n]") && n.dataset.i18n) {
+        const h=n.getAttribute("data-i18n");
+        if(window.secpackHomepageDict?.[currentLanguage]?.[h]) n.innerHTML=window.secpackHomepageDict[currentLanguage][h];
+      }
+      if(n.children?.length===0) translateNode(n,currentLanguage);
+      n.querySelectorAll?.("body *").forEach(()=>{});
+      n.querySelectorAll?.("*").forEach(el=>{if(el.children.length===0) translateNode(el,currentLanguage);});
+    }
+  }
+});
+function startTranslationObserver(){
+  if(document.body) translationObserver.observe(document.body,{childList:true,subtree:true});
+}
+
 function init(){
+ startTranslationObserver();
  document.querySelectorAll("[data-lang]").forEach(btn=>{
    btn.addEventListener("click",()=>setLanguage(btn.dataset.lang));
  });
