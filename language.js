@@ -76,29 +76,118 @@ function applyExact(lang){
  localStorage.setItem(KEY,lang);
 }
 
+const PAGE_TEXT={
+"company.html":{
+"SEC PACK works with professional buyers, manufacturers and export partners to structure product requirements, evaluate supply options and coordinate practical B2B procurement.":["SEC PACK با خریداران حرفه‌ای، تولیدکنندگان و شرکای صادراتی برای ساختاربندی نیاز محصول، ارزیابی گزینه‌های تأمین و هماهنگی خرید B2B همکاری می‌کند.","تعمل SEC PACK مع المشترين المحترفين والمصنعين وشركاء التصدير لتحديد متطلبات المنتجات وتقييم خيارات التوريد وتنسيق مشتريات B2B."],
+"Our public-facing work is centered on clearly specified products and dependable commercial coordination—not on publishing confidential supplier or pricing information.":["فعالیت عمومی ما بر محصولات با مشخصات روشن و هماهنگی تجاری قابل اتکا متمرکز است، نه انتشار اطلاعات محرمانه تأمین‌کنندگان یا قیمت‌ها.","يركز عملنا العام على المنتجات ذات المواصفات الواضحة والتنسيق التجاري الموثوق، وليس نشر معلومات الموردين أو الأسعار السرية."],
+"Selected materials for printing, packaging and converting.":["مواد منتخب برای چاپ، بسته‌بندی و کانورتینگ." ,"مواد مختارة للطباعة والتغليف والتحويل."],
+"75–80 GSM programs, OEM/private label where available.":["برنامه‌های ۷۵ تا ۸۰ گرم، OEM/برند اختصاصی در صورت امکان.","برامج 75–80 غ/م²، مع OEM/العلامة الخاصة عند توفرها."],
+"BOPP, PET and MPET solutions for professional applications.":["راهکارهای BOPP، PET و MPET برای کاربردهای حرفه‌ای.","حلول BOPP وPET وMPET للتطبيقات المهنية."],
+"Paper, film and board lamination applications.":["کاربردهای لمینیشن کاغذ، فیلم و مقوا.","تطبيقات تصفيح الورق والأفلام والكرتون."],
+"Specification-led sourcing for converters and manufacturers.":["تأمین مشخصات‌محور برای مبدل‌ها و تولیدکنندگان.","توريد وفق المواصفات للمحوّلين والمصنعين."],
+"SEC PACK is designed around a simple principle: the right supplier is only useful when the product, specification, commercial terms and delivery route fit the actual requirement.":["SEC PACK بر یک اصل ساده بنا شده است: تأمین‌کننده مناسب زمانی ارزشمند است که محصول، مشخصات، شرایط تجاری و مسیر تحویل با نیاز واقعی هماهنگ باشد.","تقوم SEC PACK على مبدأ بسيط: يكون المورد المناسب مفيدًا عندما يتوافق المنتج والمواصفات والشروط التجارية ومسار التسليم مع المتطلب الفعلي."],
+"We clarify what the material must do before comparing offers.":["پیش از مقایسه پیشنهادها، مشخص می‌کنیم ماده موردنظر باید چه عملکردی داشته باشد.","نحدد الوظيفة المطلوبة من المادة قبل مقارنة العروض."],
+"Specifications, packaging, quantity, documentation and delivery conditions are considered together.":["مشخصات، بسته‌بندی، مقدار، مستندات و شرایط تحویل در کنار هم بررسی می‌شوند.","تتم دراسة المواصفات والتغليف والكمية والوثائق وشروط التسليم معًا."],
+"Commercial and technical details are documented before an order is accepted.":["جزئیات تجاری و فنی پیش از پذیرش سفارش مستند می‌شوند.","يتم توثيق التفاصيل التجارية والفنية قبل قبول الطلب."],
+"For each commercial opportunity, the objective is to reduce ambiguity before an order is accepted.":["در هر فرصت تجاری، هدف کاهش ابهام پیش از پذیرش سفارش است.","في كل فرصة تجارية، الهدف هو تقليل الغموض قبل قبول الطلب."],
+"We prefer measurable specifications and written confirmation rather than assumptions or vague product descriptions.":["مشخصات قابل اندازه‌گیری و تأیید کتبی را به جای فرضیات یا توصیف‌های مبهم ترجیح می‌دهیم.","نفضل المواصفات القابلة للقياس والتأكيد الكتابي بدلًا من الافتراضات أو الأوصاف الغامضة."],
+"Prices, availability, payment terms, delivery terms and final specifications are confirmed before commercial acceptance.":["قیمت، موجودی، شرایط پرداخت، شرایط تحویل و مشخصات نهایی پیش از پذیرش تجاری تأیید می‌شوند.","يتم تأكيد الأسعار والتوفر وشروط الدفع والتسليم والمواصفات النهائية قبل القبول التجاري."],
+"Private supplier identities, purchase prices, margins and internal procurement records are not published on the public website.":["هویت خصوصی تأمین‌کنندگان، قیمت‌های خرید، حاشیه سود و سوابق داخلی خرید در وب‌سایت عمومی منتشر نمی‌شوند.","لا يتم نشر هويات الموردين الخاصة وأسعار الشراء وهوامش الربح وسجلات المشتريات الداخلية على الموقع العام."],
+"We are interested in repeatable supply programs and practical manufacturer relationships, not only one-off inquiries.":["ما به برنامه‌های تأمین تکرارشونده و روابط عملی با تولیدکنندگان علاقه‌مندیم، نه فقط درخواست‌های موردی.","نهتم ببرامج التوريد المتكررة والعلاقات العملية مع المصنعين، وليس فقط بالطلبات الفردية."],
+"Have a product, market or supply opportunity?":["فرصتی در محصول، بازار یا تأمین دارید؟","لديك فرصة في منتج أو سوق أو توريد؟"],
+"Send the requirement or supplier proposal with the relevant technical and commercial information.":["نیاز یا پیشنهاد تأمین‌کننده را همراه با اطلاعات فنی و تجاری مرتبط ارسال کنید.","أرسل المتطلب أو عرض المورد مع المعلومات الفنية والتجارية ذات الصلة."]
+},
+"manufacturers.html":{
+"SEC PACK works with manufacturers and export teams through defined specifications, transparent commercial discussions and practical supply planning. The objective is to build repeatable relationships where product fit and supply capability are clear.":["SEC PACK با تولیدکنندگان و تیم‌های صادراتی بر پایه مشخصات تعریف‌شده، گفت‌وگوی تجاری شفاف و برنامه‌ریزی عملی تأمین همکاری می‌کند. هدف، ایجاد روابط تکرارشونده‌ای است که تناسب محصول و توان تأمین در آنها روشن باشد.","تعمل SEC PACK مع المصنعين وفرق التصدير وفق مواصفات محددة ومناقشات تجارية شفافة وتخطيط عملي للتوريد. الهدف هو بناء علاقات متكررة تكون فيها ملاءمة المنتج وقدرة التوريد واضحة."],
+"We aim to make the first exchange useful for both sides: the manufacturer sees the actual requirement, while SEC PACK can evaluate the offer against defined criteria.":["هدف ما این است که نخستین تبادل اطلاعات برای هر دو طرف مفید باشد: تولیدکننده نیاز واقعی را می‌بیند و SEC PACK می‌تواند پیشنهاد را بر اساس معیارهای مشخص ارزیابی کند.","نسعى إلى جعل التواصل الأول مفيدًا للطرفين: يرى المصنع المتطلب الفعلي، بينما تستطيع SEC PACK تقييم العرض وفق معايير محددة."],
+"Product application, specification, quantity, packaging and destination are clarified as the opportunity develops.":["کاربرد محصول، مشخصات، مقدار، بسته‌بندی و مقصد هم‌زمان با پیشرفت فرصت تجاری روشن می‌شوند.","يتم توضيح تطبيق المنتج والمواصفات والكمية والتغليف والوجهة مع تطور الفرصة."],
+"Samples, TDS, COA and other relevant documentation can be reviewed where applicable.":["نمونه‌ها، TDS، COA و سایر مستندات مرتبط در صورت امکان بررسی می‌شوند.","يمكن مراجعة العينات وTDS وCOA والوثائق ذات الصلة عند توفرها."],
+"MOQ, lead time, packaging, payment and delivery terms are discussed before purchasing commitment.":["MOQ، زمان تولید، بسته‌بندی، پرداخت و شرایط تحویل پیش از تعهد خرید بررسی می‌شوند.","تتم مناقشة MOQ ومدة الإنتاج والتغليف والدفع وشروط التسليم قبل الالتزام بالشراء."],
+"Clear technical specifications, application knowledge and consistent product identification.":["مشخصات فنی روشن، شناخت کاربرد و شناسایی ثابت محصول.","مواصفات فنية واضحة ومعرفة بالتطبيق وتحديد متسق للمنتج."],
+"Realistic production capacity, lead times, packaging options and export readiness.":["ظرفیت واقعی تولید، زمان تحویل، گزینه‌های بسته‌بندی و آمادگی صادراتی.","قدرة إنتاج واقعية ومهل توريد وخيارات تغليف وجاهزية للتصدير."],
+"Technical data, quality information, certificates or test documentation where applicable.":["اطلاعات فنی، کیفیت، گواهی‌ها یا مستندات آزمون در صورت وجود.","البيانات الفنية ومعلومات الجودة والشهادات أو وثائق الاختبار عند توفرها."],
+"When introducing a product, please provide the information needed for a commercial and technical review.":["هنگام معرفی محصول، اطلاعات لازم برای بررسی تجاری و فنی را ارائه کنید.","عند تقديم منتج، يرجى توفير المعلومات اللازمة للمراجعة التجارية والفنية."],
+"Manufacturer / factory identity and export contact":["هویت تولیدکننده / کارخانه و تماس صادراتی","هوية المصنع / الشركة وجهة اتصال التصدير"],
+"Product catalogue and technical specifications":["کاتالوگ محصول و مشخصات فنی","كتالوج المنتج والمواصفات الفنية"],
+"MOQ, production lead time and packaging options":["MOQ، زمان تولید و گزینه‌های بسته‌بندی","MOQ ومدة الإنتاج وخيارات التغليف"],
+"Available delivery terms and destination support":["شرایط تحویل موجود و پشتیبانی مقصد","شروط التسليم المتاحة ودعم الوجهة"],
+"OEM / private-label capability, if available":["توان OEM / برند اختصاصی در صورت وجود","إمكانية OEM / العلامة الخاصة عند توفرها"],
+"Public categories include A4 copy paper, lamination films, water-based adhesives and packaging materials. Product-specific opportunities depend on the buyer requirement and market.":["دسته‌های عمومی شامل کاغذ A4، فیلم‌های لمینیشن، چسب‌های پایه آب و مواد بسته‌بندی هستند. فرصت‌های هر محصول به نیاز خریدار و بازار بستگی دارد.","تشمل الفئات العامة ورق A4 وأفلام التصفيح والمواد اللاصقة المائية ومواد التغليف. وتعتمد فرص كل منتج على متطلبات المشتري والسوق."],
+"Website content is informational. Final specifications, pricing, availability, payment, delivery terms and order acceptance are confirmed directly for each transaction.":["محتوای وب‌سایت اطلاع‌رسانی است. مشخصات نهایی، قیمت، موجودی، پرداخت، شرایط تحویل و پذیرش سفارش برای هر معامله مستقیماً تأیید می‌شوند.","محتوى الموقع معلوماتي. يتم تأكيد المواصفات النهائية والأسعار والتوفر والدفع وشروط التسليم وقبول الطلب مباشرة لكل معاملة."],
+"Include your catalogue, technical data, MOQ, lead time, packaging and preferred contact channel.":["کاتالوگ، اطلاعات فنی، MOQ، زمان تحویل، بسته‌بندی و کانال ارتباطی ترجیحی خود را ارسال کنید.","أرفق الكتالوج والبيانات الفنية وMOQ ومدة التوريد والتغليف وقناة الاتصال المفضلة."]
+},
+"documents.html":{
+"Information that supports better material selection.":["اطلاعاتی برای انتخاب بهتر مواد.","معلومات تساعد على اختيار المواد بشكل أفضل."],
+"Public resources are designed to help customers understand specifications, applications and the procurement process.":["منابع عمومی برای کمک به درک مشخصات، کاربردها و فرایند خرید طراحی شده‌اند.","صممت الموارد العامة لمساعدة العملاء على فهم المواصفات والتطبيقات وعملية الشراء."],
+"SEC PACK uses clear specifications and documented communication to reduce ambiguity between buyers, manufacturers and export partners.":["SEC PACK برای کاهش ابهام میان خریداران، تولیدکنندگان و شرکای صادراتی از مشخصات روشن و ارتباطات مستند استفاده می‌کند.","تستخدم SEC PACK مواصفات واضحة وتواصلًا موثقًا لتقليل الغموض بين المشترين والمصنعين وشركاء التصدير."],
+"Define dimensions, GSM, substrate, application, packaging and quality requirements before requesting quotations.":["پیش از درخواست قیمت، ابعاد، GSM، بستر، کاربرد، بسته‌بندی و الزامات کیفیت را مشخص کنید.","حدد المقاسات وGSM والركيزة والتطبيق والتغليف ومتطلبات الجودة قبل طلب عروض الأسعار."],
+"TDS, COA and relevant quality documentation can be requested as part of product evaluation where applicable.":["TDS، COA و مستندات کیفی مرتبط را می‌توان در چارچوب ارزیابی محصول درخواست کرد.","يمكن طلب TDS وCOA ووثائق الجودة ذات الصلة ضمن تقييم المنتج عند الحاجة."],
+"Manufacturer identity, production capability, export experience, references and sample performance should be reviewed together.":["هویت تولیدکننده، توان تولید، تجربه صادرات، سوابق و عملکرد نمونه باید در کنار هم بررسی شوند.","ينبغي مراجعة هوية المصنع وقدرته الإنتاجية وخبرته التصديرية ومراجعه وأداء العينات معًا."],
+"A precise RFQ reduces ambiguity and makes quotations easier to compare on a like-for-like basis.":["یک RFQ دقیق ابهام را کاهش می‌دهد و مقایسه قیمت‌ها را بر مبنای شرایط یکسان آسان‌تر می‌کند.","يقلل RFQ الدقيق الغموض ويسهّل مقارنة العروض على أساس متكافئ."],
+"Material selection should consider the real production process and end-use requirements, not only nominal specifications.":["انتخاب مواد باید فرایند واقعی تولید و نیاز مصرف نهایی را در نظر بگیرد، نه فقط مشخصات اسمی.","ينبغي أن يراعي اختيار المواد عملية الإنتاج الفعلية ومتطلبات الاستخدام النهائي، وليس المواصفات الاسمية فقط."],
+"Requirement → sourcing → supplier screening → quotation → sample/technical review → commercial coordination.":["نیاز → تأمین → غربالگری تأمین‌کننده → قیمت‌گذاری → بررسی نمونه/فنی → هماهنگی تجاری","المتطلب → التوريد → فحص المورد → عرض السعر → مراجعة العينة/الفنية → التنسيق التجاري"]
+},
+"contact.html":{
+"A supplier or buyer can save time by including the exact product, specification, quantity, packaging, destination, expected timing and relevant documentation requirements.":["تأمین‌کننده یا خریدار با ارائه دقیق محصول، مشخصات، مقدار، بسته‌بندی، مقصد، زمان مورد انتظار و مستندات لازم می‌تواند در زمان صرفه‌جویی کند.","يمكن للمورد أو المشتري توفير الوقت من خلال تحديد المنتج والمواصفات والكمية والتغليف والوجهة والموعد المتوقع والوثائق المطلوبة بدقة."],
+"Send your requirement in measurable terms so suitable supply options can be compared.":["نیاز خود را با معیارهای قابل اندازه‌گیری ارسال کنید تا گزینه‌های مناسب تأمین قابل مقایسه باشند.","أرسل متطلباتك بمصطلحات قابلة للقياس لتتم مقارنة خيارات التوريد المناسبة."],
+"Send factory identity, catalogue, technical data, MOQ, lead time and export terms.":["هویت کارخانه، کاتالوگ، اطلاعات فنی، MOQ، زمان تحویل و شرایط صادرات را ارسال کنید.","أرسل هوية المصنع والكتالوج والبيانات الفنية وMOQ ومدة التوريد وشروط التصدير."],
+"Do not send passwords, payment credentials or other sensitive information through this public form.":["رمز عبور، اطلاعات پرداخت یا سایر اطلاعات حساس را از طریق این فرم عمومی ارسال نکنید.","لا ترسل كلمات المرور أو بيانات الدفع أو أي معلومات حساسة أخرى عبر هذا النموذج العام."],
+"SEC PACK can structure the requirement for sourcing and supplier discussions.":["SEC PACK می‌تواند نیاز شما را برای تأمین و گفت‌وگو با تأمین‌کنندگان ساختاربندی کند.","يمكن لـ SEC PACK تنظيم المتطلب لمناقشات التوريد والموردين."]
+},
+"privacy.html":{
+"Public privacy information for SEC PACK website visitors and B2B inquiries.":["اطلاعات عمومی حریم خصوصی برای بازدیدکنندگان وب‌سایت SEC PACK و درخواست‌های B2B.","معلومات الخصوصية العامة لزوار موقع SEC PACK واستفسارات B2B."],
+"This website is primarily a public product, sourcing and educational site. The current static storefront does not process card payments and does not transmit customer form data to a server.":["این وب‌سایت عمدتاً یک سایت عمومی محصولات، تأمین و آموزش است. فروشگاه استاتیک فعلی پرداخت کارتی انجام نمی‌دهد و اطلاعات فرم مشتری را به سرور ارسال نمی‌کند.","هذا الموقع أساسًا موقع عام للمنتجات والتوريد والمحتوى التعليمي. المتجر الثابت الحالي لا يعالج مدفوعات البطاقات ولا يرسل بيانات النماذج إلى خادم."],
+"The storefront may keep a temporary cart draft in the visitor's browser. Customer contact details entered in the current static form are not persisted by the site.":["فروشگاه ممکن است پیش‌نویس موقت سبد را در مرورگر بازدیدکننده نگه دارد. اطلاعات تماس واردشده در فرم استاتیک فعلی توسط سایت ذخیره نمی‌شود.","قد يحتفظ المتجر بمسودة مؤقتة للسلة في متصفح الزائر. ولا يتم حفظ بيانات الاتصال المدخلة في النموذج الثابت الحالي."],
+"Supplier identities, purchase prices, target margins, private logistics information, internal procurement records, credentials and other confidential business information are intentionally excluded from the public website.":["هویت تأمین‌کنندگان، قیمت‌های خرید، حاشیه سود هدف، اطلاعات لجستیکی خصوصی، سوابق داخلی خرید، اطلاعات ورود و سایر داده‌های محرمانه عمداً از وب‌سایت عمومی حذف شده‌اند.","تم استبعاد هويات الموردين وأسعار الشراء وهوامش الربح المستهدفة ومعلومات اللوجستيات الخاصة وسجلات المشتريات الداخلية وبيانات الدخول والمعلومات التجارية السرية عمدًا من الموقع العام."],
+"When a production order and payment backend are connected, data handling, retention and payment-provider terms will be documented before that service is activated.":["هنگام اتصال سامانه سفارش و پرداخت واقعی، نحوه پردازش و نگهداری داده و شرایط ارائه‌دهنده پرداخت پیش از فعال‌سازی مستند خواهد شد.","عند ربط نظام الطلب والدفع الفعلي، سيتم توثيق معالجة البيانات والاحتفاظ بها وشروط مزود الدفع قبل تفعيل الخدمة."]
+},
+"terms.html":{
+"General website and B2B supply request terms for SEC PACK.":["شرایط عمومی وب‌سایت و درخواست تأمین B2B برای SEC PACK.","الشروط العامة للموقع وطلبات التوريد B2B لدى SEC PACK."],
+"Public product pages describe typical requirements and sourcing categories. Final specifications, availability, commercial terms and delivery conditions are confirmed for each transaction.":["صفحات عمومی محصول نیازهای معمول و دسته‌های تأمین را توضیح می‌دهند. مشخصات نهایی، موجودی، شرایط تجاری و تحویل برای هر معامله تأیید می‌شوند.","تصف صفحات المنتجات العامة المتطلبات المعتادة وفئات التوريد. ويتم تأكيد المواصفات النهائية والتوفر والشروط التجارية والتسليم لكل معاملة."],
+"A website inquiry or cart draft is not, by itself, acceptance of an order or a binding commercial quotation. SEC PACK confirms applicable terms before order acceptance.":["درخواست وب‌سایت یا پیش‌نویس سبد به‌تنهایی پذیرش سفارش یا پیشنهاد تجاری الزام‌آور محسوب نمی‌شود. SEC PACK شرایط قابل اعمال را پیش از پذیرش سفارش تأیید می‌کند.","لا يُعد استفسار الموقع أو مسودة السلة بحد ذاته قبولًا للطلب أو عرضًا تجاريًا ملزمًا. تؤكد SEC PACK الشروط المعمول بها قبل قبول الطلب."],
+"Future payment, shipping, analytics or communication services may have their own terms and privacy policies. They will be identified when actually integrated.":["خدمات آینده پرداخت، حمل، تحلیل یا ارتباطات ممکن است شرایط و سیاست‌های حریم خصوصی خود را داشته باشند. هنگام ادغام واقعی معرفی خواهند شد.","قد تكون لخدمات الدفع أو الشحن أو التحليلات أو الاتصالات المستقبلية شروط وسياسات خصوصية خاصة بها، وسيتم تحديدها عند دمجها فعليًا."],
+"Product specifications and educational content should be reviewed against the final commercial specification, technical documentation and applicable destination requirements.":["مشخصات محصول و محتوای آموزشی باید با مشخصات تجاری نهایی، مستندات فنی و الزامات مقصد بررسی شوند.","ينبغي مراجعة مواصفات المنتجات والمحتوى التعليمي مقابل المواصفات التجارية النهائية والوثائق الفنية ومتطلبات الوجهة المعمول بها."]
+},
+"store.html":{
+"Prepare a B2B order request online.":["درخواست سفارش B2B را آنلاین آماده کنید.","جهّز طلب شراء B2B عبر الإنترنت."],
+"Select products and quantities here. This is an inquiry-preparation tool, not a live payment checkout; final price, availability, specifications and delivery terms are confirmed directly by SEC PACK.":["محصولات و مقدار را اینجا انتخاب کنید. این ابزار برای آماده‌سازی درخواست است، نه پرداخت آنلاین؛ قیمت نهایی، موجودی، مشخصات و شرایط تحویل مستقیماً توسط SEC PACK تأیید می‌شود.","اختر المنتجات والكميات هنا. هذه أداة لإعداد الطلب وليست للدفع المباشر؛ يتم تأكيد السعر النهائي والتوفر والمواصفات وشروط التسليم مباشرة من SEC PACK."],
+"210 × 297 mm · 500 sheets/ream · 5 reams/carton":["۲۱۰ × ۲۹۷ میلی‌متر · ۵۰۰ برگ/ریم · ۵ ریم/کارتن","210 × 297 مم · 500 ورقة/رزمة · 5 رزم/كرتون"],
+"Film solutions for paper and board lamination":["راهکارهای فیلم برای لمینیشن کاغذ و مقوا","حلول أفلام لتصفيح الورق والكرتون"],
+"Dry-lamination applications · TDS/COA where applicable":["کاربردهای لمینیشن خشک · TDS/COA در صورت وجود","تطبيقات التصفيح الجاف · TDS/COA عند توفرها"],
+"Specification-led sourcing for converters and manufacturers":["تأمین مشخصات‌محور برای مبدل‌ها و تولیدکنندگان","توريد وفق المواصفات للمحوّلين والمصنعين"],
+"We keep the checkout practical: you submit the order online, then SEC PACK confirms the commercial terms before payment or dispatch.":["فرایند سفارش را عملی نگه می‌داریم: درخواست را آنلاین ارسال می‌کنید و SEC PACK پیش از پرداخت یا ارسال، شرایط تجاری را تأیید می‌کند.","نبقي عملية الطلب عملية: ترسل الطلب عبر الإنترنت ثم تؤكد SEC PACK الشروط التجارية قبل الدفع أو الشحن."],
+"Your order is empty.":["سفارش شما خالی است.","طلبك فارغ."],
+"Order prepared.":["سفارش آماده شد.","تم إعداد الطلب."],
+"Your cart draft is kept only for this browser session; customer contact details are not stored by the static site. The next production step is connecting this checkout to SEC PACK's confirmed order/payment endpoint.":["پیش‌نویس سبد فقط برای همین نشست مرورگر نگهداری می‌شود؛ اطلاعات تماس مشتری توسط سایت استاتیک ذخیره نمی‌شود. مرحله بعدی اتصال این فرایند به سامانه تأییدشده سفارش/پرداخت SEC PACK است.","يتم الاحتفاظ بمسودة السلة لهذه الجلسة فقط؛ ولا يحفظ الموقع الثابت بيانات اتصال العميل. والخطوة التالية هي ربط الطلب بنظام الطلب/الدفع المعتمد لدى SEC PACK."]
+},
+"products.html":{
+"Materials selected for professional printing, packaging and converting.":["مواد منتخب برای چاپ، بسته‌بندی و کانورتینگ حرفه‌ای.","مواد مختارة للطباعة والتغليف والتحويل الاحترافي."],
+"SEC PACK develops its portfolio around clear specifications, industrial applications and dependable supply.":["SEC PACK سبد محصولات خود را بر اساس مشخصات روشن، کاربردهای صنعتی و تأمین قابل اتکا توسعه می‌دهد.","تطوّر SEC PACK محفظتها حول المواصفات الواضحة والتطبيقات الصناعية والتوريد الموثوق."],
+"A4 cut-size office paper for professional supply programs.":["کاغذ اداری برش‌خورده A4 برای برنامه‌های حرفه‌ای تأمین.","ورق مكتبي A4 مقصوص لبرامج التوريد الاحترافية."],
+"OEM & private-label programs where available":["برنامه‌های OEM و برند اختصاصی در صورت امکان","برامج OEM والعلامة الخاصة عند توفرها"],
+"Film solutions for printing, finishing and packaging applications.":["راهکارهای فیلم برای چاپ، تکمیل و بسته‌بندی.","حلول أفلام للطباعة والتشطيب والتغليف."],
+"BOPP / PET / MPET applications":["کاربردهای BOPP / PET / MPET","تطبيقات BOPP / PET / MPET"],
+"Paper and board lamination":["لمینیشن کاغذ و مقوا","تصفيح الورق والكرتون"],
+"Industrial converting requirements":["نیازهای کانورتینگ صنعتی","متطلبات التحويل الصناعي"],
+"Specification-led sourcing":["تأمین مشخصات‌محور","التوريد وفق المواصفات"],
+"Water-based adhesive solutions for paper, film and board lamination processes.":["راهکارهای چسب پایه آب برای فرایندهای لمینیشن کاغذ، فیلم و مقوا.","حلول لاصقة مائية لعمليات تصفيح الورق والأفلام والكرتون."],
+"Technical data review":["بررسی اطلاعات فنی","مراجعة البيانات الفنية"],
+"Process-oriented evaluation":["ارزیابی فرایندمحور","تقييم قائم على العملية"],
+"COA / TDS documentation where applicable":["مستندات COA / TDS در صورت وجود","وثائق COA / TDS عند توفرها"],
+"Selected materials for printers, converters and packaging manufacturers.":["مواد منتخب برای چاپخانه‌ها، مبدل‌ها و تولیدکنندگان بسته‌بندی.","مواد مختارة للطابعين والمحوّلين ومصنعي التغليف."],
+"Application-specific sourcing":["تأمین متناسب با کاربرد","توريد وفق التطبيق"],
+"Manufacturer identification":["شناسایی تولیدکننده","تحديد المصنع"],
+"Commercial specification matching":["تطبیق مشخصات تجاری","مطابقة المواصفات التجارية"],
+"Long-term supply programs":["برنامه‌های تأمین بلندمدت","برامج التوريد طويلة الأجل"],
+"Need more technical information?":["اطلاعات فنی بیشتری نیاز دارید؟","هل تحتاج إلى مزيد من المعلومات الفنية؟"],
+"Visit the SEC PACK Knowledge Center for deeper material and application guidance. If you have a technical question, send it to us and our team can respond online.":["برای راهنمایی عمیق‌تر درباره مواد و کاربردها به مرکز دانش SEC PACK مراجعه کنید. اگر سؤال فنی دارید، آن را برای ما ارسال کنید تا تیم ما پاسخ دهد.","زر مركز معرفة SEC PACK للحصول على إرشادات أعمق حول المواد والتطبيقات. إذا كان لديك سؤال فني، أرسله إلينا ليجيب فريقنا عبر الإنترنت."]
+}
+};
 function applyPageTranslations(lang){
- const path=(location.pathname||"").toLowerCase();
- const maps={
-  "lamination-films.html":{
-   fa:{h1:"فیلم‌های لمینیشن",hero:"تأمین B2B فیلم‌های لمینیشن BOPP، PET و MPET برای کاغذ، مقوا، چاپ و بسته‌بندی.",spec:"مشخصات",title:"بر پایه نیاز واقعی خریدار.",intro:"تأمین مشخصات‌محور فیلم‌های BOPP، PET و MPET مورد استفاده در چاپ، تکمیل، لمینیشن کاغذ و مقوا و کاربردهای بسته‌بندی.",core:"مشخصات اصلی",app:"کاربرد",process:"فرمت / فرایند",tech:"نیاز فنی",supply:"برنامه تأمین",docs:"مستندات",proc:"خرید",quote:"اطلاعات لازم برای قیمت‌گذاری دقیق.",techSpec:"مشخصات فنی",qty:"مقدار و بسته‌بندی",dest:"مقصد و شرایط تحویل",commercial:"نیازهای تجاری و مستنداتی",cta:"شروع درخواست تأمین",need:"این محصول را برای برنامه B2B نیاز دارید؟",submit:"درخواست قیمت"},
-   ar:{h1:"أفلام التصفيح",hero:"توريد B2B لأفلام BOPP وPET وMPET لتطبيقات الورق والكرتون والطباعة والتغليف.",spec:"المواصفات",title:"مبني على متطلبات المشتري الفعلية.",intro:"توريد وفق المواصفات لأفلام BOPP وPET وMPET المستخدمة في الطباعة والتشطيب وتصفيح الورق والكرتون وتطبيقات التغليف.",core:"المواصفات الأساسية",app:"التطبيق",process:"التنسيق / العملية",tech:"المتطلب الفني",supply:"برنامج التوريد",docs:"الوثائق",proc:"المشتريات",quote:"ما نحتاجه لتقديم عرض دقيق.",techSpec:"المواصفات الفنية",qty:"الكمية والتغليف",dest:"الوجهة وشروط التسليم",commercial:"المتطلبات التجارية والوثائق",cta:"ابدأ طلب التوريد",need:"هل تحتاج هذا المنتج لبرنامج B2B؟",submit:"طلب عرض سعر"}
-  },
-  "water-based-adhesives.html":{
-   fa:{h1:"چسب‌های پایه آب",hero:"تأمین چسب پایه آب برای لمینیشن خشک فیلم روی کاغذ، مقوا و بسترهای بسته‌بندی، همراه با مستندات فنی در صورت وجود.",spec:"مشخصات",intro:"تأمین چسب پایه آب برای لمینیشن کاغذ، فیلم و مقوا؛ انتخاب بر اساس بستر، روش پوشش‌دهی، شرایط خشک‌شدن، سرعت خط و عملکرد اتصال انجام می‌شود.",core:"مشخصات اصلی",app:"کاربرد",process:"فرمت / فرایند",tech:"نیاز فنی",supply:"برنامه تأمین",docs:"مستندات",proc:"خرید",quote:"اطلاعات لازم برای قیمت‌گذاری دقیق.",techSpec:"مشخصات فنی",qty:"مقدار و بسته‌بندی",dest:"مقصد و شرایط تحویل",commercial:"نیازهای تجاری و مستنداتی",cta:"شروع درخواست تأمین",need:"این محصول را برای برنامه B2B نیاز دارید؟",submit:"درخواست قیمت"},
-   ar:{h1:"مواد لاصقة مائية",hero:"توريد مواد لاصقة مائية للتصفيح الجاف بين الأفلام والورق والكرتون ومواد التغليف، مع الوثائق الفنية عند توفرها.",spec:"المواصفات",intro:"توريد مواد لاصقة مائية لتصفيح الورق والأفلام والكرتون؛ ويتم اختيارها وفق الركيزة وطريقة الطلاء وظروف التجفيف وسرعة الخط وأداء الالتصاق المطلوب.",core:"المواصفات الأساسية",app:"التطبيق",process:"التنسيق / العملية",tech:"المتطلب الفني",supply:"برنامج التوريد",docs:"الوثائق",proc:"المشتريات",quote:"ما نحتاجه لتقديم عرض دقيق.",techSpec:"المواصفات الفنية",qty:"الكمية والتغليف",dest:"الوجهة وشروط التسليم",commercial:"المتطلبات التجارية والوثائق",cta:"ابدأ طلب التوريد",need:"هل تحتاج هذا المنتج لبرنامج B2B؟",submit:"طلب عرض سعر"}
-  }
- };
- const file=Object.keys(maps).find(k=>path.endsWith(k)); if(!file || lang==="en") return;
- const m=maps[file][lang]; if(!m) return;
- const set=(sel,key,html=false)=>{const e=document.querySelector(sel); if(e&&m[key]!==undefined){if(html)e.innerHTML=m[key];else e.textContent=m[key];}};
- set(".page-hero h1","h1"); set(".page-hero > p","hero"); set(".page-hero .eyebrow","eyebrow");
- set(".section-head .eyebrow","spec"); set(".section-head h2","title"); set(".section-head p","intro");
- const cards=document.querySelectorAll(".grid.three .card");
- if(cards.length>=6){[["core","core"],["app","app"],["process","process"],["tech","tech"],["supply","supply"],["docs","docs"]].forEach((x,i)=>{const e=cards[i].querySelector("h3");if(e)e.textContent=m[x[0]];});}
- set(".section.dark .eyebrow","proc"); set(".section.dark h2","quote");
- const steps=document.querySelectorAll(".section.dark .steps span");
- [m.techSpec,m.qty,m.dest,m.commercial].forEach((v,i)=>{if(steps[i])steps[i].textContent=v;});
- set(".cta .eyebrow","cta"); set(".cta h2","need"); set(".cta .btn","submit");
+ const path=(location.pathname||"").toLowerCase(); const file=Object.keys(PAGE_TEXT).find(k=>path.endsWith(k));
+ if(file&&lang!=="en"){document.querySelectorAll("body *").forEach(el=>{if(el.children.length===0){const t=(el.textContent||"").trim();const v=PAGE_TEXT[file][t];if(v)el.textContent=v[lang==="fa"?0:1];}});}
+ const oldFile=path.endsWith("lamination-films.html")?"lamination-films.html":path.endsWith("water-based-adhesives.html")?"water-based-adhesives.html":null;
+ if(oldFile&&lang!=="en"){const m=oldFile==="lamination-films.html"?{fa:["فیلم‌های لمینیشن","تأمین B2B فیلم‌های لمینیشن BOPP، PET و MPET برای کاغذ، مقوا، چاپ و بسته‌بندی."],ar:["أفلام التصفيح","توريد B2B لأفلام BOPP وPET وMPET لتطبيقات الورق والكرتون والطباعة والتغليف."]}:{fa:["چسب‌های پایه آب","تأمین چسب پایه آب برای لمینیشن خشک فیلم روی کاغذ، مقوا و بسترهای بسته‌بندی، همراه با مستندات فنی در صورت وجود."],ar:["مواد لاصقة مائية","توريد مواد لاصقة مائية للتصفيح الجاف بين الأفلام والورق والكرتون ومواد التغليف، مع الوثائق الفنية عند توفرها."]};const v=m[lang];document.querySelector(".page-hero h1")&&(document.querySelector(".page-hero h1").textContent=v[0]);document.querySelector(".page-hero>p")&&(document.querySelector(".page-hero>p").textContent=v[1]);}
 }
 function setLanguage(lang){
  lang=SUPPORTED.includes(lang)?lang:"en";
