@@ -123,6 +123,20 @@ const HOME_CORE={
 };
 Object.assign(CORE,HOME_CORE);
 Object.assign(CORE,{
+"common.primaryNav":["Primary navigation","ناوبری اصلی","التنقل الرئيسي"],
+"common.languageSelector":["Language selector","انتخاب زبان","اختيار اللغة"],
+"common.english":["English","انگلیسی","الإنجليزية"],
+"form.nameCompany":["Name / Company","نام / شرکت","الاسم / الشركة"],
+"form.email":["Email","ایمیل","البريد الإلكتروني"],
+"form.phoneWhatsapp":["Phone / WhatsApp","تلفن / واتساپ","الهاتف / واتساب"],
+"form.deliveryDestination":["Delivery destination","مقصد تحویل","وجهة التسليم"],
+"form.requirements":["Quantity, packaging, specification, destination and any special requirements","تعداد، بسته‌بندی، مشخصات، مقصد و هر نیاز ویژه","الكمية والتغليف والمواصفات والوجهة وأي متطلبات خاصة"],
+"product.a4Quantity":["A4 Copy Paper quantity","تعداد کاغذ کپی A4","كمية ورق النسخ A4"],
+"product.filmQuantity":["Lamination Films quantity","تعداد فیلم لمینیشن","كمية أفلام التصفيح"],
+"product.adhesiveQuantity":["Water-Based Adhesives quantity","تعداد چسب پایه آب","كمية المواد اللاصقة المائية"],
+"product.packagingQuantity":["Packaging Materials quantity","تعداد مواد بسته‌بندی","كمية مواد التغليف"],
+"common.heroImageAlt":["International sourcing and packaging trade illustration","تصویر تجارت بین‌المللی و تأمین بسته‌بندی","رسم توضيحي للتجارة الدولية وتوريد مواد التغليف"],
+
 "page.packaging-materials.23":["Submit your requirement and SEC PACK can structure it for supplier comparison and commercial discussion.","نیاز خود را ارسال کنید تا SEC PACK آن را برای مقایسه تأمین‌کنندگان و گفت‌وگوی تجاری ساختاربندی کند.","أرسل متطلبك ويمكن لـ SEC PACK تنظيمه لمقارنة الموردين والمناقشة التجارية."],
 
 "d.water-based-adhesives.01":["Water-Based Adhesives | Paper & Film Lamination | SEC PACK","چسب‌های پایه آب | لمینیشن کاغذ و فیلم | SEC PACK","المواد اللاصقة المائية | تصفيح الورق والأفلام | SEC PACK"],
