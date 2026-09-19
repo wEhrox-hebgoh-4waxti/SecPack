@@ -54,4 +54,4 @@ function render(){document.getElementById("cartCount").textContent=items.reduce(
 function toggleCart(){document.getElementById("orderPanel").classList.toggle("open");render()}
 function prepareOrder(){if(!items.length){alert("Add at least one product.");return}const data={customer:document.getElementById("customerName").value,email:document.getElementById("customerEmail").value,phone:document.getElementById("customerPhone").value,destination:document.getElementById("destination").value,payment:document.getElementById("payment").value,notes:document.getElementById("notes").value,items};sessionStorage.setItem("secpack-order-draft",JSON.stringify({items}));document.getElementById("orderResult").innerHTML='<div class="quote"><strong>Order prepared.</strong><p>Your cart draft is kept only for this browser session; customer contact details are not stored by the static site. The next production step is connecting this checkout to SEC PACK\'s confirmed order/payment endpoint.</p></div>'}
 render();
-</script><script src="../language.js"></script></body></html>
+</script><script src="../i18n.js"></script></body></html>
