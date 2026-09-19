@@ -123,6 +123,11 @@ const HOME_CORE={
 };
 Object.assign(CORE,HOME_CORE);
 Object.assign(CORE,{
+"product.name.paper":["A4 Copy Paper","کاغذ کپی A4","ورق النسخ A4"],
+"product.name.film":["Lamination Films","فیلم‌های لمینیشن","أفلام التصفيح"],
+"product.name.adhesive":["Water-Based Adhesives","چسب‌های پایه آب","المواد اللاصقة المائية"],
+"product.name.packaging":["Packaging Materials","مواد بسته‌بندی","مواد التغليف"],
+
 "common.primaryNav":["Primary navigation","ناوبری اصلی","التنقل الرئيسي"],
 "common.languageSelector":["Language selector","انتخاب زبان","اختيار اللغة"],
 "common.english":["English","انگلیسی","الإنجليزية"],
