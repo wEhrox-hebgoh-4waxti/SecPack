@@ -353,6 +353,9 @@ let currentLanguage="en";
 function t(key,lang=currentLanguage){const row=CORE[key];return row?row[LANG_INDEX[lang]]??row[0]:key}
 window.secpackT=t;
 window.secpackI18n={translations:CORE,t,langs:SUPPORTED};
+function legacyText(text,lang=currentLanguage){const path=(location.pathname||"").toLowerCase(),file=Object.keys(PAGE_TEXT||{}).find(k=>path.endsWith(k));const row=(typeof D!=="undefined"&&D[text])||(file&&PAGE_TEXT[file]?PAGE_TEXT[file][text]:null);return row&&row[LANG_INDEX[lang]]||text}
+function legacyFragment(html,lang=currentLanguage){const box=document.createElement("div");box.innerHTML=html;const walk=document.createTreeWalker(box,NodeFilter.SHOW_TEXT);const nodes=[];while(walk.nextNode())nodes.push(walk.currentNode);nodes.forEach(n=>{const v=legacyText((n.nodeValue||"").trim(),lang);if(v!==(n.nodeValue||"").trim()){const lead=(n.nodeValue||"").match(/^\s*/)?.[0]||"",tail=(n.nodeValue||"").match(/\s*$/)?.[0]||"";n.nodeValue=lead+v+tail}});return box.innerHTML}
+window.secpackLegacyText=legacyText;window.secpackLegacyFragment=legacyFragment;window.secpackGetLanguage=()=>currentLanguage;
 function applyCoreKeys(lang){
  document.querySelectorAll("[data-i18n]").forEach(el=>{const key=el.dataset.i18n;const value=t(key,lang);if(value!==key)el.textContent=value});document.querySelectorAll("[data-i18n-html]").forEach(el=>{const key=el.dataset.i18nHtml;const value=t(key,lang);if(value!==key)el.innerHTML=value});
  [["data-i18n-placeholder","placeholder"],["data-i18n-title","title"],["data-i18n-aria-label","aria-label"],["data-i18n-alt","alt"]].forEach(([ka,a])=>document.querySelectorAll("["+ka+"]").forEach(el=>{const key=el.getAttribute(ka),value=t(key,lang);if(value!==key)el.setAttribute(a,value)}));
