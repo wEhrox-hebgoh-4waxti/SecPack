@@ -367,10 +367,18 @@ const PAGE_TEXT={
 }
 };
 function applyPageTranslations(lang){
- const path=(location.pathname||"").toLowerCase(); const file=Object.keys(PAGE_TEXT).find(k=>path.endsWith(k));
- if(file&&lang!=="en"){document.querySelectorAll("body *").forEach(el=>{if(el.children.length===0){const t=(el.textContent||"").trim();const v=PAGE_TEXT[file][t];if(v)el.textContent=v[lang==="fa"?0:1];}});}
- const oldFile=path.endsWith("lamination-films.html")?"lamination-films.html":path.endsWith("water-based-adhesives.html")?"water-based-adhesives.html":null;
- if(oldFile&&lang!=="en"){const m=oldFile==="lamination-films.html"?{fa:["فیلم‌های لمینیشن","تأمین B2B فیلم‌های لمینیشن BOPP، PET و MPET برای کاغذ، مقوا، چاپ و بسته‌بندی."],ar:["أفلام التصفيح","توريد B2B لأفلام BOPP وPET وMPET لتطبيقات الورق والكرتون والطباعة والتغليف."]}:{fa:["چسب‌های پایه آب","تأمین چسب پایه آب برای لمینیشن خشک فیلم روی کاغذ، مقوا و بسترهای بسته‌بندی، همراه با مستندات فنی در صورت وجود."],ar:["مواد لاصقة مائية","توريد مواد لاصقة مائية للتصفيح الجاف بين الأفلام والورق والكرتون ومواد التغليف، مع الوثائق الفنية عند توفرها."]};const v=m[lang];document.querySelector(".page-hero h1")&&(document.querySelector(".page-hero h1").textContent=v[0]);document.querySelector(".page-hero>p")&&(document.querySelector(".page-hero>p").textContent=v[1]);}
+ const path=(location.pathname||"").toLowerCase();
+ const file=Object.keys(PAGE_TEXT).find(k=>path.endsWith(k));
+ if(!file)return;
+ document.querySelectorAll("body *").forEach(el=>{
+   if(el.children.length!==0)return;
+   const original=el.getAttribute("data-original-text")||((el.textContent||"").replace(/\s+/g," ").trim());
+   if(!original)return;
+   if(!el.hasAttribute("data-original-text")) el.setAttribute("data-original-text",original);
+   if(lang==="en"){el.textContent=original;return;}
+   const v=PAGE_TEXT[file][original];
+   if(v)el.textContent=v[lang==="fa"?0:1];
+ });
 }
 function setLanguage(lang){
  lang=SUPPORTED.includes(lang)?lang:"en";
