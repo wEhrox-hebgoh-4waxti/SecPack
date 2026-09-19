@@ -141,36 +141,30 @@
             "Request Supplier Support":"Request Supplier Support",
 
 
-            "Procurement workspace":"محیط کاری تأمین و خرید",
-            "CONTROL CENTER":"مرکز کنترل",
-            "SUPPLIER INTELLIGENCE":"اطلاعات تأمین‌کنندگان",
-            "How SecPack evaluates supply partners":"روش ارزیابی شرکای تأمین در SecPack",
-            "SUPPLY CENTER":"مرکز تأمین",
-            "Packaging materials supply":"تأمین مواد بسته‌بندی",
-            "INTELLIGENCE WORKSPACE":"محیط اطلاعات و تحلیل",
-            "Structured procurement intelligence":"اطلاعات ساختاریافته برای تأمین و خرید",
-            "Technical documents":"اسناد فنی",
-            "Categories":"دسته‌بندی‌ها",
-            "Languages":"زبان‌ها",
-            "Request Supplier Support":"درخواست پشتیبانی تأمین",
-
-
-            "Procurement workspace":"مساحة عمل المشتريات",
-            "CONTROL CENTER":"مركز التحكم",
-            "SUPPLIER INTELLIGENCE":"معلومات الموردين",
-            "How SecPack evaluates supply partners":"كيفية تقييم SecPack لشركاء التوريد",
-            "SUPPLY CENTER":"مركز التوريد",
-            "Packaging materials supply":"توريد مواد التغليف",
-            "INTELLIGENCE WORKSPACE":"مساحة ذكاء المشتريات",
-            "Structured procurement intelligence":"معلومات منظمة للمشتريات والتوريد",
-            "Technical documents":"الوثائق التقنية",
-            "Categories":"الفئات",
-            "Languages":"اللغات",
-            "Request Supplier Support":"طلب دعم التوريد",
+            "Procurement workspace":"Procurement workspace",
+            "CONTROL CENTER":"CONTROL CENTER",
+            "SUPPLIER INTELLIGENCE":"SUPPLIER INTELLIGENCE",
+            "How SecPack evaluates supply partners":"How SecPack evaluates supply partners",
+            "SUPPLY CENTER":"SUPPLY CENTER",
+            "Packaging materials supply":"Packaging materials supply",
+            "INTELLIGENCE WORKSPACE":"INTELLIGENCE WORKSPACE",
+            "Structured procurement intelligence":"Structured procurement intelligence",
+            "Technical documents":"Technical documents",
+            "Categories":"Categories",
+            "Languages":"Languages",
+            "Request Supplier Support":"Request Supplier Support",
 
 "SecPack Enterprise © 2026":
                 "SecPack Enterprise © 2026"
-        },
+"Company":"Company",
+            "For Manufacturers":"For Manufacturers",
+            "Knowledge Center":"Knowledge Center",
+            "Market Insights":"Knowledge Center",
+            "International Trade & Sourcing":"International Trade & Sourcing",
+            "Contact SEC PACK":"Contact SEC PACK",
+            "Online Store":"Online Store",
+            "Start a business discussion":"Start a business discussion",
+                    },
 
         fa: {
             "Home": "خانه",
@@ -309,7 +303,15 @@
 
             "SecPack Enterprise © 2026":
                 "SecPack Enterprise © 2026"
-        },
+"Company":"شرکت",
+            "For Manufacturers":"برای تولیدکنندگان",
+            "Knowledge Center":"مرکز دانش",
+            "Market Insights":"مرکز دانش",
+            "International Trade & Sourcing":"تجارت بین‌الملل و تأمین",
+            "Contact SEC PACK":"تماس با SEC PACK",
+            "Online Store":"فروشگاه آنلاین",
+            "Start a business discussion":"شروع گفت‌وگوی تجاری",
+                    },
 
         ar: {
             "Home": "الرئيسية",
@@ -660,20 +662,40 @@
 
             en: {
                 products:
-                    "SecPack | Products",
+                    "A4 Copy Paper, Lamination Films & Packaging Materials | SEC PACK",
                 documents:
-                    "SecPack | Documents",
+                    "Resources | SEC PACK",
                 market:
-                    "SecPack | Market Intelligence",
-                supplier: "SecPack | Supplier Intelligence",
-                dashboard: "SecPack | Dashboard",
-                store: "SecPack | Supply Center",
-                ai: "SecPack | Intelligence",
+                    "Knowledge Center | A4 Paper, Packaging & Procurement | SEC PACK",
+                supplier: "SEC PACK | Supplier Intelligence",
+                dashboard: "SEC PACK | Dashboard",
+                store: "SEC PACK | Online Supply Center",
+                ai: "SEC PACK | Intelligence",
                 contact:
-                    "SecPack | Contact",
+                    "Contact | SEC PACK",
+                company:
+                    "Company Profile | SEC PACK — International Trade & Sourcing",
+                manufacturers:
+                    "For Manufacturers & Export Partners | SEC PACK",
+                a4:
+                    "A4 Copy Paper | 75 GSM & 80 GSM OEM Supply | SEC PACK",
+                films:
+                    "Lamination Films | BOPP PET MPET | SEC PACK",
+                adhesives:
+                    "Water-Based Adhesives | Paper & Film Lamination | SEC PACK",
+                packaging:
+                    "Packaging Materials | B2B Sourcing | SEC PACK",
                 default:
-                    "SecPack | Professional Packaging Materials"
-            },
+                    "SEC PACK | International Trade & Sourcing"
+    "Company":"الشركة",
+            "For Manufacturers":"للمصنعين",
+            "Knowledge Center":"مركز المعرفة",
+            "Market Insights":"مركز المعرفة",
+            "International Trade & Sourcing":"التجارة الدولية والتوريد",
+            "Contact SEC PACK":"التواصل مع SEC PACK",
+            "Online Store":"المتجر الإلكتروني",
+            "Start a business discussion":"بدء مناقشة تجارية",
+                    },
 
             fa: {
                 products:
@@ -728,8 +750,20 @@
             type = "store";
         } else if (path.includes("ai.html")) {
             type = "ai";
-        } else if (path.includes("contact.html")) {
+                } else if (path.includes("contact.html")) {
             type = "contact";
+        } else if (path.includes("company.html")) {
+            type = "company";
+        } else if (path.includes("manufacturers.html")) {
+            type = "manufacturers";
+        } else if (path.includes("a4-copy-paper.html")) {
+            type = "a4";
+        } else if (path.includes("lamination-films.html")) {
+            type = "films";
+        } else if (path.includes("water-based-adhesives.html")) {
+            type = "adhesives";
+        } else if (path.includes("packaging-materials.html")) {
+            type = "packaging";
         }
 
         document.title =
