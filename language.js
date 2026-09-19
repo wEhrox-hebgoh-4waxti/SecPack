@@ -1,861 +1,94 @@
 (function () {
-    "use strict";
+  "use strict";
 
-    const STORAGE_KEY = "secpack-language";
-    const LANGUAGES = ["en", "fa", "ar"];
+  /*
+   * SEC PACK multilingual site layer.
+   * English is the source language. FA and AR use Google Translate's
+   * page translation so newly added public text is translated too.
+   * The visible EN / FA / AR buttons remain the site's language control.
+   */
+  const KEY = "secpack-lang";
+  const SUPPORTED = ["en","fa","ar"];
 
-    const translations = {
-        en: {
-            "Home": "Home",
-            "Products": "Products",
-            "Store": "Store",
-            "Dashboard": "Dashboard",
-            "Contact": "Contact",
-            "Resources": "Resources",
-            "Platform": "Platform",
-            "Market Intelligence": "Market Intelligence",
-            "Supplier Intelligence": "Supplier Intelligence",
+  function addWidget() {
+    if (document.getElementById("google_translate_element")) return;
+    const el = document.createElement("div");
+    el.id = "google_translate_element";
+    el.setAttribute("aria-hidden","true");
+    el.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;";
+    document.body.appendChild(el);
+  }
 
-            "Professional Packaging Materials Supplier":
-                "Professional Packaging Materials Supplier",
-            "Professional Packaging Materials":
-                "Professional Packaging Materials",
-            "Global Packaging Intelligence Platform":
-                "Global Packaging Intelligence Platform",
+  window.googleTranslateElementInit = function () {
+    if (!window.google || !google.translate || !google.translate.TranslateElement) return;
+    new google.translate.TranslateElement({
+      pageLanguage: "en",
+      includedLanguages: "en,fa,ar",
+      autoDisplay: false
+    }, "google_translate_element");
+  };
 
-            "Materials.": "Materials.",
-            "Technical Knowledge.": "Technical Knowledge.",
-            "Professional Solutions.": "Professional Solutions.",
+  function loadGoogleTranslate() {
+    addWidget();
+    if (document.getElementById("secpack-google-translate")) return;
+    const s = document.createElement("script");
+    s.id = "secpack-google-translate";
+    s.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+    s.async = true;
+    document.head.appendChild(s);
+  }
 
-            "SECPACK PRODUCTS": "SECPACK PRODUCTS",
-            "PRODUCT PORTFOLIO": "PRODUCT PORTFOLIO",
-            "Available Materials": "Available Materials",
-            "Explore SecPack materials by category and application.":
-                "Explore SecPack materials by category and application.",
+  function chooseGoogleLanguage(lang) {
+    const select = document.querySelector(".goog-te-combo");
+    if (!select) return false;
+    select.value = lang;
+    select.dispatchEvent(new Event("change", {bubbles:true}));
+    return true;
+  }
 
-            "SECPACK DOCUMENT CENTER":
-                "SECPACK DOCUMENT CENTER",
-            "Technical & Procurement Documents":
-                "Technical & Procurement Documents",
-            "DOCUMENT CENTER":
-                "DOCUMENT CENTER",
-            "Professional Information Resources":
-                "Professional Information Resources",
-            "Technical Data":
-                "Technical Data",
-            "Quality Information":
-                "Quality Information",
-            "Product Information":
-                "Product Information",
-            "Procurement Records":
-                "Procurement Records",
-            "TECHNICAL KNOWLEDGE":
-                "TECHNICAL KNOWLEDGE",
+  function setLanguage(lang) {
+    lang = SUPPORTED.includes(lang) ? lang : "en";
+    localStorage.setItem(KEY, lang);
+    document.documentElement.lang = lang;
+    document.documentElement.dir = (lang === "fa" || lang === "ar") ? "rtl" : "ltr";
 
-            "SECPACK MARKET INTELLIGENCE":
-                "SECPACK MARKET INTELLIGENCE",
-            "Packaging Industry Market Intelligence":
-                "Packaging Industry Market Intelligence",
-            "MARKET OVERVIEW":
-                "MARKET OVERVIEW",
-            "Global Packaging Market Focus":
-                "Global Packaging Market Focus",
-            "Lamination Films":
-                "Lamination Films",
-            "Lamination Adhesives":
-                "Lamination Adhesives",
-            "Packaging Materials":
-                "Packaging Materials",
-            "Supply Conditions":
-                "Supply Conditions",
-            "MARKET SIGNALS":
-                "MARKET SIGNALS",
-            "Price Conditions":
-                "Price Conditions",
-            "Demand Trends":
-                "Demand Trends",
-            "Supplier Capacity":
-                "Supplier Capacity",
-            "Regional Opportunities":
-                "Regional Opportunities",
+    document.querySelectorAll("[data-lang]").forEach(btn => {
+      btn.classList.toggle("on", btn.dataset.lang === lang);
+      btn.classList.toggle("active-language", btn.dataset.lang === lang);
+    });
 
-            "SECPACK SUPPLIER INTELLIGENCE":
-                "SECPACK SUPPLIER INTELLIGENCE",
-            "Supplier Evaluation Center":
-                "Supplier Evaluation Center",
-            "SUPPLIER NETWORK":
-                "SUPPLIER NETWORK",
-            "SUPPLIER SCORECARD":
-                "SUPPLIER SCORECARD",
-            "How SecPack Evaluates Suppliers":
-                "How SecPack Evaluates Suppliers",
-            "Cost Efficiency":
-                "Cost Efficiency",
-            "Quality Stability":
-                "Quality Stability",
-            "Batch Consistency":
-                "Batch Consistency",
-            "Response & Support":
-                "Response & Support",
-
-            "China": "China",
-            "Pakistan": "Pakistan",
-            "India": "India",
-            "Global Network": "Global Network",
-
-            "Request a Quote": "Request a Quote",
-            "Request a Solution": "Request a Solution",
-            "Request Information": "Request Information",
-            "Request Technical Information":
-                "Request Technical Information",
-            "Request Supplier Support":
-                "Request Supplier Support",
-            "Explore Products": "Explore Products",
-            "View Products": "View Products",
-            "Open Dashboard": "Open Dashboard",
-            "Review Suppliers": "Review Suppliers",
-            "Review Documents": "Review Documents",
-            "Discuss Requirements": "Discuss Requirements",
-            "Contact SecPack": "Contact SecPack",
-            "Email SecPack": "Email SecPack",
-
-            "Thermal Lamination Film":
-                "Thermal Lamination Film",
-            "Water-Based Adhesive":
-                "Water-Based Adhesive",
-
-            
-            "Procurement workspace":"Procurement workspace",
-            "CONTROL CENTER":"CONTROL CENTER",
-            "SUPPLIER INTELLIGENCE":"SUPPLIER INTELLIGENCE",
-            "How SecPack evaluates supply partners":"How SecPack evaluates supply partners",
-            "SUPPLY CENTER":"SUPPLY CENTER",
-            "Packaging materials supply":"Packaging materials supply",
-            "INTELLIGENCE WORKSPACE":"INTELLIGENCE WORKSPACE",
-            "Structured procurement intelligence":"Structured procurement intelligence",
-            "Technical documents":"Technical documents",
-            "Categories":"Categories",
-            "Languages":"Languages",
-            "Request Supplier Support":"Request Supplier Support",
-
-
-            "Procurement workspace":"Procurement workspace",
-            "CONTROL CENTER":"CONTROL CENTER",
-            "SUPPLIER INTELLIGENCE":"SUPPLIER INTELLIGENCE",
-            "How SecPack evaluates supply partners":"How SecPack evaluates supply partners",
-            "SUPPLY CENTER":"SUPPLY CENTER",
-            "Packaging materials supply":"Packaging materials supply",
-            "INTELLIGENCE WORKSPACE":"INTELLIGENCE WORKSPACE",
-            "Structured procurement intelligence":"Structured procurement intelligence",
-            "Technical documents":"Technical documents",
-            "Categories":"Categories",
-            "Languages":"Languages",
-            "Request Supplier Support":"Request Supplier Support",
-
-"SecPack Enterprise © 2026":
-                "SecPack Enterprise © 2026"
-                    },
-
-        fa: {
-            "Home": "خانه",
-            "Products": "محصولات",
-            "Store": "فروشگاه",
-            "Dashboard": "داشبورد",
-            "Contact": "تماس با ما",
-            "Resources": "منابع",
-            "Platform": "پلتفرم",
-            "Market Intelligence": "اطلاعات بازار",
-            "Supplier Intelligence": "اطلاعات تأمین‌کنندگان",
-
-            "Professional Packaging Materials Supplier":
-                "تأمین‌کننده حرفه‌ای مواد بسته‌بندی",
-            "Professional Packaging Materials":
-                "مواد بسته‌بندی حرفه‌ای",
-            "Global Packaging Intelligence Platform":
-                "پلتفرم اطلاعات جهانی صنعت بسته‌بندی",
-
-            "Materials.": "مواد بسته‌بندی.",
-            "Technical Knowledge.": "دانش فنی.",
-            "Professional Solutions.": "راهکارهای حرفه‌ای.",
-
-            "SECPACK PRODUCTS":
-                "محصولات SECPACK",
-            "PRODUCT PORTFOLIO":
-                "سبد محصولات",
-            "Available Materials":
-                "مواد موجود",
-            "Explore SecPack materials by category and application.":
-                "مواد SecPack را بر اساس دسته‌بندی و کاربرد بررسی کنید.",
-
-            "SECPACK DOCUMENT CENTER":
-                "مرکز اسناد SECPACK",
-            "Technical & Procurement Documents":
-                "اسناد فنی و تأمین",
-            "DOCUMENT CENTER":
-                "مرکز اسناد",
-            "Professional Information Resources":
-                "منابع اطلاعات حرفه‌ای",
-            "Technical Data":
-                "اطلاعات فنی",
-            "Quality Information":
-                "اطلاعات کیفیت",
-            "Product Information":
-                "اطلاعات محصول",
-            "Procurement Records":
-                "سوابق تأمین",
-            "TECHNICAL KNOWLEDGE":
-                "دانش فنی",
-
-            "SECPACK MARKET INTELLIGENCE":
-                "اطلاعات بازار SECPACK",
-            "Packaging Industry Market Intelligence":
-                "اطلاعات بازار صنعت بسته‌بندی",
-            "MARKET OVERVIEW":
-                "نمای کلی بازار",
-            "Global Packaging Market Focus":
-                "تمرکز بازار جهانی بسته‌بندی",
-            "Lamination Films":
-                "فیلم‌های لمینیشن",
-            "Lamination Adhesives":
-                "چسب‌های لمینیشن",
-            "Packaging Materials":
-                "مواد بسته‌بندی",
-            "Supply Conditions":
-                "شرایط تأمین",
-            "MARKET SIGNALS":
-                "سیگنال‌های بازار",
-            "Price Conditions":
-                "شرایط قیمت",
-            "Demand Trends":
-                "روند تقاضا",
-            "Supplier Capacity":
-                "ظرفیت تأمین‌کننده",
-            "Regional Opportunities":
-                "فرصت‌های منطقه‌ای",
-
-            "SECPACK SUPPLIER INTELLIGENCE":
-                "اطلاعات تأمین‌کنندگان SECPACK",
-            "Supplier Evaluation Center":
-                "مرکز ارزیابی تأمین‌کنندگان",
-            "SUPPLIER NETWORK":
-                "شبکه تأمین",
-            "SUPPLIER SCORECARD":
-                "امتیازدهی تأمین‌کنندگان",
-            "How SecPack Evaluates Suppliers":
-                "SecPack چگونه تأمین‌کنندگان را ارزیابی می‌کند",
-            "Cost Efficiency":
-                "بهره‌وری هزینه",
-            "Quality Stability":
-                "ثبات کیفیت",
-            "Batch Consistency":
-                "ثبات بین بچ‌ها",
-            "Response & Support":
-                "سرعت پاسخ و پشتیبانی",
-
-            "China": "چین",
-            "Pakistan": "پاکستان",
-            "India": "هند",
-            "Global Network": "شبکه جهانی",
-
-            "Request a Quote":
-                "درخواست قیمت",
-            "Request a Solution":
-                "درخواست راهکار",
-            "Request Information":
-                "درخواست اطلاعات",
-            "Request Technical Information":
-                "درخواست اطلاعات فنی",
-            "Request Supplier Support":
-                "درخواست پشتیبانی تأمین",
-            "Explore Products":
-                "مشاهده محصولات",
-            "View Products":
-                "مشاهده محصولات",
-            "Open Dashboard":
-                "باز کردن داشبورد",
-            "Review Suppliers":
-                "بررسی تأمین‌کنندگان",
-            "Review Documents":
-                "بررسی اسناد",
-            "Discuss Requirements":
-                "بررسی نیازمندی‌ها",
-            "Contact SecPack":
-                "تماس با SecPack",
-            "Email SecPack":
-                "ایمیل به SecPack",
-
-            "Thermal Lamination Film":
-                "فیلم لمینیشن حرارتی",
-            "Water-Based Adhesive":
-                "چسب پایه آب",
-
-            "SecPack Enterprise © 2026":
-                "SecPack Enterprise © 2026"
-                    },
-
-        ar: {
-            "Home": "الرئيسية",
-            "Products": "المنتجات",
-            "Store": "المتجر",
-            "Dashboard": "لوحة التحكم",
-            "Contact": "اتصل بنا",
-            "Resources": "المصادر",
-            "Platform": "المنصة",
-            "Market Intelligence": "معلومات السوق",
-            "Supplier Intelligence": "معلومات الموردين",
-
-            "Professional Packaging Materials Supplier":
-                "مورد محترف لمواد التغليف",
-            "Professional Packaging Materials":
-                "مواد تغليف احترافية",
-            "Global Packaging Intelligence Platform":
-                "منصة عالمية لمعلومات صناعة التغليف",
-
-            "Materials.": "مواد التغليف.",
-            "Technical Knowledge.": "المعرفة التقنية.",
-            "Professional Solutions.": "الحلول الاحترافية.",
-
-            "SECPACK PRODUCTS":
-                "منتجات SECPACK",
-            "PRODUCT PORTFOLIO":
-                "مجموعة المنتجات",
-            "Available Materials":
-                "المواد المتاحة",
-            "Explore SecPack materials by category and application.":
-                "استكشف مواد SecPack حسب الفئة والتطبيق.",
-
-            "SECPACK DOCUMENT CENTER":
-                "مركز وثائق SECPACK",
-            "Technical & Procurement Documents":
-                "الوثائق التقنية ووثائق التوريد",
-            "DOCUMENT CENTER":
-                "مركز الوثائق",
-            "Professional Information Resources":
-                "مصادر المعلومات الاحترافية",
-            "Technical Data":
-                "البيانات التقنية",
-            "Quality Information":
-                "معلومات الجودة",
-            "Product Information":
-                "معلومات المنتجات",
-            "Procurement Records":
-                "سجلات التوريد",
-            "TECHNICAL KNOWLEDGE":
-                "المعرفة التقنية",
-
-            "SECPACK MARKET INTELLIGENCE":
-                "معلومات سوق SECPACK",
-            "Packaging Industry Market Intelligence":
-                "معلومات سوق صناعة التغليف",
-            "MARKET OVERVIEW":
-                "نظرة عامة على السوق",
-            "Global Packaging Market Focus":
-                "التركيز على سوق التغليف العالمي",
-            "Lamination Films":
-                "أفلام التصفيح",
-            "Lamination Adhesives":
-                "مواد لاصقة للتصفيح",
-            "Packaging Materials":
-                "مواد التغليف",
-            "Supply Conditions":
-                "ظروف التوريد",
-            "MARKET SIGNALS":
-                "مؤشرات السوق",
-            "Price Conditions":
-                "ظروف الأسعار",
-            "Demand Trends":
-                "اتجاهات الطلب",
-            "Supplier Capacity":
-                "قدرة الموردين",
-            "Regional Opportunities":
-                "الفرص الإقليمية",
-
-            "SECPACK SUPPLIER INTELLIGENCE":
-                "معلومات موردي SECPACK",
-            "Supplier Evaluation Center":
-                "مركز تقييم الموردين",
-            "SUPPLIER NETWORK":
-                "شبكة التوريد",
-            "SUPPLIER SCORECARD":
-                "بطاقة تقييم الموردين",
-            "How SecPack Evaluates Suppliers":
-                "كيف تقوم SecPack بتقييم الموردين",
-            "Cost Efficiency":
-                "كفاءة التكلفة",
-            "Quality Stability":
-                "استقرار الجودة",
-            "Batch Consistency":
-                "ثبات الدُفعات",
-            "Response & Support":
-                "سرعة الاستجابة والدعم",
-
-            "China": "الصين",
-            "Pakistan": "باكستان",
-            "India": "الهند",
-            "Global Network": "الشبكة العالمية",
-
-            "Request a Quote":
-                "طلب عرض سعر",
-            "Request a Solution":
-                "طلب حل",
-            "Request Information":
-                "طلب معلومات",
-            "Request Technical Information":
-                "طلب معلومات تقنية",
-            "Request Supplier Support":
-                "طلب دعم الموردين",
-            "Explore Products":
-                "استكشف المنتجات",
-            "View Products":
-                "عرض المنتجات",
-            "Open Dashboard":
-                "فتح لوحة التحكم",
-            "Review Suppliers":
-                "مراجعة الموردين",
-            "Review Documents":
-                "مراجعة الوثائق",
-            "Discuss Requirements":
-                "مناقشة المتطلبات",
-            "Contact SecPack":
-                "التواصل مع SecPack",
-            "Email SecPack":
-                "إرسال بريد إلى SecPack",
-
-            "Thermal Lamination Film":
-                "فيلم التصفيح الحراري",
-            "Water-Based Adhesive":
-                "لاصق مائي",
-
-            "SecPack Enterprise © 2026":
-                "SecPack Enterprise © 2026"
-        }
-    };
-
-    function normalize(text) {
-        return String(text)
-            .replace(/\s+/g, " ")
-            .replace(/\u00A0/g, " ")
-            .trim();
+    if (lang === "en") {
+      // Reset Google Translate without reloading the page.
+      const reset = document.querySelector(".goog-te-combo");
+      if (reset) {
+        reset.value = "en";
+        reset.dispatchEvent(new Event("change", {bubbles:true}));
+      } else {
+        const frame = document.querySelector(".goog-te-banner-frame");
+        if (frame) window.location.reload();
+      }
+      return;
     }
 
-    function detectLanguage() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-
-        if (LANGUAGES.includes(saved)) {
-            return saved;
-        }
-
-        const browser = (
-            navigator.language || ""
-        ).toLowerCase();
-
-        if (browser.startsWith("fa")) {
-            return "fa";
-        }
-
-        if (browser.startsWith("ar")) {
-            return "ar";
-        }
-
-        return "en";
-    }
-
-    function translateDataAttributes(language) {
-        const dictionary = translations[language];
-
-        document
-            .querySelectorAll("[data-i18n]")
-            .forEach(function (element) {
-
-                const key =
-                    element.getAttribute("data-i18n");
-
-                if (dictionary[key] !== undefined) {
-                    element.textContent =
-                        dictionary[key];
-                }
-            });
-    }
-
-    function translateTextNodes(language) {
-        const dictionary = translations[language];
-
-        const walker =
-            document.createTreeWalker(
-                document.body,
-                NodeFilter.SHOW_TEXT
-            );
-
-        const nodes = [];
-
-        let node;
-
-        while ((node = walker.nextNode())) {
-            nodes.push(node);
-        }
-
-        nodes.forEach(function (textNode) {
-
-            const parent =
-                textNode.parentElement;
-
-            if (!parent) {
-                return;
-            }
-
-            if (
-                ["SCRIPT", "STYLE", "NOSCRIPT"]
-                    .includes(parent.tagName)
-            ) {
-                return;
-            }
-
-            const original =
-                normalize(textNode.nodeValue);
-
-            if (!original) {
-                return;
-            }
-
-            const translated =
-                dictionary[original];
-
-            if (translated !== undefined) {
-                textNode.nodeValue =
-                    textNode.nodeValue.replace(
-                        original,
-                        translated
-                    );
-            }
-        });
-    }
-
-    function translateAttributes(language) {
-        const dictionary = translations[language];
-
-        document
-            .querySelectorAll(
-                "[placeholder],[title],[aria-label]"
-            )
-            .forEach(function (element) {
-
-                [
-                    "placeholder",
-                    "title",
-                    "aria-label"
-                ].forEach(function (attribute) {
-
-                    const value =
-                        element.getAttribute(attribute);
-
-                    if (!value) {
-                        return;
-                    }
-
-                    const key =
-                        normalize(value);
-
-                    if (
-                        dictionary[key] !== undefined
-                    ) {
-                        element.setAttribute(
-                            attribute,
-                            dictionary[key]
-                        );
-                    }
-                });
-            });
-    }
-
-    function updateDirection(language) {
-
-        document.documentElement.lang =
-            language;
-
-        document.documentElement.dir =
-            language === "en"
-                ? "ltr"
-                : "rtl";
-
-        if (document.body) {
-            document.body.classList.remove(
-                "lang-en",
-                "lang-fa",
-                "lang-ar"
-            );
-
-            document.body.classList.add(
-                "lang-" + language
-            );
-        }
-    }
-
-    function updateButtons(language) {
-
-        document
-            .querySelectorAll(".languages button, .langs button[data-lang]")
-            .forEach(function (button) {
-
-                const onclick =
-                    button.getAttribute("onclick") || "";
-
-                const dataLanguage =
-                    button.getAttribute("data-lang") || "";
-
-                button.classList.toggle(
-                    "active-language",
-                    dataLanguage === language ||
-                    onclick.indexOf("'" + language + "'") !== -1
-                );
-
-                button.classList.toggle(
-                    "on",
-                    dataLanguage === language
-                );
-            });
-    }
-
-    function bindLanguageButtons() {
-        document
-            .querySelectorAll(".langs button[data-lang]")
-            .forEach(function (button) {
-                if (button.dataset.secpackLanguageBound === "true") {
-                    return;
-                }
-
-                button.dataset.secpackLanguageBound = "true";
-
-                button.addEventListener("click", function () {
-                    applyLanguage(button.getAttribute("data-lang"));
-                });
-            });
-    }
-
-    function updateTitle(language) {
-        const path = window.location.pathname.toLowerCase();
-        const titles = {
-            en: {
-                products: "A4 Copy Paper, Lamination Films & Packaging Materials | SEC PACK",
-                documents: "Resources | SEC PACK",
-                market: "Knowledge Center | A4 Paper, Packaging & Procurement | SEC PACK",
-                supplier: "SEC PACK | Supplier Intelligence",
-                dashboard: "SEC PACK | Dashboard",
-                store: "SEC PACK | Online Supply Center",
-                ai: "SEC PACK | Intelligence",
-                contact: "Contact | SEC PACK",
-                company: "Company Profile | SEC PACK — International Trade & Sourcing",
-                manufacturers: "For Manufacturers & Export Partners | SEC PACK",
-                a4: "A4 Copy Paper | 75 GSM & 80 GSM OEM Supply | SEC PACK",
-                films: "Lamination Films | BOPP PET MPET | SEC PACK",
-                adhesives: "Water-Based Adhesives | Paper & Film Lamination | SEC PACK",
-                packaging: "Packaging Materials | B2B Sourcing | SEC PACK",
-                default: "SEC PACK | International Trade & Sourcing"
-            },
-            fa: {
-                products: "SEC PACK | محصولات",
-                documents: "SEC PACK | منابع",
-                market: "SEC PACK | مرکز دانش",
-                supplier: "SEC PACK | اطلاعات تأمین‌کنندگان",
-                dashboard: "SEC PACK | داشبورد",
-                store: "SEC PACK | فروشگاه آنلاین",
-                ai: "SEC PACK | اطلاعات تأمین",
-                contact: "SEC PACK | تماس",
-                company: "SEC PACK | معرفی شرکت",
-                manufacturers: "SEC PACK | برای تولیدکنندگان و شرکای صادراتی",
-                a4: "SEC PACK | کاغذ A4 — تأمین 75 و 80 گرم",
-                films: "SEC PACK | فیلم‌های لمینیشن BOPP PET MPET",
-                adhesives: "SEC PACK | چسب‌های پایه آب لمینیشن",
-                packaging: "SEC PACK | مواد بسته‌بندی",
-                default: "SEC PACK | تجارت بین‌الملل و تأمین"
-            },
-            ar: {
-                products: "SEC PACK | المنتجات",
-                documents: "SEC PACK | المصادر",
-                market: "SEC PACK | مركز المعرفة",
-                supplier: "SEC PACK | معلومات الموردين",
-                dashboard: "SEC PACK | لوحة التحكم",
-                store: "SEC PACK | المتجر الإلكتروني",
-                ai: "SEC PACK | معلومات التوريد",
-                contact: "SEC PACK | اتصل بنا",
-                company: "SEC PACK | ملف الشركة",
-                manufacturers: "SEC PACK | للمصنعين وشركاء التصدير",
-                a4: "SEC PACK | ورق A4 — توريد 75 و80 غرام",
-                films: "SEC PACK | أفلام التصفيح BOPP PET MPET",
-                adhesives: "SEC PACK | مواد لاصقة مائية للتصفيح",
-                packaging: "SEC PACK | مواد التغليف",
-                default: "SEC PACK | التجارة الدولية والتوريد"
-            }
-        };
-        let type = "default";
-        if (path.includes("products.html")) type = "products";
-        else if (path.includes("documents.html")) type = "documents";
-        else if (path.includes("market.html")) type = "market";
-        else if (path.includes("supplier-profile.html")) type = "supplier";
-        else if (path.includes("dashboard.html")) type = "dashboard";
-        else if (path.includes("store.html")) type = "store";
-        else if (path.includes("ai.html")) type = "ai";
-        else if (path.includes("contact.html")) type = "contact";
-        else if (path.includes("company.html")) type = "company";
-        else if (path.includes("manufacturers.html")) type = "manufacturers";
-        else if (path.includes("a4-copy-paper.html")) type = "a4";
-        else if (path.includes("lamination-films.html")) type = "films";
-        else if (path.includes("water-based-adhesives.html")) type = "adhesives";
-        else if (path.includes("packaging-materials.html")) type = "packaging";
-        document.title = titles[language][type] || titles.en.default;
-    }
-
-    function applyLanguage(language) {
-
-        if (!LANGUAGES.includes(language)) {
-            language = "en";
-        }
-
-        localStorage.setItem(
-            STORAGE_KEY,
-            language
-        );
-
-        updateDirection(language);
-        translateDataAttributes(language);
-        translateTextNodes(language);
-        translateAttributes(language);
-        updateButtons(language);
-        updateTitle(language);
-
-        window.dispatchEvent(
-            new CustomEvent(
-                "secpack-language-changed",
-                {
-                    detail: {
-                        language: language
-                    }
-                }
-            )
-        );
-    }
-
-    window.changeLanguage =
-        function (language) {
-            applyLanguage(language);
-        };
-
-    window.SecPackLanguage = {
-
-        get: function () {
-            return detectLanguage();
-        },
-
-        set: function (language) {
-            applyLanguage(language);
-        },
-
-        apply: function (language) {
-            applyLanguage(language);
-        },
-
-        translate: function (
-            text,
-            targetLanguage
-        ) {
-
-            const language =
-                targetLanguage ||
-                detectLanguage();
-
-            const dictionary =
-                translations[language];
-
-            const key =
-                normalize(text);
-
-            return dictionary[key] !== undefined
-                ? dictionary[key]
-                : text;
-        },
-
-        getAIContext: function () {
-
-            const language =
-                detectLanguage();
-
-            const instructions = {
-
-                en:
-                    "Respond to the user in English. Preserve technical product names, model numbers, brands and codes.",
-
-                fa:
-                    "به کاربر به زبان فارسی پاسخ بده. تمام توضیحات، پیام‌ها، راهنمایی‌ها و پاسخ‌های متنی را فارسی ارائه کن. نام محصولات، مدل‌ها، برندها و کدهای فنی را در صورت نیاز به شکل اصلی حفظ کن.",
-
-                ar:
-                    "أجب المستخدم باللغة العربية. يجب أن تكون جميع الشروحات والرسائل والإرشادات والإجابات النصية باللغة العربية. حافظ على أسماء المنتجات والموديلات والعلامات التجارية والرموز التقنية بصيغتها الأصلية عند الحاجة."
-            };
-
-            return {
-                language: language,
-                instruction:
-                    instructions[language]
-            };
-        },
-
-        translations: translations
-    };
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        function () {
-            bindLanguageButtons();
-            applyLanguage(
-                detectLanguage()
-            );
-        }
-    );
-
-    let observerStarted = false;
-
-    function startObserver() {
-
-        if (
-            observerStarted ||
-            !document.body
-        ) {
-            return;
-        }
-
-        observerStarted = true;
-
-        const observer =
-            new MutationObserver(
-                function () {
-
-                    const language =
-                        detectLanguage();
-
-                    translateDataAttributes(
-                        language
-                    );
-
-                    translateTextNodes(
-                        language
-                    );
-
-                    translateAttributes(
-                        language
-                    );
-                }
-            );
-
-        observer.observe(
-            document.body,
-            {
-                childList: true,
-                subtree: true
-            }
-        );
-    }
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        startObserver
-    );
-
+    loadGoogleTranslate();
+    let tries = 0;
+    const timer = setInterval(() => {
+      if (chooseGoogleLanguage(lang) || ++tries > 30) clearInterval(timer);
+    }, 250);
+  }
+
+  function init() {
+    document.querySelectorAll("[data-lang]").forEach(btn => {
+      btn.addEventListener("click", () => setLanguage(btn.dataset.lang));
+    });
+
+    const saved = localStorage.getItem(KEY) || "en";
+    setLanguage(saved);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, {once:true});
+  } else {
+    init();
+  }
 })();
