@@ -123,6 +123,7 @@ const HOME_CORE={
 };
 Object.assign(CORE,HOME_CORE);
 Object.assign(CORE,{
+"page.packaging-materials.23":["Submit your requirement and SEC PACK can structure it for supplier comparison and commercial discussion.","نیاز خود را ارسال کنید تا SEC PACK آن را برای مقایسه تأمین‌کنندگان و گفت‌وگوی تجاری ساختاربندی کند.","أرسل متطلبك ويمكن لـ SEC PACK تنظيمه لمقارنة الموردين والمناقشة التجارية."],
 
 "d.water-based-adhesives.01":["Water-Based Adhesives | Paper & Film Lamination | SEC PACK","چسب‌های پایه آب | لمینیشن کاغذ و فیلم | SEC PACK","المواد اللاصقة المائية | تصفيح الورق والأفلام | SEC PACK"],
 "d.water-based-adhesives.02":["Skip to content","پرش به محتوا","انتقل إلى المحتوى"],
