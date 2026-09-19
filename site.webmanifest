@@ -1,0 +1,16 @@
+{
+  "name": "SEC PACK | International Trade & Sourcing",
+  "short_name": "SEC PACK",
+  "description": "International sourcing, procurement and packaging material solutions for professional B2B customers.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#071321",
+  "theme_color": "#071321",
+  "icons": [
+    {
+      "src": "logo.jpg",
+      "sizes": "any",
+      "type": "image/jpeg"
+    }
+  ]
+}
