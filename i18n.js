@@ -123,6 +123,22 @@ const HOME_CORE={
 };
 Object.assign(CORE,HOME_CORE);
 Object.assign(CORE,{
+"meta.home":["SEC PACK | International Trade & Sourcing","SEC PACK | تجارت بین‌الملل و تأمین","SEC PACK | التجارة الدولية والتوريد"],
+"meta.a4":["A4 Copy Paper | 75 GSM & 80 GSM OEM Supply | SEC PACK","کاغذ کپی A4 | تأمین OEM در ۷۵ و ۸۰ گرم | SEC PACK","ورق النسخ A4 | توريد OEM بوزن 75 و80 GSM | SEC PACK"],
+"meta.products":["A4 Copy Paper, Lamination Films & Packaging Materials | SEC PACK","کاغذ کپی A4، فیلم لمینیشن و مواد بسته‌بندی | SEC PACK","ورق النسخ A4 وأفلام التصفيح ومواد التغليف | SEC PACK"],
+"meta.film":["Lamination Films | BOPP PET MPET | SEC PACK","فیلم‌های لمینیشن | BOPP PET MPET | SEC PACK","أفلام التصفيح | BOPP PET MPET | SEC PACK"],
+"meta.adhesive":["Water-Based Adhesives | Paper & Film Lamination | SEC PACK","چسب‌های پایه آب | لمینیشن کاغذ و فیلم | SEC PACK","المواد اللاصقة المائية | تصفيح الورق والفيلم | SEC PACK"],
+"meta.packaging":["Packaging Materials | B2B Sourcing | SEC PACK","مواد بسته‌بندی | تأمین B2B | SEC PACK","مواد التغليف | التوريد B2B | SEC PACK"],
+"meta.company":["Company Profile | SEC PACK — International Trade & Sourcing","معرفی شرکت | SEC PACK — تجارت و تأمین بین‌المللی","ملف الشركة | SEC PACK — التجارة والتوريد الدولي"],
+"meta.manufacturers":["For Manufacturers & Export Partners | SEC PACK","برای تولیدکنندگان و شرکای صادراتی | SEC PACK","للمصنعين وشركاء التصدير | SEC PACK"],
+"meta.market":["Knowledge Center | A4 Paper, Packaging & Procurement | SEC PACK","مرکز دانش | کاغذ A4، بسته‌بندی و خرید | SEC PACK","مركز المعرفة | ورق A4 والتغليف والمشتريات | SEC PACK"],
+"meta.documents":["Resources | SEC PACK","منابع | SEC PACK","المصادر | SEC PACK"],
+"meta.contact":["Contact | SEC PACK","تماس | SEC PACK","اتصل بنا | SEC PACK"],
+"meta.store":["SEC PACK | Online Supply Center","SEC PACK | مرکز تأمین آنلاین","SEC PACK | مركز التوريد الإلكتروني"],
+"meta.privacy":["Privacy & Data Handling | SEC PACK","حریم خصوصی و مدیریت داده | SEC PACK","الخصوصية ومعالجة البيانات | SEC PACK"],
+"meta.terms":["Terms of Use | SEC PACK","شرایط استفاده | SEC PACK","شروط الاستخدام | SEC PACK"],
+"meta.404":["SecPack | Page not found","SEC PACK | صفحه پیدا نشد","SEC PACK | الصفحة غير موجودة"],
+
 "d.market.01":["Knowledge Center | A4 Paper, Packaging & Procurement | SEC PACK","مرکز دانش | کاغذ A4، بسته‌بندی و خرید | SEC PACK","مركز المعرفة | ورق A4 والتغليف والمشتريات | SEC PACK"],
 "d.market.02":["International Trade & Sourcing","تجارت بین‌الملل و تأمین","التجارة الدولية والتوريد"],
 "d.market.03":["SEC PACK KNOWLEDGE CENTER","مرکز دانش SEC PACK","مركز معرفة SEC PACK"],
