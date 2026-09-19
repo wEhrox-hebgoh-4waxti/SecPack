@@ -32,3 +32,30 @@
 a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #75d9f5;outline-offset:3px}
 button{font-family:inherit}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* Homepage visual refresh */
+.hero{position:relative;overflow:hidden;min-height:700px;padding:78px 7.5%;grid-template-columns:minmax(0,1.05fr) minmax(380px,.95fr);gap:55px;background:
+ radial-gradient(circle at 78% 18%,rgba(19,168,216,.32),transparent 27%),
+ radial-gradient(circle at 92% 85%,rgba(64,190,160,.18),transparent 30%),
+ linear-gradient(120deg,#06111f 0%,#0a2035 54%,#0d3c52 100%)}
+.hero::after{content:"";position:absolute;inset:auto -10% -42% 35%;height:360px;background:linear-gradient(90deg,transparent,rgba(19,168,216,.13),transparent);transform:rotate(-8deg);pointer-events:none}
+.hero-copy{position:relative;z-index:2}
+.hero-brand{width:118px;height:118px;padding:10px;margin:0 0 22px;border-radius:24px;background:rgba(255,255,255,.98);box-shadow:0 18px 55px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center}
+.hero-brand img{width:100%;height:100%;object-fit:contain;border-radius:15px}
+.hero h1{font-size:clamp(42px,5.4vw,74px)}
+.hero-visual{position:relative;z-index:1;min-height:475px;border:1px solid rgba(255,255,255,.13);border-radius:32px;background:linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.035));box-shadow:0 35px 90px rgba(0,0,0,.28);overflow:hidden}
+.visual-glow{position:absolute;width:260px;height:260px;right:4%;top:3%;border-radius:50%;background:rgba(117,217,245,.18);filter:blur(2px)}
+.trade-orbit{position:absolute;border:1px solid rgba(117,217,245,.22);border-radius:50%;transform:rotate(-18deg)}
+.orbit-one{width:420px;height:190px;left:5%;top:24%}
+.orbit-two{width:360px;height:155px;left:15%;top:32%;border-color:rgba(77,221,180,.18)}
+.trade-map{position:absolute;inset:70px 45px 80px}
+.node{position:absolute;width:12px;height:12px;border-radius:50%;background:#75d9f5;box-shadow:0 0 0 8px rgba(117,217,245,.09),0 0 24px rgba(117,217,245,.7)}
+.n1{left:12%;top:55%}.n2{left:39%;top:26%}.n3{right:18%;top:42%}.n4{right:6%;bottom:8%}
+.route{position:absolute;height:1px;background:linear-gradient(90deg,rgba(117,217,245,.08),rgba(117,217,245,.65),rgba(77,221,180,.2));transform-origin:left center}
+.r1{width:180px;left:14%;top:55%;transform:rotate(-23deg)}.r2{width:190px;left:40%;top:28%;transform:rotate(12deg)}.r3{width:150px;right:9%;top:44%;transform:rotate(67deg)}
+.visual-card{position:absolute;padding:13px 16px;border-radius:14px;background:rgba(4,17,30,.76);border:1px solid rgba(255,255,255,.15);box-shadow:0 14px 30px rgba(0,0,0,.22);backdrop-filter:blur(10px);display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center}
+.visual-card span{grid-row:span 2;color:#75d9f5;font-size:10px;font-weight:900}.visual-card b{font-size:12px;letter-spacing:.08em}.visual-card small{font-size:8px;color:#9db0c0;letter-spacing:.13em}
+.visual-paper{left:7%;top:12%}.visual-film{right:7%;top:27%}.visual-pack{left:18%;bottom:17%}
+.visual-caption{position:absolute;left:28px;right:28px;bottom:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.13);display:flex;justify-content:space-between;gap:15px;align-items:center}.visual-caption strong{font-size:11px;letter-spacing:.16em;color:#75d9f5}.visual-caption span{font-size:11px;color:#a9bac9}
+@media(max-width:900px){.hero{grid-template-columns:1fr;padding:64px 7%;gap:38px}.hero-visual{min-height:410px}.hero-brand{width:105px;height:105px}}
+@media(max-width:560px){.hero{padding:48px 6% 55px}.hero-brand{width:92px;height:92px;border-radius:20px;margin-bottom:18px}.hero h1{font-size:40px}.hero-visual{min-height:370px;border-radius:24px}.trade-map{inset:60px 20px 70px}.visual-paper{left:5%;top:10%}.visual-film{right:5%;top:25%}.visual-pack{left:8%;bottom:18%}.visual-caption{left:18px;right:18px;bottom:18px;display:block}.visual-caption span{display:block;margin-top:5px}}
