@@ -123,6 +123,7 @@ const HOME_CORE={
 };
 Object.assign(CORE,HOME_CORE);
 Object.assign(CORE,{
+
 "d.water-based-adhesives.01":["Water-Based Adhesives | Paper & Film Lamination | SEC PACK","چسب‌های پایه آب | لمینیشن کاغذ و فیلم | SEC PACK","المواد اللاصقة المائية | تصفيح الورق والأفلام | SEC PACK"],
 "d.water-based-adhesives.02":["Skip to content","پرش به محتوا","انتقل إلى المحتوى"],
 "d.water-based-adhesives.03":["International Trade & Sourcing","تجارت بین‌الملل و تأمین","التجارة الدولية والتوريد"],
