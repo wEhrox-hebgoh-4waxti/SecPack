@@ -337,7 +337,7 @@ function t(key,lang=currentLanguage){const row=CORE[key];return row?row[LANG_IND
 window.secpackT=t;
 window.secpackI18n={translations:CORE,t,langs:SUPPORTED};
 function applyCoreKeys(lang){
- document.querySelectorAll("[data-i18n]").forEach(el=>{const key=el.dataset.i18n;const value=t(key,lang);if(value!==key)el.textContent=value});
+ document.querySelectorAll("[data-i18n]").forEach(el=>{const key=el.dataset.i18n;const value=t(key,lang);if(value!==key)el.textContent=value});document.querySelectorAll("[data-i18n-html]").forEach(el=>{const key=el.dataset.i18nHtml;const value=t(key,lang);if(value!==key)el.innerHTML=value});
  [["data-i18n-placeholder","placeholder"],["data-i18n-title","title"],["data-i18n-aria-label","aria-label"],["data-i18n-alt","alt"]].forEach(([ka,a])=>document.querySelectorAll("["+ka+"]").forEach(el=>{const key=el.getAttribute(ka),value=t(key,lang);if(value!==key)el.setAttribute(a,value)}));
 }
 function applyDocumentMeta(lang){
