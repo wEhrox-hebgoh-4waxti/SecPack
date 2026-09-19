@@ -123,6 +123,7 @@ const HOME_CORE={
 };
 Object.assign(CORE,HOME_CORE);
 Object.assign(CORE,{
+
 "page.a4-copy-paper.01":["Skip to content","پرش به محتوا","انتقل إلى المحتوى"],
 "page.a4-copy-paper.02":["International Trade & Sourcing","تجارت بین‌الملل و تأمین","التجارة الدولية والتوريد"],
 "page.a4-copy-paper.03":["Home","خانه","الرئيسية"],
