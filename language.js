@@ -53,6 +53,149 @@ Object.assign(D,{
 "Application-specific":["متناسب با کاربرد","وفق التطبيق"],"Printer / converter / manufacturer":["چاپخانه / مبدل / تولیدکننده","طابع / محوّل / مصنع"],"Technical specification":["مشخصات فنی","المواصفات الفنية"],"Packaging format":["فرمت بسته‌بندی","صيغة التغليف"],"Quantity program":["برنامه مقداری","برنامج الكمية"],"Long-term supply":["تأمین بلندمدت","توريد طويل الأجل"],
 "International sourcing, procurement and trade support for professional B2B customers.":["تأمین بین‌المللی، خرید و پشتیبانی تجارت برای مشتریان حرفه‌ای B2B.","التوريد الدولي والمشتريات ودعم التجارة للعملاء المحترفين في قطاع B2B."]
 });
+
+// Comprehensive technical translation layer: visible content, scientific guides,
+// forms, labels, metadata and dynamic UI all resolve from one canonical EN key.
+Object.assign(D,{
+"SEC PACK | International Trade & Sourcing":["SEC PACK | تجارت بین‌الملل و تأمین","SEC PACK | التجارة الدولية والتوريد"],
+"SEC PACK · INTERNATIONAL TRADE":["SEC PACK · تجارت بین‌الملل","SEC PACK · التجارة الدولية"],
+"Structured procurement.":["خرید ساختاریافته.","مشتريات منظمة."],
+"SEC PACK connects professional buyers with manufacturers and export partners through specification-led sourcing, disciplined procurement and practical international trade coordination.":["SEC PACK خریداران حرفه‌ای را از طریق تأمین مبتنی بر مشخصات، خرید منضبط و هماهنگی عملی تجارت بین‌الملل به تولیدکنندگان و شرکای صادراتی متصل می‌کند.","تربط SEC PACK المشترين المحترفين بالمصنعين وشركاء التصدير من خلال التوريد القائم على المواصفات والمشتريات المنضبطة والتنسيق العملي للتجارة الدولية."],
+"Explore Products":["مشاهده محصولات","استكشف المنتجات"],
+"CAPABILITIES":["توانمندی‌ها","القدرات"],
+"A sourcing partner built around real trade requirements.":["شریکی برای تأمین، بر پایه نیازهای واقعی تجارت.","شريك توريد مبني على متطلبات التجارة الفعلية."],
+"Global Sourcing":["تأمین جهانی","التوريد العالمي"],
+"Identify suitable manufacturers and export partners based on product, quality and commercial requirements.":["شناسایی تولیدکنندگان و شرکای صادراتی مناسب بر اساس محصول، کیفیت و الزامات تجاری.","تحديد المصنعين وشركاء التصدير المناسبين وفق متطلبات المنتج والجودة والشروط التجارية."],
+"Procurement":["خرید","المشتريات"],
+"Support RFQs, specification checks, negotiation and purchasing coordination for B2B supply.":["پشتیبانی از استعلام قیمت، بررسی مشخصات، مذاکره و هماهنگی خرید برای تأمین B2B.","دعم طلبات عروض الأسعار والتحقق من المواصفات والتفاوض وتنسيق المشتريات لتوريد B2B."],
+"Trade Support":["پشتیبانی تجارت","دعم التجارة"],
+"Coordinate practical international trade requirements from supplier communication to delivery planning.":["هماهنگی نیازهای عملی تجارت بین‌الملل از ارتباط با تأمین‌کننده تا برنامه‌ریزی تحویل.","تنسيق متطلبات التجارة الدولية العملية من التواصل مع المورد إلى تخطيط التسليم."],
+"Materials for printing, packaging and converting.":["مواد برای چاپ، بسته‌بندی و کانورتینگ.","مواد للطباعة والتغليف والتحويل."],
+"Our product portfolio is developed around industrial applications and dependable supply.":["سبد محصولات ما بر پایه کاربردهای صنعتی و تأمین قابل اتکا توسعه یافته است.","تم تطوير محفظة منتجاتنا حول التطبيقات الصناعية والتوريد الموثوق."],
+"Copy Paper":["کاغذ تحریر","ورق النسخ"],
+"A4 office and printing paper specifications for professional supply programs.":["مشخصات کاغذ اداری و چاپ A4 برای برنامه‌های حرفه‌ای تأمین.","مواصفات ورق A4 المكتبي والطباعة لبرامج التوريد الاحترافية."],
+"Adhesive solutions for paper, film and board lamination processes.":["راهکارهای چسب برای فرایندهای لمینیشن کاغذ، فیلم و مقوا.","حلول لاصقة لعمليات تصفيح الورق والأفلام والكرتون."],
+"Selected materials for converters, printers and packaging manufacturers.":["مواد منتخب برای مبدل‌ها، چاپخانه‌ها و تولیدکنندگان بسته‌بندی.","مواد مختارة للمحوّلين والطابعين ومصنعي التغليف."],
+"OUR APPROACH":["رویکرد ما","نهجنا"],
+"From requirement to reliable supply.":["از نیاز تا تأمین قابل اتکا.","من المتطلب إلى التوريد الموثوق."],
+"We focus on clear specifications, direct communication, commercial discipline and long-term B2B relationships.":["تمرکز ما بر مشخصات روشن، ارتباط مستقیم، انضباط تجاری و روابط بلندمدت B2B است.","نركز على المواصفات الواضحة والتواصل المباشر والانضباط التجاري والعلاقات طويلة الأجل في قطاع B2B."],
+"Understand the requirement":["درک نیاز","فهم المتطلب"],
+"Identify suitable production partners":["شناسایی شرکای تولید مناسب","تحديد شركاء الإنتاج المناسبين"],
+"Evaluate specifications and commercial terms":["ارزیابی مشخصات و شرایط تجاری","تقييم المواصفات والشروط التجارية"],
+"Coordinate the purchasing process":["هماهنگی فرایند خرید","تنسيق عملية الشراء"],
+"START A CONVERSATION":["شروع گفت‌وگو","ابدأ محادثة"],
+"Have a product or sourcing requirement?":["نیاز محصول یا تأمین دارید؟","هل لديك متطلب لمنتج أو توريد؟"],
+"Tell us what you need. We will review the requirement and discuss the appropriate supply route.":["نیاز خود را برای ما ارسال کنید. نیاز را بررسی کرده و مسیر مناسب تأمین را بررسی می‌کنیم.","أخبرنا بما تحتاجه. سنراجع المتطلب ونناقش مسار التوريد المناسب."],
+"Request a Discussion":["درخواست گفت‌وگو","طلب مناقشة"],
+"Register your professional details to receive technical solutions, useful information and relevant new products from SEC PACK.":["برای دریافت راهکارهای فنی، اطلاعات مفید و محصولات جدید مرتبط از SEC PACK، مشخصات حرفه‌ای خود را ثبت کنید.","سجّل بياناتك المهنية لتلقي الحلول الفنية والمعلومات المفيدة والمنتجات الجديدة ذات الصلة من SEC PACK."],
+"Your information will be used for business communication in accordance with our":["اطلاعات شما مطابق با","ستُستخدم معلوماتك للاتصالات التجارية وفقًا لـ"],
+"Register":["ثبت اطلاعات","تسجيل"],
+"Focus":["تمرکز","التركيز"],
+"Manufacturer sourcing":["تأمین از تولیدکننده","توريد من المصنعين"],
+"Supplier evaluation":["ارزیابی تأمین‌کننده","تقييم المورد"],
+"International procurement":["خرید بین‌المللی","المشتريات الدولية"],
+
+"What it is":["چیست؟","ما هو؟"],
+"Cut-size office paper produced primarily from cellulose fibre. Typical commercial programs use virgin wood-pulp fibres, with formation, refining, sizing, fillers and surface treatment adjusted to achieve printability and runnability.":["کاغذ اداری برش‌خورده که عمدتاً از الیاف سلولزی تولید می‌شود. برنامه‌های تجاری معمول از الیاف خمیر چوب بکر استفاده می‌کنند و شکل‌دهی، پالایش، سایزینگ، مواد پرکننده و تیمار سطحی برای دستیابی به چاپ‌پذیری و ران‌پذیری مناسب تنظیم می‌شوند.","ورق مكتبي مقصوص يُنتج أساسًا من ألياف السليلوز. تستخدم البرامج التجارية المعتادة ألياف لب الخشب البكر، مع ضبط التكوين والتكرير والتحجيم والمواد المالئة ومعالجة السطح لتحقيق قابلية الطباعة وأداء التشغيل."],
+"Key quality factors":["عوامل کلیدی کیفیت","عوامل الجودة الرئيسية"],
+"Grammage (GSM) and thickness":["گرماژ (GSM) و ضخامت","الوزن الأساسي (GSM) والسماكة"],
+"Moisture content and dimensional stability":["رطوبت و پایداری ابعادی","محتوى الرطوبة والثبات الأبعادي"],
+"Brightness, opacity and whiteness":["روشنایی، کدری و سفیدی","السطوع والعتامة والبياض"],
+"Surface smoothness and formation":["صافی سطح و یکنواختی تشکیل","نعومة السطح وتجانس التكوين"],
+"Stiffness, curl and cut accuracy":["سفتی، تاب و دقت برش","الصلابة والتقوس ودقة القص"],
+"Dust, lint and print-machine runnability":["گردوغبار، پرز و ران‌پذیری در دستگاه چاپ","الغبار والوبر وقابلية التشغيل في آلة الطباعة"],
+"Suitable applications":["کاربردهای مناسب","التطبيقات المناسبة"],
+"Laser and inkjet office printing, copying, documents, reports, forms and general commercial print work. The correct grade depends on printer type, duplexing requirements and desired print appearance.":["چاپ اداری لیزری و جوهرافشان، کپی، اسناد، گزارش‌ها، فرم‌ها و چاپ تجاری عمومی. گرید مناسب به نوع چاپگر، نیاز چاپ دورو و ظاهر چاپ موردنظر بستگی دارد.","الطباعة المكتبية بالليزر والحبر والنسخ والمستندات والتقارير والنماذج وأعمال الطباعة التجارية العامة. تعتمد الدرجة المناسبة على نوع الطابعة ومتطلبات الطباعة على الوجهين والمظهر المطلوب."],
+"What they are":["چه هستند؟","ما هي؟"],
+"Polymeric films such as BOPP, PET and MPET used as functional or protective layers. Film selection depends on polymer type, thickness, surface treatment, optical properties and the adhesive or lamination process.":["فیلم‌های پلیمری مانند BOPP، PET و MPET که به‌عنوان لایه عملکردی یا محافظ استفاده می‌شوند. انتخاب فیلم به نوع پلیمر، ضخامت، تیمار سطح، خواص نوری و فرایند چسب یا لمینیشن بستگی دارد.","أفلام بوليمرية مثل BOPP وPET وMPET تُستخدم كطبقات وظيفية أو واقية. يعتمد اختيار الفيلم على نوع البوليمر والسماكة ومعالجة السطح والخواص البصرية وعملية اللصق أو التصفيح."],
+"Film polymer and thickness":["نوع پلیمر و ضخامت فیلم","نوع البوليمر وسماكة الفيلم"],
+"Corona/surface treatment and surface energy":["تیمار کرونا/سطح و انرژی سطحی","معالجة الكورونا/السطح وطاقة السطح"],
+"Haze, gloss and transparency":["هیز، براقیت و شفافیت","الضبابية واللمعان والشفافية"],
+"Tensile properties and dimensional stability":["خواص کششی و پایداری ابعادی","خواص الشد والثبات الأبعادي"],
+"Coefficient of friction and winding quality":["ضریب اصطکاک و کیفیت رول‌پیچی","معامل الاحتكاك وجودة اللف"],
+"Bond strength and heat resistance in the finished laminate":["استحکام اتصال و مقاومت حرارتی در لمینیت نهایی","قوة الالتصاق ومقاومة الحرارة في الرقائق المصفحة النهائية"],
+"Book and cover finishing, printed sheets, paperboard, flexible packaging and other converting applications where a protective, functional or visual layer is required.":["تکمیل کتاب و جلد، شیت‌های چاپی، مقوا، بسته‌بندی انعطاف‌پذیر و سایر کاربردهای کانورتینگ که به لایه محافظ، عملکردی یا بصری نیاز دارند.","تشطيب الكتب والأغلفة والأوراق المطبوعة والكرتون والتغليف المرن وتطبيقات التحويل الأخرى التي تتطلب طبقة واقية أو وظيفية أو بصرية."],
+"Polymer-based aqueous adhesive systems designed to bond compatible substrates after water removal. Formulation and application conditions determine wetting, drying, bond development and final resistance.":["سامانه‌های چسب پایه آب پلیمری که برای اتصال بسترهای سازگار پس از خروج آب طراحی شده‌اند. فرمولاسیون و شرایط کاربرد، ترشوندگی، خشک‌شدن، شکل‌گیری اتصال و مقاومت نهایی را تعیین می‌کنند.","أنظمة لاصقة مائية قائمة على البوليمر مصممة لربط الركائز المتوافقة بعد إزالة الماء. تحدد التركيبة وظروف التطبيق البلل والتجفيف وتطور الالتصاق والمقاومة النهائية."],
+"Solids content and viscosity":["درصد جامد و ویسکوزیته","محتوى المواد الصلبة واللزوجة"],
+"pH and storage stability":["pH و پایداری در انبارش","الأس الهيدروجيني pH وثبات التخزين"],
+"Wetting and substrate compatibility":["ترشوندگی و سازگاری بستر","البلل وتوافق الركيزة"],
+"Drying speed and residual moisture":["سرعت خشک‌شدن و رطوبت باقیمانده","سرعة التجفيف والرطوبة المتبقية"],
+"Initial and final bond strength":["استحکام اتصال اولیه و نهایی","قوة الالتصاق الأولية والنهائية"],
+"Heat, water and ageing resistance where required":["مقاومت حرارتی، آبی و پیری در صورت نیاز","مقاومة الحرارة والماء والتقادم عند الحاجة"],
+"Paper-to-film, paper-to-board and related lamination processes, subject to machine conditions, coating weight, drying capacity and substrate compatibility. TDS and COA should be reviewed for each technical program.":["فرایندهای لمینیشن کاغذ به فیلم، کاغذ به مقوا و موارد مرتبط، با توجه به شرایط دستگاه، وزن پوشش، ظرفیت خشک‌کردن و سازگاری بستر. برای هر برنامه فنی باید TDS و COA بررسی شوند.","عمليات تصفيح الورق إلى الفيلم والورق إلى الكرتون والعمليات ذات الصلة، وفق ظروف الآلة ووزن الطلاء وقدرة التجفيف وتوافق الركيزة. ينبغي مراجعة TDS وCOA لكل برنامج فني."],
+"Packaging materials are selected according to the physical, mechanical, barrier, printing and converting requirements of the finished package rather than by material name alone.":["مواد بسته‌بندی بر اساس الزامات فیزیکی، مکانیکی، سدکنندگی، چاپ و کانورتینگ بسته نهایی انتخاب می‌شوند، نه صرفاً بر اساس نام ماده.","يتم اختيار مواد التغليف وفق المتطلبات الفيزيائية والميكانيكية والحاجزية والطباعة والتحويل للعبوة النهائية، وليس بناءً على اسم المادة وحده."],
+"Basis weight, thickness and dimensional stability":["گرماژ، ضخامت و پایداری ابعادی","الوزن الأساسي والسماكة والثبات الأبعادي"],
+"Strength, stiffness and puncture/tear resistance":["استحکام، سفتی و مقاومت در برابر سوراخ‌شدن/پارگی","القوة والصلابة ومقاومة الثقب/التمزق"],
+"Barrier properties where applicable":["خواص سدکنندگی در صورت کاربرد","خصائص الحاجز عند الاقتضاء"],
+"Printability, surface energy and coating compatibility":["چاپ‌پذیری، انرژی سطحی و سازگاری پوشش","قابلية الطباعة وطاقة السطح وتوافق الطلاء"],
+"Heat-seal or lamination performance where required":["عملکرد دوخت حرارتی یا لمینیشن در صورت نیاز","أداء الختم الحراري أو التصفيح عند الحاجة"],
+"Consistency between production lots":["یکنواختی بین بچ‌های تولید","اتساق دفعات الإنتاج"],
+"Printing, folding cartons, labels, flexible packaging, protective packaging and converting applications. Final selection should be based on the product's required performance and production process.":["چاپ، جعبه‌های تاشو، لیبل، بسته‌بندی انعطاف‌پذیر، بسته‌بندی محافظ و کاربردهای کانورتینگ. انتخاب نهایی باید بر اساس عملکرد موردنیاز محصول و فرایند تولید انجام شود.","الطباعة وعلب الطي والملصقات والتغليف المرن والتغليف الواقي وتطبيقات التحويل. يجب أن يستند الاختيار النهائي إلى الأداء المطلوب للمنتج وعملية الإنتاج."],
+
+"75–80 GSM · OEM/private label where available.":["۷۵–۸۰ GSM · OEM/برند اختصاصی در صورت امکان","75–80 غ/م² · OEM/العلامة الخاصة عند توفرها."],
+"75–80 GSM · OEM/private label where available.":["۷۵–۸۰ GSM · OEM/برند اختصاصی در صورت امکان","75–80 غ/م² · OEM/العلامة الخاصة عند توفرها."],
+"BOPP · PET · MPET.":["BOPP · PET · MPET","BOPP · PET · MPET"],
+"Paper, film and board lamination.":["لمینیشن کاغذ، فیلم و مقوا.","تصفيح الورق والأفلام والكرتون."],
+"Specification-led supply.":["تأمین مبتنی بر مشخصات.","توريد قائم على المواصفات."],
+
+"For the same A4 sheet area, 80 GSM paper carries more mass than 75 GSM. This affects ream and carton weight and therefore logistics planning.":["برای سطح یکسان هر برگ A4، کاغذ 80 گرم جرم بیشتری از 75 گرم دارد. این موضوع بر وزن ریم و کارتن و در نتیجه برنامه‌ریزی لجستیک اثر می‌گذارد.","للمساحة نفسها من ورقة A4، يحمل ورق 80 غ/م² كتلة أكبر من 75 غ/م². ويؤثر ذلك في وزن الرزمة والكرتون وبالتالي في التخطيط اللوجستي."],
+"Grammage is not the only determinant of paper feel. Caliper, stiffness, moisture and fiber characteristics also influence feeding and handling.":["گرماژ تنها عامل تعیین‌کننده حس کاغذ نیست. ضخامت، سفتی، رطوبت و ویژگی‌های الیاف نیز بر تغذیه و جابه‌جایی اثر دارند.","الوزن الأساسي ليس العامل الوحيد في إحساس الورق. فالسماكة والصلابة والرطوبة وخصائص الألياف تؤثر أيضًا في التغذية والمناولة."],
+"Before changing GSM, test the paper in the target printer or copier fleet. Curl, dust, moisture and dimensional stability can matter as much as grammage.":["پیش از تغییر GSM، کاغذ را در ناوگان چاپگر یا دستگاه کپی هدف آزمایش کنید. تاب، گردوغبار، رطوبت و پایداری ابعادی می‌توانند به اندازه گرماژ مهم باشند.","قبل تغيير GSM، اختبر الورق في مجموعة الطابعات أو آلات النسخ المستهدفة. قد يكون التقوس والغبار والرطوبة والثبات الأبعادي مهمًا بقدر الوزن الأساسي."],
+"Define size, GSM, tolerances, raw material, packaging, performance requirements and acceptable alternatives.":["ابعاد، GSM، تلرانس‌ها، ماده اولیه، بسته‌بندی، الزامات عملکردی و گزینه‌های جایگزین قابل قبول را مشخص کنید.","حدد المقاس وGSM والتفاوتات والمواد الخام والتغليف ومتطلبات الأداء والبدائل المقبولة."],
+"State quantity, shipment frequency, destination, Incoterm, payment expectations and required documentation.":["مقدار، دفعات ارسال، مقصد، اینکوترمز، شرایط مورد انتظار پرداخت و مستندات موردنیاز را مشخص کنید.","اذكر الكمية وتواتر الشحن والوجهة وIncoterm وتوقعات الدفع والوثائق المطلوبة."],
+"Use samples, TDS/COA where applicable, packaging photographs, factory information and shipment history to reduce uncertainty.":["برای کاهش عدم‌قطعیت از نمونه، TDS/COA در صورت وجود، تصاویر بسته‌بندی، اطلاعات کارخانه و سابقه ارسال استفاده کنید.","استخدم العينات وTDS/COA عند توفرها وصور التغليف ومعلومات المصنع وسجل الشحن لتقليل عدم اليقين."],
+"Quoted unit price, packaging and any OEM/private-label costs.":["قیمت واحد اعلام‌شده، بسته‌بندی و هرگونه هزینه OEM/برند اختصاصی.","سعر الوحدة المعروض والتغليف وأي تكاليف OEM/العلامة الخاصة."],
+"Inland movement, export handling, documentation and origin charges.":["حمل داخلی، عملیات صادراتی، مستندات و هزینه‌های مبدأ.","النقل الداخلي والمناولة التصديرية والوثائق ورسوم المنشأ."],
+"Freight, insurance where applicable, routing and transit considerations.":["کرایه حمل، بیمه در صورت وجود، مسیر و ملاحظات زمان حمل.","أجرة الشحن والتأمين عند الاقتضاء ومسار النقل واعتبارات زمن العبور."],
+"Port handling, customs, taxes, inland delivery and other destination costs.":["هزینه‌های بندری، گمرک، مالیات، تحویل داخلی و سایر هزینه‌های مقصد.","مناولة الميناء والجمارك والضرائب والتسليم الداخلي وتكاليف الوجهة الأخرى."],
+"Film family (BOPP/PET/MPET), thickness, width, roll format, surface treatment, intended substrate, application and required quantity.":["خانواده فیلم (BOPP/PET/MPET)، ضخامت، عرض، فرمت رول، تیمار سطح، بستر هدف، کاربرد و مقدار موردنیاز.","نوع الفيلم (BOPP/PET/MPET) والسماكة والعرض وشكل اللفة ومعالجة السطح والركيزة المستهدفة والتطبيق والكمية المطلوبة."],
+"Substrates, coating method, solids, viscosity range, drying conditions, line speed, required bond performance, packaging and technical documentation.":["بسترها، روش پوشش‌دهی، درصد جامد، محدوده ویسکوزیته، شرایط خشک‌کردن، سرعت خط، عملکرد اتصال موردنیاز، بسته‌بندی و مستندات فنی.","الركائز وطريقة الطلاء ونسبة المواد الصلبة ونطاق اللزوجة وظروف التجفيف وسرعة الخط وأداء الالتصاق المطلوب والتغليف والوثائق الفنية."],
+"Choose based on the required balance of weight, stiffness, opacity, printer performance, market expectation and logistics—not GSM alone.":["بر اساس توازن موردنیاز میان وزن، سفتی، کدری، عملکرد چاپگر، انتظار بازار و لجستیک انتخاب کنید؛ نه صرفاً GSM.","اختر وفق التوازن المطلوب بين الوزن والصلابة والعتامة وأداء الطابعة وتوقعات السوق واللوجستيات، وليس GSM وحده."],
+"Compare equivalent specifications and the complete commercial package. A lower factory quote is not directly comparable if specifications or delivery terms differ.":["مشخصات معادل و کل بسته تجاری را مقایسه کنید. اگر مشخصات یا شرایط تحویل متفاوت باشد، قیمت پایین‌تر کارخانه مستقیماً قابل مقایسه نیست.","قارن المواصفات المتكافئة والحزمة التجارية الكاملة. لا يمكن مقارنة عرض مصنع أقل مباشرة إذا اختلفت المواصفات أو شروط التسليم."],
+"Samples allow practical testing before a commercial shipment and can reveal feeding, curl, dust, bonding or finishing issues that a quotation cannot show.":["نمونه‌ها امکان آزمون عملی پیش از ارسال تجاری را فراهم می‌کنند و می‌توانند مشکلات تغذیه، تاب، گردوغبار، اتصال یا تکمیل را که قیمت‌گذاری نشان نمی‌دهد آشکار کنند.","تتيح العينات الاختبار العملي قبل الشحنة التجارية وقد تكشف مشكلات التغذية أو التقوس أو الغبار أو الالتصاق أو التشطيب التي لا يظهرها عرض السعر."],
+"Consistent specifications, repeatable quality, clear documentation, realistic lead times, responsive communication and commercially workable logistics.":["مشخصات پایدار، کیفیت تکرارپذیر، مستندات روشن، زمان‌های تحویل واقع‌بینانه، ارتباط پاسخگو و لجستیک تجاری قابل اجرا.","مواصفات ثابتة وجودة قابلة للتكرار ووثائق واضحة ومواعيد توريد واقعية وتواصل سريع الاستجابة ولوجستيات قابلة للتنفيذ تجاريًا."],
+"Send SEC PACK the technical specification, target quantity and destination. We can structure the requirement for supplier comparison.":["مشخصات فنی، مقدار هدف و مقصد را برای SEC PACK ارسال کنید. ما می‌توانیم نیاز را برای مقایسه تأمین‌کنندگان ساختاربندی کنیم.","أرسل إلى SEC PACK المواصفات الفنية والكمية المستهدفة والوجهة. يمكننا تنظيم المتطلب لمقارنة الموردين."],
+
+"ONLINE SUPPLY CENTER":["مرکز تأمین آنلاین","مركز التوريد الإلكتروني"],
+"Prepare a B2B order request online.":["درخواست سفارش B2B را آنلاین آماده کنید.","جهّز طلب شراء B2B عبر الإنترنت."],
+"Select products and quantities here. This is an inquiry-preparation tool, not a live payment checkout; final price, availability, specifications and delivery terms are confirmed directly by SEC PACK.":["محصولات و مقدار را اینجا انتخاب کنید. این ابزار برای آماده‌سازی درخواست است، نه پرداخت آنلاین؛ قیمت نهایی، موجودی، مشخصات و شرایط تحویل مستقیماً توسط SEC PACK تأیید می‌شود.","اختر المنتجات والكميات هنا. هذه أداة لإعداد الطلب وليست للدفع المباشر؛ يتم تأكيد السعر النهائي والتوفر والمواصفات وشروط التسليم مباشرة من SEC PACK."],
+"PRODUCTS":["محصولات","المنتجات"],
+"A4 · 75–80 GSM":["A4 · ۷۵–۸۰ GSM","A4 · 75–80 غ/م²"],
+"BOPP · PET · MPET":["BOPP · PET · MPET","BOPP · PET · MPET"],
+"TECHNICAL SUPPLY":["تأمین فنی","التوريد الفني"],
+"B2B SUPPLY":["تأمین B2B","توريد B2B"],
+"Add to order":["افزودن به سفارش","أضف إلى الطلب"],
+"Your online order":["سفارش آنلاین شما","طلبك عبر الإنترنت"],
+"Final quotation:":["پیش‌فاکتور نهایی:","عرض السعر النهائي:"],
+"SEC PACK will confirm price, availability, specifications, delivery terms and payment method before order acceptance.":["SEC PACK پیش از پذیرش سفارش، قیمت، موجودی، مشخصات، شرایط تحویل و روش پرداخت را تأیید می‌کند.","ستؤكد SEC PACK السعر والتوفر والمواصفات وشروط التسليم وطريقة الدفع قبل قبول الطلب."],
+"Name / Company":["نام / شرکت","الاسم / الشركة"],
+"Preferred payment method":["روش پرداخت ترجیحی","طريقة الدفع المفضلة"],
+"Bank transfer":["حواله بانکی","تحويل بنكي"],
+"Local online payment":["پرداخت آنلاین محلی","دفع إلكتروني محلي"],
+"International payment":["پرداخت بین‌المللی","دفع دولي"],
+"Quantity, packaging, specification, destination and any special requirements":["مقدار، بسته‌بندی، مشخصات، مقصد و هر نیاز ویژه","الكمية والتغليف والمواصفات والوجهة وأي متطلبات خاصة"],
+"Prepare order request":["آماده‌سازی درخواست سفارش","إعداد طلب الشراء"],
+"B2B CHECKOUT":["ثبت سفارش B2B","إتمام طلب B2B"],
+"Online ordering, with commercial confirmation.":["سفارش آنلاین با تأیید تجاری.","الطلب عبر الإنترنت مع تأكيد تجاري."],
+"We keep the checkout practical: you submit the order online, then SEC PACK confirms the commercial terms before payment or dispatch.":["فرایند سفارش را عملی نگه می‌داریم: درخواست را آنلاین ارسال می‌کنید و SEC PACK پیش از پرداخت یا ارسال، شرایط تجاری را تأیید می‌کند.","نبقي عملية الطلب عملية: ترسل الطلب عبر الإنترنت ثم تؤكد SEC PACK الشروط التجارية قبل الدفع أو الشحن."],
+"Your order is empty.":["سفارش شما خالی است.","طلبك فارغ."],
+"Order prepared.":["سفارش آماده شد.","تم إعداد الطلب."],
+
+"Resources | SEC PACK":["منابع | SEC PACK","المصادر | SEC PACK"],
+"Privacy & Data Handling":["حریم خصوصی و مدیریت داده","الخصوصية ومعالجة البيانات"],
+"Need clarification before a commercial inquiry?":["پیش از درخواست تجاری به توضیح نیاز دارید؟","هل تحتاج إلى توضيح قبل الاستفسار التجاري؟"],
+"Contact SEC PACK with the product, specification, quantity and destination.":["محصول، مشخصات، مقدار و مقصد را برای SEC PACK ارسال کنید.","تواصل مع SEC PACK بشأن المنتج والمواصفات والكمية والوجهة."],
+"Terms of Use":["شرایط استفاده","شروط الاستخدام"],
+"SEC PACK | Online Supply Center":["SEC PACK | مرکز تأمین آنلاین","SEC PACK | مركز التوريد الإلكتروني"],
+"Contact | SEC PACK":["تماس | SEC PACK","اتصل بـ SEC PACK"],
+"Company Profile | SEC PACK — International Trade & Sourcing":["معرفی شرکت | SEC PACK — تجارت بین‌الملل و تأمین","نبذة عن الشركة | SEC PACK — التجارة الدولية والتوريد"],
+"For Manufacturers & Export Partners | SEC PACK":["برای تولیدکنندگان و شرکای صادراتی | SEC PACK","للمصنعين وشركاء التصدير | SEC PACK"],
+"Knowledge Center | A4 Paper, Packaging & Procurement | SEC PACK":["مرکز دانش | کاغذ A4، بسته‌بندی و خرید | SEC PACK","مركز المعرفة | ورق A4 والتغليف والمشتريات | SEC PACK"],
+"Lamination Films | BOPP PET MPET | SEC PACK":["فیلم‌های لمینیشن | BOPP PET MPET | SEC PACK","أفلام التصفيح | BOPP PET MPET | SEC PACK"],
+"Water-Based Adhesives | Paper & Film Lamination | SEC PACK":["چسب‌های پایه آب | لمینیشن کاغذ و فیلم | SEC PACK","المواد اللاصقة المائية | تصفيح الورق والأفلام | SEC PACK"],
+"Packaging Materials | B2B Sourcing | SEC PACK":["مواد بسته‌بندی | تأمین B2B | SEC PACK","مواد التغليف | التوريد B2B | SEC PACK"],
+"Skip to content":["پرش به محتوا","انتقل إلى المحتوى"]
+});
 function translateNode(el,lang){
  const raw=(el.textContent||"").replace(/\s+/g," ").trim();
  if(!raw)return;
@@ -60,6 +203,46 @@ function translateNode(el,lang){
  if(lang==="en"){ el.textContent=el.getAttribute("data-original-text"); return; }
  const v=D[el.getAttribute("data-original-text")||raw];
  if(v && v[lang==="fa"?0:1]) el.textContent=v[lang==="fa"?0:1];
+}
+
+function translateNode(el,lang){
+ const raw=(el.textContent||"").replace(/\s+/g," ").trim();
+ if(!raw)return;
+ if(!el.hasAttribute("data-original-text")) el.setAttribute("data-original-text",raw);
+ const original=el.getAttribute("data-original-text")||raw;
+ if(lang==="en"){ el.textContent=original; return; }
+ const v=D[original];
+ if(v && v[lang==="fa"?0:1]) el.textContent=v[lang==="fa"?0:1];
+}
+
+function translateAttributes(lang){
+ const attrs=["title","placeholder","aria-label","alt"];
+ document.querySelectorAll("*").forEach(el=>{
+   attrs.forEach(a=>{
+     if(!el.hasAttribute(a))return;
+     const raw=el.getAttribute(a);
+     const key="data-original-"+a;
+     if(!el.hasAttribute(key)) el.setAttribute(key,raw);
+     const original=el.getAttribute(key);
+     if(lang==="en"){el.setAttribute(a,original);return;}
+     const v=D[original];
+     if(v) el.setAttribute(a,v[lang==="fa"?0:1]);
+   });
+   if(el.tagName==="META" && el.getAttribute("name")==="description"){
+     const raw=el.getAttribute("content"), key="data-original-content";
+     if(!el.hasAttribute(key)) el.setAttribute(key,raw);
+     const original=el.getAttribute(key), v=D[original];
+     if(lang==="en") el.setAttribute("content",original);
+     else if(v) el.setAttribute("content",v[lang==="fa"?0:1]);
+   }
+ });
+ const title=document.querySelector("title");
+ if(title){
+   const key="data-original-title";
+   if(!title.hasAttribute(key)) title.setAttribute(key,title.textContent);
+   const original=title.getAttribute(key), v=D[original];
+   title.textContent=lang==="en"?original:(v?v[lang==="fa"?0:1]:original);
+ }
 }
 
 function applyExact(lang){
