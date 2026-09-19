@@ -21,7 +21,7 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SEC PACK","item":"https://wehrox-hebgoh-4waxti.github.io/SecPack/"},{"@type":"ListItem","position":2,"name":"Online Store","item":"https://wehrox-hebgoh-4waxti.github.io/SecPack/pages/store.html"}]}</script></head>
 <body>
 <header class="topbar"><a class="brand" href="../index.html"><img src="../logo.jpg" alt="SEC PACK"><span><b>SEC PACK</b><small data-i18n="d.store.02">International Trade & Sourcing</small></span></a>
-<nav aria-label="Primary navigation"><a href="../index.html" data-i18n="nav.home">Home</a><a href="products.html" data-i18n="nav.products">Products</a><a class="active" href="store.html" data-i18n="nav.store">Online Store</a><a href="company.html" data-i18n="nav.company">Company</a><a href="manufacturers.html" data-i18n="nav.manufacturers">For Manufacturers</a><a href="market.html" data-i18n="nav.knowledge">Knowledge Center</a><a href="documents.html" data-i18n="nav.resources">Resources</a><a href="contact.html" data-i18n="nav.contact">Contact</a></nav>
+<nav data-i18n-aria-label="common.primaryNav" aria-label="Primary navigation"><a href="../index.html" data-i18n="nav.home">Home</a><a href="products.html" data-i18n="nav.products">Products</a><a class="active" href="store.html" data-i18n="nav.store">Online Store</a><a href="company.html" data-i18n="nav.company">Company</a><a href="manufacturers.html" data-i18n="nav.manufacturers">For Manufacturers</a><a href="market.html" data-i18n="nav.knowledge">Knowledge Center</a><a href="documents.html" data-i18n="nav.resources">Resources</a><a href="contact.html" data-i18n="nav.contact">Contact</a></nav>
 <div class="langs"><button data-lang="en">EN</button><button data-lang="fa">FA</button><button data-lang="ar">AR</button></div></header>
 <main>
 <section class="page-hero"><span class="eyebrow" data-i18n="d.store.03">ONLINE SUPPLY CENTER</span><h1><span data-i18n="page.store.01">Prepare a B2B order request online.</span></h1><p><span data-i18n="page.store.02">Select products and quantities here. This is an inquiry-preparation tool, not a live payment checkout; final price, availability, specifications and delivery terms are confirmed directly by SEC PACK.</span></p></section>
@@ -32,12 +32,12 @@
 </div>
 <div id="orderPanel" class="order-panel"><h2 data-i18n="d.store.18">Your online order</h2><div id="cartRows"></div><p><strong data-i18n="d.store.19">Final quotation:</strong> SEC PACK will confirm price, availability, specifications, delivery terms and payment method before order acceptance.</p>
 <div class="checkout-grid">
-<input id="customerName" placeholder="Name / Company">
-<input id="customerEmail" type="email" placeholder="Email">
-<input id="customerPhone" placeholder="Phone / WhatsApp">
-<input id="destination" placeholder="Delivery destination">
+<input id="customerName" data-i18n-placeholder="form.nameCompany" placeholder="Name / Company">
+<input id="customerEmail" type="email" data-i18n-placeholder="form.email" placeholder="Email">
+<input id="customerPhone" data-i18n-placeholder="form.phoneWhatsapp" placeholder="Phone / WhatsApp">
+<input id="destination" data-i18n-placeholder="form.deliveryDestination" placeholder="Delivery destination">
 <select id="payment"><option value="" data-i18n="d.store.20">Preferred payment method</option><option data-i18n="d.store.21">Bank transfer</option><option data-i18n="d.store.22">Local online payment</option><option data-i18n="d.store.23">International payment</option></select>
-<textarea id="notes" placeholder="Quantity, packaging, specification, destination and any special requirements"></textarea>
+<textarea id="notes" data-i18n-placeholder="form.requirements" placeholder="Quantity, packaging, specification, destination and any special requirements"></textarea>
 <button class="btn primary full" onclick="prepareOrder()" data-i18n="d.store.24">Prepare order request</button>
 </div><div id="orderResult"></div></div>
 </section>
