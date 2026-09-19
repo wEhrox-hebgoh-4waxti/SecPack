@@ -163,7 +163,7 @@
 <script>
 function openVisitorForm(){const m=document.getElementById("visitorModal");m.hidden=false;document.body.classList.add("modal-open");setTimeout(()=>m.querySelector("input")?.focus(),50)}
 function closeVisitorForm(){const m=document.getElementById("visitorModal");m.hidden=true;document.body.classList.remove("modal-open")}
-function submitVisitorForm(e){e.preventDefault();const s=document.getElementById("visitorStatus");s.textContent="Thank you. The registration form is ready to be connected to our secure business database.";s.className="visitor-status success";document.getElementById("visitorForm").reset()}
+function submitVisitorForm(e){e.preventDefault();const s=document.getElementById("visitorStatus");s.textContent=(window.secpackT||((k)=>k))("dynamic.visitorReady");s.className="visitor-status success";document.getElementById("visitorForm").reset()}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeVisitorForm()});
 </script>
 <script src="i18n.js"></script>
