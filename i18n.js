@@ -332,6 +332,7 @@ const HOME_CORE={
 };
 Object.assign(CORE,HOME_CORE);
 Object.assign(CORE,{
+"error.pageTitle":["Page not found","صفحه پیدا نشد","الصفحة غير موجودة"],"error.message":["The page you requested is not available. Return to the SecPack home page and continue exploring our products and sourcing services.","صفحه‌ای که درخواست کرده‌اید در دسترس نیست. به صفحه اصلی SEC PACK بازگردید و محصولات و خدمات تأمین ما را بررسی کنید.","الصفحة التي طلبتها غير متاحة. عد إلى الصفحة الرئيسية لـ SEC PACK واستكشف منتجاتنا وخدمات التوريد."],"error.home":["Go to Home","رفتن به صفحه اصلی","العودة إلى الرئيسية"],"error.contact":["Contact SecPack","تماس با SEC PACK","اتصل بـ SEC PACK"],
 "dynamic.cartEmpty":["Your order is empty.","سفارش شما خالی است.","طلبك فارغ."],
 "dynamic.addProduct":["Add at least one product.","حداقل یک محصول را اضافه کنید.","أضف منتجًا واحدًا على الأقل."],
 "dynamic.orderPrepared":["Order prepared.","سفارش آماده شد.","تم إعداد الطلب."],
