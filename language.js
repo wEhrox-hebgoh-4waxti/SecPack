@@ -9,12 +9,10 @@
             "Home": "Home",
             "Products": "Products",
             "Store": "Store",
-            "Online Store": "Online Store",
             "Dashboard": "Dashboard",
             "Contact": "Contact",
             "Resources": "Resources",
             "Platform": "Platform",
-            "Knowledge Center": "Knowledge Center",
             "Market Intelligence": "Market Intelligence",
             "Supplier Intelligence": "Supplier Intelligence",
 
@@ -156,26 +154,16 @@
 
 "SecPack Enterprise © 2026":
                 "SecPack Enterprise © 2026"
-"Company":"Company",
-            "For Manufacturers":"For Manufacturers",
-            "Knowledge Center":"Knowledge Center",
-            "Market Insights":"Knowledge Center",
-            "International Trade & Sourcing":"International Trade & Sourcing",
-            "Contact SEC PACK":"Contact SEC PACK",
-            "Online Store":"Online Store",
-            "Start a business discussion":"Start a business discussion",
                     },
 
         fa: {
             "Home": "خانه",
             "Products": "محصولات",
             "Store": "فروشگاه",
-            "Online Store": "فروشگاه آنلاین",
             "Dashboard": "داشبورد",
             "Contact": "تماس با ما",
             "Resources": "منابع",
             "Platform": "پلتفرم",
-            "Knowledge Center": "مرکز دانش",
             "Market Intelligence": "اطلاعات بازار",
             "Supplier Intelligence": "اطلاعات تأمین‌کنندگان",
 
@@ -303,26 +291,16 @@
 
             "SecPack Enterprise © 2026":
                 "SecPack Enterprise © 2026"
-"Company":"شرکت",
-            "For Manufacturers":"برای تولیدکنندگان",
-            "Knowledge Center":"مرکز دانش",
-            "Market Insights":"مرکز دانش",
-            "International Trade & Sourcing":"تجارت بین‌الملل و تأمین",
-            "Contact SEC PACK":"تماس با SEC PACK",
-            "Online Store":"فروشگاه آنلاین",
-            "Start a business discussion":"شروع گفت‌وگوی تجاری",
                     },
 
         ar: {
             "Home": "الرئيسية",
             "Products": "المنتجات",
             "Store": "المتجر",
-            "Online Store": "المتجر الإلكتروني",
             "Dashboard": "لوحة التحكم",
             "Contact": "اتصل بنا",
             "Resources": "المصادر",
             "Platform": "المنصة",
-            "Knowledge Center": "مركز المعرفة",
             "Market Intelligence": "معلومات السوق",
             "Supplier Intelligence": "معلومات الموردين",
 
@@ -654,120 +632,76 @@
     }
 
     function updateTitle(language) {
-
-        const path =
-            window.location.pathname.toLowerCase();
-
+        const path = window.location.pathname.toLowerCase();
         const titles = {
-
             en: {
-                products:
-                    "A4 Copy Paper, Lamination Films & Packaging Materials | SEC PACK",
-                documents:
-                    "Resources | SEC PACK",
-                market:
-                    "Knowledge Center | A4 Paper, Packaging & Procurement | SEC PACK",
+                products: "A4 Copy Paper, Lamination Films & Packaging Materials | SEC PACK",
+                documents: "Resources | SEC PACK",
+                market: "Knowledge Center | A4 Paper, Packaging & Procurement | SEC PACK",
                 supplier: "SEC PACK | Supplier Intelligence",
                 dashboard: "SEC PACK | Dashboard",
                 store: "SEC PACK | Online Supply Center",
                 ai: "SEC PACK | Intelligence",
-                contact:
-                    "Contact | SEC PACK",
-                company:
-                    "Company Profile | SEC PACK — International Trade & Sourcing",
-                manufacturers:
-                    "For Manufacturers & Export Partners | SEC PACK",
-                a4:
-                    "A4 Copy Paper | 75 GSM & 80 GSM OEM Supply | SEC PACK",
-                films:
-                    "Lamination Films | BOPP PET MPET | SEC PACK",
-                adhesives:
-                    "Water-Based Adhesives | Paper & Film Lamination | SEC PACK",
-                packaging:
-                    "Packaging Materials | B2B Sourcing | SEC PACK",
-                default:
-                    "SEC PACK | International Trade & Sourcing"
-    "Company":"الشركة",
-            "For Manufacturers":"للمصنعين",
-            "Knowledge Center":"مركز المعرفة",
-            "Market Insights":"مركز المعرفة",
-            "International Trade & Sourcing":"التجارة الدولية والتوريد",
-            "Contact SEC PACK":"التواصل مع SEC PACK",
-            "Online Store":"المتجر الإلكتروني",
-            "Start a business discussion":"بدء مناقشة تجارية",
-                    },
-
-            fa: {
-                products:
-                    "SecPack | محصولات",
-                documents:
-                    "SecPack | اسناد",
-                market:
-                    "SecPack | اطلاعات بازار",
-                supplier: "SecPack | اطلاعات تأمین‌کنندگان",
-                dashboard: "SecPack | داشبورد",
-                store: "SecPack | مرکز تأمین",
-                ai: "SecPack | هوش تأمین",
-                contact:
-                    "SecPack | تماس",
-                default:
-                    "SecPack | مواد بسته‌بندی حرفه‌ای"
+                contact: "Contact | SEC PACK",
+                company: "Company Profile | SEC PACK — International Trade & Sourcing",
+                manufacturers: "For Manufacturers & Export Partners | SEC PACK",
+                a4: "A4 Copy Paper | 75 GSM & 80 GSM OEM Supply | SEC PACK",
+                films: "Lamination Films | BOPP PET MPET | SEC PACK",
+                adhesives: "Water-Based Adhesives | Paper & Film Lamination | SEC PACK",
+                packaging: "Packaging Materials | B2B Sourcing | SEC PACK",
+                default: "SEC PACK | International Trade & Sourcing"
             },
-
+            fa: {
+                products: "SEC PACK | محصولات",
+                documents: "SEC PACK | منابع",
+                market: "SEC PACK | مرکز دانش",
+                supplier: "SEC PACK | اطلاعات تأمین‌کنندگان",
+                dashboard: "SEC PACK | داشبورد",
+                store: "SEC PACK | فروشگاه آنلاین",
+                ai: "SEC PACK | اطلاعات تأمین",
+                contact: "SEC PACK | تماس",
+                company: "SEC PACK | معرفی شرکت",
+                manufacturers: "SEC PACK | برای تولیدکنندگان و شرکای صادراتی",
+                a4: "SEC PACK | کاغذ A4 — تأمین 75 و 80 گرم",
+                films: "SEC PACK | فیلم‌های لمینیشن BOPP PET MPET",
+                adhesives: "SEC PACK | چسب‌های پایه آب لمینیشن",
+                packaging: "SEC PACK | مواد بسته‌بندی",
+                default: "SEC PACK | تجارت بین‌الملل و تأمین"
+            },
             ar: {
-                products:
-                    "SecPack | المنتجات",
-                documents:
-                    "SecPack | الوثائق",
-                market:
-                    "SecPack | معلومات السوق",
-                supplier: "SecPack | معلومات الموردين",
-                dashboard: "SecPack | لوحة التحكم",
-                store: "SecPack | مركز التوريد",
-                ai: "SecPack | ذكاء المشتريات",
-                contact:
-                    "SecPack | اتصل بنا",
-                default:
-                    "SecPack | مواد التغليف الاحترافية"
+                products: "SEC PACK | المنتجات",
+                documents: "SEC PACK | المصادر",
+                market: "SEC PACK | مركز المعرفة",
+                supplier: "SEC PACK | معلومات الموردين",
+                dashboard: "SEC PACK | لوحة التحكم",
+                store: "SEC PACK | المتجر الإلكتروني",
+                ai: "SEC PACK | معلومات التوريد",
+                contact: "SEC PACK | اتصل بنا",
+                company: "SEC PACK | ملف الشركة",
+                manufacturers: "SEC PACK | للمصنعين وشركاء التصدير",
+                a4: "SEC PACK | ورق A4 — توريد 75 و80 غرام",
+                films: "SEC PACK | أفلام التصفيح BOPP PET MPET",
+                adhesives: "SEC PACK | مواد لاصقة مائية للتصفيح",
+                packaging: "SEC PACK | مواد التغليف",
+                default: "SEC PACK | التجارة الدولية والتوريد"
             }
         };
-
         let type = "default";
-
-        if (path.includes("products.html")) {
-            type = "products";
-        } else if (path.includes("documents.html")) {
-            type = "documents";
-        } else if (path.includes("market.html")) {
-            type = "market";
-        } else if (
-            path.includes("supplier-profile.html")
-        ) {
-            type = "supplier";
-        } else if (path.includes("dashboard.html")) {
-            type = "dashboard";
-        } else if (path.includes("store.html")) {
-            type = "store";
-        } else if (path.includes("ai.html")) {
-            type = "ai";
-                } else if (path.includes("contact.html")) {
-            type = "contact";
-        } else if (path.includes("company.html")) {
-            type = "company";
-        } else if (path.includes("manufacturers.html")) {
-            type = "manufacturers";
-        } else if (path.includes("a4-copy-paper.html")) {
-            type = "a4";
-        } else if (path.includes("lamination-films.html")) {
-            type = "films";
-        } else if (path.includes("water-based-adhesives.html")) {
-            type = "adhesives";
-        } else if (path.includes("packaging-materials.html")) {
-            type = "packaging";
-        }
-
-        document.title =
-            titles[language][type];
+        if (path.includes("products.html")) type = "products";
+        else if (path.includes("documents.html")) type = "documents";
+        else if (path.includes("market.html")) type = "market";
+        else if (path.includes("supplier-profile.html")) type = "supplier";
+        else if (path.includes("dashboard.html")) type = "dashboard";
+        else if (path.includes("store.html")) type = "store";
+        else if (path.includes("ai.html")) type = "ai";
+        else if (path.includes("contact.html")) type = "contact";
+        else if (path.includes("company.html")) type = "company";
+        else if (path.includes("manufacturers.html")) type = "manufacturers";
+        else if (path.includes("a4-copy-paper.html")) type = "a4";
+        else if (path.includes("lamination-films.html")) type = "films";
+        else if (path.includes("water-based-adhesives.html")) type = "adhesives";
+        else if (path.includes("packaging-materials.html")) type = "packaging";
+        document.title = titles[language][type] || titles.en.default;
     }
 
     function applyLanguage(language) {
