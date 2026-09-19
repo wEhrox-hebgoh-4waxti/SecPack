@@ -54,6 +54,21 @@ Object.assign(D,{
 "International sourcing, procurement and trade support for professional B2B customers.":["تأمین بین‌المللی، خرید و پشتیبانی تجارت برای مشتریان حرفه‌ای B2B.","التوريد الدولي والمشتريات ودعم التجارة للعملاء المحترفين في قطاع B2B."]
 });
 
+// Final UI/meta keys that are not ordinary visible prose.
+Object.assign(D,{
+"A4 Copy Paper, Lamination Films & Packaging Materials | SEC PACK":["کاغذ تحریر A4، فیلم‌های لمینیشن و مواد بسته‌بندی | SEC PACK","ورق نسخ A4 وأفلام التصفيح ومواد التغليف | SEC PACK"],
+"Privacy & Data Handling | SEC PACK":["حریم خصوصی و مدیریت داده | SEC PACK","الخصوصية ومعالجة البيانات | SEC PACK"],
+"Terms of Use | SEC PACK":["شرایط استفاده | SEC PACK","شروط الاستخدام | SEC PACK"],
+"Thank you. The registration form is ready to be connected to our secure business database.":["متشکریم. فرم ثبت اطلاعات آماده اتصال به پایگاه داده امن کسب‌وکار ماست.","شكرًا لك. نموذج التسجيل جاهز للربط بقاعدة بيانات الأعمال الآمنة لدينا."],
+"Your cart draft is kept only for this browser session; customer contact details are not stored by the static site. The next production step is connecting this checkout to SEC PACK's confirmed order/payment endpoint.":["پیش‌نویس سبد فقط برای همین نشست مرورگر نگهداری می‌شود؛ اطلاعات تماس مشتری توسط سایت استاتیک ذخیره نمی‌شود. مرحله بعدی اتصال این فرایند به سامانه تأییدشده سفارش/پرداخت SEC PACK است.","يتم الاحتفاظ بمسودة السلة لهذه الجلسة فقط؛ ولا يحفظ الموقع الثابت بيانات اتصال العميل. والخطوة التالية هي ربط الطلب بنظام الطلب/الدفع المعتمد لدى SEC PACK."],
+"01 · OFFICE & PRINTING":["۰۱ · اداری و چاپ","٠١ · المكاتب والطباعة"],
+"02 · FINISHING":["۰۲ · تکمیل و فینیشینگ","٠٢ · التشطيب"],
+"03 · ADHESIVES":["۰۳ · چسب‌ها","٠٣ · المواد اللاصقة"],
+"04 · PACKAGING":["۰۴ · بسته‌بندی","٠٤ · التغليف"],
+"Privacy":["حریم خصوصی","الخصوصية"],
+"Terms":["شرایط استفاده","الشروط"]
+});
+
 // Comprehensive technical translation layer: visible content, scientific guides,
 // forms, labels, metadata and dynamic UI all resolve from one canonical EN key.
 Object.assign(D,{
