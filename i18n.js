@@ -11,6 +11,7 @@ const CORE={
 "footer.explore":["Explore","بخش‌های سایت","استكشف"],"footer.connect":["Connect","ارتباط","تواصل"],"footer.legal":["Legal","حقوقی","قانوني"],"footer.products":["Products","محصولات","المنتجات"],"footer.privacy":["Privacy","حریم خصوصی","الخصوصية"],"footer.terms":["Terms","شرایط استفاده","الشروط"],"footer.company":["SEC PACK","SEC PACK","SEC PACK"],"footer.focus":["Focus","تمرکز","التركيز"],"footer.manufacturerSourcing":["Manufacturer sourcing","تأمین از تولیدکننده","التوريد من المصنعين"],"footer.supplierEvaluation":["Supplier evaluation","ارزیابی تأمین‌کننده","تقييم المورد"],"footer.year":["SEC PACK © 2026","SEC PACK © ۲۰۲۶","SEC PACK © 2026"],"footer.tagline":["International Trade · Sourcing · Procurement","تجارت بین‌الملل · تأمین · خرید","التجارة الدولية · التوريد · المشتريات"],
 "common.close":["Close","بستن","إغلاق"],"common.register":["Register","ثبت‌نام","تسجيل"],"common.addToCart":["Add to cart","افزودن به سبد","أضف إلى السلة"],"common.scientificGuide":["Scientific product guide","راهنمای علمی محصول","الدليل العلمي للمنتج"]
 };
+"page.contact.05":["SEC PACK can structure the requirement for sourcing and supplier discussions.","SEC PACK می‌تواند نیاز شما را برای تأمین و مذاکره با تأمین‌کنندگان ساختاربندی کند.","يمكن لـ SEC PACK تنظيم متطلبك للتوريد ومناقشات الموردين"],
 const HOME_CORE={
   "home.brandSub":["International Trade & Sourcing","تجارت بین‌الملل و تأمین","التجارة الدولية والتوريد"],
   "home.navHome":["Home","خانه","الرئيسية"],
