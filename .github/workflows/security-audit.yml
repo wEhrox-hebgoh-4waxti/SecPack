@@ -1,0 +1,57 @@
+name: SEC PACK Security Audit
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Reject obvious secret material
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=.git --exclude='security-audit.yml' '(BEGIN (RSA|EC|OPENSSH|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{20,})' .; then
+            echo "Potential credential material detected."
+            exit 1
+          fi
+
+      - name: Reject insecure HTTP resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --include='*.html' --include='*.js' --include='*.css' 'http://' .; then
+            echo "Potential insecure HTTP resource detected."
+            exit 1
+          fi
+
+      - name: Check required security files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f SECURITY.md
+          test -f .well-known/security.txt
+          test -f .github/CODEOWNERS
+          test -f .github/dependabot.yml
+          test -f .github/workflows/codeql.yml
+
+      - name: Check dangerous client-side patterns
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --include='*.html' --include='*.js' 'eval\(|new Function\(|document\.write\(' .; then
+            echo "Potentially dangerous client-side pattern detected."
+            exit 1
+          fi
