@@ -822,7 +822,7 @@ window.secpackI18n={translations:CORE,t,langs:SUPPORTED};
 function getScienceKey(id,kind){return "science."+id+"."+kind}
 window.secpackGetScienceText=(id,kind,lang=currentLanguage)=>t(getScienceKey(id,kind),lang);
 function applyCoreKeys(lang){
- document.querySelectorAll("[data-i18n]").forEach(el=>{const key=el.dataset.i18n;const value=t(key,lang);if(value!==key)el.textContent=value});document.querySelectorAll("[data-i18n-html]").forEach(el=>{const key=el.dataset.i18nHtml;const value=t(key,lang);if(value!==key)el.innerHTML=value});
+ document.querySelectorAll("[data-i18n]").forEach(el=>{const key=el.dataset.i18n;const value=t(key,lang);if(value!==key)el.textContent=value});document.querySelectorAll("[data-i18n-html]").forEach(el=>{const key=el.dataset.i18nHtml;const value=t(key,lang);if(value!==key){const parsed=new DOMParser().parseFromString(value,"text/html");el.replaceChildren(...Array.from(parsed.body.childNodes));}});
  [["data-i18n-placeholder","placeholder"],["data-i18n-title","title"],["data-i18n-aria-label","aria-label"],["data-i18n-alt","alt"]].forEach(([ka,a])=>document.querySelectorAll("["+ka+"]").forEach(el=>{const key=el.getAttribute(ka),value=t(key,lang);if(value!==key)el.setAttribute(a,value)}));
 }
 function applyDocumentMeta(lang){
