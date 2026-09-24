@@ -104,3 +104,34 @@ button{font-family:inherit}
 :where(html[dir="rtl"]) select{direction:rtl;text-align:start}
 :where(html[dir="rtl"]) .science-card{text-align:start}
 :where(html[dir="rtl"]) .science-close{inset-inline-end:14px;inset-inline-start:auto}
+
+/* Homepage visual polish v2: brighter B2B energy, smaller hero statement, clearer language control */
+.langs{gap:5px;padding:5px 6px;border:1px solid rgba(8,126,168,.24);border-radius:12px;background:linear-gradient(135deg,#ffffff,#f2fbfd);box-shadow:0 5px 18px rgba(8,126,168,.10)}
+.lang-icon{font-size:17px;margin-inline-end:4px;filter:saturate(1.15)}
+.langs button{min-width:auto;padding:7px 10px;font-size:12px;letter-spacing:.01em;color:#087ea8}
+.langs button:hover{background:#e4f8fb;color:#045d7d}
+.langs button.on{background:linear-gradient(135deg,#087ea8,#20b8d6);color:#fff;border-color:transparent;box-shadow:0 5px 14px rgba(8,126,168,.24)}
+.hero h1{font-size:clamp(36px,4.45vw,62px);line-height:1.08;margin:14px 0 20px;max-width:720px}
+.hero h1 em{color:#65dfd0}
+.hero p{font-size:16px;line-height:1.75;max-width:620px}
+.hero-brand{width:108px;height:108px;margin-bottom:18px}
+.hero .actions{margin-top:26px}
+.hero .ghost{border-color:rgba(255,255,255,.34)}
+.hero .ghost:hover{border-color:rgba(85,215,192,.7);background:rgba(85,215,192,.10)}
+.hero-visual{border-color:rgba(85,215,192,.20)}
+.visual-paper{background:linear-gradient(135deg,rgba(4,17,30,.86),rgba(8,126,168,.32))}
+.visual-film{background:linear-gradient(135deg,rgba(4,17,30,.86),rgba(242,184,75,.25))}
+.visual-pack{background:linear-gradient(135deg,rgba(4,17,30,.86),rgba(239,128,104,.24))}
+.section:not(.dark) .card:nth-child(1){background:linear-gradient(145deg,#fff,#effbfd);border-color:#cbeef4}
+.section:not(.dark) .card:nth-child(2){background:linear-gradient(145deg,#fff,#fff8e9);border-color:#f4dfad}
+.section:not(.dark) .card:nth-child(3){background:linear-gradient(145deg,#fff,#fff1ed);border-color:#f2d0c8}
+.section:not(.dark) .card:nth-child(1) .icon{color:#087ea8}
+.section:not(.dark) .card:nth-child(2) .icon{color:#d09219}
+.section:not(.dark) .card:nth-child(3) .icon{color:#d76650}
+.product-card:nth-child(1){background:linear-gradient(145deg,#fff,#eefaff)}
+.product-card:nth-child(2){background:linear-gradient(145deg,#fff,#fff8e9)}
+.product-card:nth-child(3){background:linear-gradient(145deg,#fff,#eefaf7)}
+.product-card:nth-child(4){background:linear-gradient(145deg,#fff,#fff1ed)}
+.cta{box-shadow:0 20px 55px rgba(10,35,55,.10);border:1px solid #d8e8ed}
+@media(max-width:900px){.hero h1{font-size:clamp(36px,7vw,54px)}.hero-brand{width:98px;height:98px}}
+@media(max-width:560px){.langs{padding:4px}.lang-icon{font-size:16px;margin-inline-end:2px}.langs button{padding:7px 8px;font-size:11px}.hero h1{font-size:37px;line-height:1.1}.hero p{font-size:15px}.hero-brand{width:88px;height:88px}}
