@@ -798,7 +798,6 @@ Object.assign(CORE,{
 "dynamic.addProduct":["Add at least one product.","حداقل یک محصول را اضافه کنید.","أضف منتجًا واحدًا على الأقل."],
 "dynamic.orderPrepared":["Order prepared.","سفارش آماده شد.","تم إعداد الطلب."],
 "dynamic.orderDraft":["Your cart draft is kept only for this browser session; customer contact details are not stored by the static site. The next production step is connecting this checkout to SEC PACK's confirmed order/payment endpoint.","پیش‌نویس سبد فقط در نشست این مرورگر نگهداری می‌شود؛ اطلاعات تماس مشتری توسط سایت ایستا ذخیره نمی‌شود. مرحله بعدی اتصال این فرایند به درگاه تأییدشده سفارش و پرداخت SEC PACK است.","يتم الاحتفاظ بمسودة السلة فقط خلال جلسة هذا المتصفح؛ ولا يخزن الموقع الثابت بيانات اتصال العميل. الخطوة التالية هي ربط العملية بنقطة طلب ودفع مؤكدة لدى SEC PACK."],
-"dynamic.visitorReady":["Thank you. The registration form is ready to be connected to our secure business database.","متشکریم. فرم ثبت‌نام آماده اتصال به پایگاه داده امن کسب‌وکار ماست.","شكرًا لك. نموذج التسجيل جاهز للربط بقاعدة بيانات الأعمال الآمنة لدينا."],
 "science.paper.title":["A4 Copy Paper — Scientific Product Guide","کاغذ A4 — راهنمای علمی محصول","ورق A4 — الدليل العلمي للمنتج"],
 "science.film.title":["Lamination Films — Scientific Product Guide","فیلم‌های لمینیشن — راهنمای علمی محصول","أفلام التصفيح — الدليل العلمي للمنتج"],
 "science.adhesive.title":["Water-Based Adhesives — Scientific Product Guide","چسب‌های پایه آب — راهنمای علمی محصول","المواد اللاصقة المائية — الدليل العلمي للمنتج"],
