@@ -61,7 +61,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --include='*.html' '<script([[:space:]>]|$)' . | grep -vE '<script[[:space:]][^>]*src='; then
+          if grep -RInE --include='*.html' '<script([[:space:]>]|$)' . | grep -vE '<script[[:space:]][^>]*src=' | grep -vE '<script[^>]*type=["'"'"']application/ld\+json["'"'"']'; then
             echo "Inline script detected. Externalize JavaScript before enabling a strict CSP."
             exit 1
           fi
