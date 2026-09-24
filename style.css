@@ -138,4 +138,4 @@ button{font-family:inherit}
 
 
 /* Launch-stage form status */
-.form-status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#eef8fb;color:#0879a6;font-size:12px;font-weight:700}.visitor-status[data-state="saved"]{opacity:.9}
+.form-status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#eef8fb;color:#0879a6;font-size:12px;font-weight:700}.visitor-status[data-state="saved"]{opacity:.9}.form-status.sending{opacity:.75}.form-status.error{background:#fff1ed;color:#b94d39}.form-honeypot{position:absolute!important;opacity:0!important;pointer-events:none!important;width:1px!important;height:1px!important;inset-inline-start:-9999px!important}
