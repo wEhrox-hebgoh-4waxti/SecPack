@@ -79,6 +79,23 @@ jobs:
             exit 1
           fi
 
+      - name: Reject unsafe navigation and third-party executable resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --include='*.html' '(^|["'"'"'[:space:]])javascript:' .; then
+            echo "javascript: URL detected."
+            exit 1
+          fi
+          if grep -RInE --include='*.html' '<script[^>]+src=["'"'"']https?://|<link[^>]+rel=["'"'"']stylesheet["'"'"'][^>]+href=["'"'"']https?://' .; then
+            echo "Third-party executable/style resource detected."
+            exit 1
+          fi
+          if grep -RInE --include='*.html' 'target=["'"'"']_blank["'"'"']' . | grep -vE 'rel=["'"'"'][^"'"'"']*(noopener|noreferrer)'; then
+            echo "target=_blank without noopener/noreferrer detected."
+            exit 1
+          fi
+
       - name: Validate workflow permissions
         shell: bash
         run: |
