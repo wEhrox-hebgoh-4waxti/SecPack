@@ -1,0 +1,1 @@
+async function prepare(e){e.preventDefault();const form=e.currentTarget,n=document.getElementById("form-note"),button=form.querySelector("button[type=submit]");const data=Object.fromEntries(new FormData(form).entries());delete data._gotcha;delete data.form_type;await window.secpackSubmitPayload(data,"contact",n,button);return false}
