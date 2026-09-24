@@ -10,8 +10,8 @@ const CORE={
 "nav.home":["Home","خانه","الرئيسية"],"nav.products":["Products","محصولات","المنتجات"],"nav.store":["Online Store","فروشگاه آنلاین","المتجر الإلكتروني"],"nav.company":["Company","شرکت","الشركة"],"nav.manufacturers":["For Manufacturers","برای تولیدکنندگان","للمصنعين"],"nav.knowledge":["Knowledge Center","مرکز دانش","مركز المعرفة"],"nav.resources":["Resources","منابع","المصادر"],"nav.contact":["Contact","تماس","اتصل بنا"],
 "footer.explore":["Explore","بخش‌های سایت","استكشف"],"footer.connect":["Connect","ارتباط","تواصل"],"footer.legal":["Legal","حقوقی","قانوني"],"footer.products":["Products","محصولات","المنتجات"],"footer.privacy":["Privacy","حریم خصوصی","الخصوصية"],"footer.terms":["Terms","شرایط استفاده","الشروط"],"footer.company":["SEC PACK","SEC PACK","SEC PACK"],"footer.focus":["Focus","تمرکز","التركيز"],"footer.manufacturerSourcing":["Manufacturer sourcing","تأمین از تولیدکننده","التوريد من المصنعين"],"footer.supplierEvaluation":["Supplier evaluation","ارزیابی تأمین‌کننده","تقييم المورد"],"footer.year":["SEC PACK © 2026","SEC PACK © ۲۰۲۶","SEC PACK © 2026"],"footer.tagline":["International Trade · Sourcing · Procurement","تجارت بین‌الملل · تأمین · خرید","التجارة الدولية · التوريد · المشتريات"],
 "common.close":["Close","بستن","إغلاق"],"common.register":["Register","ثبت‌نام","تسجيل"],"common.addToCart":["Add to cart","افزودن به سبد","أضف إلى السلة"],"common.scientificGuide":["Scientific product guide","راهنمای علمی محصول","الدليل العلمي للمنتج"]
+,"page.contact.05":["SEC PACK can structure the requirement for sourcing and supplier discussions.","SEC PACK می‌تواند نیاز شما را برای تأمین و مذاکره با تأمین‌کنندگان ساختاربندی کند.","يمكن لـ SEC PACK تنظيم متطلبك للتوريد ومناقشات الموردين"]
 };
-"page.contact.05":["SEC PACK can structure the requirement for sourcing and supplier discussions.","SEC PACK می‌تواند نیاز شما را برای تأمین و مذاکره با تأمین‌کنندگان ساختاربندی کند.","يمكن لـ SEC PACK تنظيم متطلبك للتوريد ومناقشات الموردين"],
 const HOME_CORE={
   "home.brandSub":["International Trade & Sourcing","تجارت بین‌الملل و تأمین","التجارة الدولية والتوريد"],
   "home.navHome":["Home","خانه","الرئيسية"],
@@ -81,46 +81,46 @@ const HOME_CORE={
   "home.vConsent":["I agree to receive technical information, new product updates and relevant business messages from SEC PACK by email, WhatsApp or SMS.","مایلم اطلاعات فنی، محصولات جدید و پیام‌های تجاری مرتبط SEC PACK را از طریق ایمیل، واتساپ یا پیامک دریافت کنم.","أوافق على تلقي المعلومات الفنية وتحديثات المنتجات الجديدة والرسائل التجارية ذات الصلة من SEC PACK عبر البريد الإلكتروني أو واتساب أو الرسائل النصية."],
   "home.vPrivacy":["Your information will be used for business communication in accordance with our","اطلاعات شما برای ارتباطات تجاری و مطابق با","سيتم استخدام معلوماتك للتواصل التجاري وفقًا لـ"],
   "home.vSubmit":["Register","ثبت‌نام","تسجيل"],
-  "home.clarityTag":["clarityTag","clarityTag","01 · CLARITY"],
-  "home.clarityTitle":["clarityTitle","clarityTitle","Clear specifications"],
-  "home.clarityText":["clarityText","clarityText","Requirements are structured around measurable product, packaging, quantity and delivery details."],
-  "home.disciplineTag":["disciplineTag","disciplineTag","02 · DISCIPLINE"],
-  "home.disciplineTitle":["disciplineTitle","disciplineTitle","Professional procurement"],
-  "home.disciplineText":["disciplineText","disciplineText","Technical, commercial and delivery points are reviewed before a transaction is accepted."],
-  "home.relationshipsTag":["relationshipsTag","relationshipsTag","03 · RELATIONSHIPS"],
-  "home.relationshipsTitle":["relationshipsTitle","relationshipsTitle","Long-term cooperation"],
-  "home.relationshipsText":["relationshipsText","relationshipsText","We seek repeatable B2B supply relationships with capable manufacturers and serious export partners."],
-  "home.procurementEyebrow":["procurementEyebrow","procurementEyebrow","PROCUREMENT MODEL"],
-  "home.procurementTitle":["procurementTitle","procurementTitle","Requirement-led, not catalog-led."],
-  "home.procurementText":["procurementText","procurementText","We start with the application and commercial requirement, then identify supply options that can be evaluated on comparable technical and delivery terms."],
-  "home.defineTag":["defineTag","defineTag","01 · DEFINE"],
-  "home.defineTitle":["defineTitle","defineTitle","Requirement brief"],
-  "home.defineText":["defineText","defineText","Product, application, specification, quantity, packaging, destination and timing are clarified first."],
-  "home.reviewTag":["reviewTag","reviewTag","02 · REVIEW"],
-  "home.reviewTitle":["reviewTitle","reviewTitle","Supply screening"],
-  "home.reviewText":["reviewText","reviewText","Relevant manufacturers and export partners are reviewed against technical, commercial and documentation requirements."],
-  "home.coordinateTag":["coordinateTag","coordinateTag","03 · COORDINATE"],
-  "home.coordinateTitle":["coordinateTitle","coordinateTitle","Commercial discussion"],
-  "home.coordinateText":["coordinateText","coordinateText","Quotations, samples, terms and delivery details are discussed before any purchasing commitment."],
-  "home.businessEyebrow":["businessEyebrow","businessEyebrow","BUSINESS PROFILE"],
-  "home.businessTitle":["businessTitle","businessTitle","Built for buyers and export partners."],
-  "home.businessText":["businessText","businessText","SEC PACK structures product requirements, evaluates supply options and coordinates practical B2B procurement. Confidential supplier identities, purchase prices and internal commercial records are kept outside the public website."],
-  "home.companyTitle":["companyTitle","companyTitle","Company Profile"],
-  "home.companyText":["companyText","companyText","How SEC PACK works, what we source and the principles behind our commercial process."],
-  "home.manufacturersTitle":["manufacturersTitle","manufacturersTitle","For Manufacturers"],
-  "home.manufacturersText":["manufacturersText","manufacturersText","Information for factories and export sales teams considering a supply relationship."],
-  "home.discussionTitle":["discussionTitle","discussionTitle","Start a Business Discussion"],
-  "home.discussionText":["discussionText","discussionText","Send product, specification, quantity and destination requirements for review."],
-  "home.visualCaption":["visualCaption","visualCaption","From specification to supply"],
-  "home.globalSourcing":["globalSourcing","globalSourcing","GLOBAL SOURCING"],
-  "home.visualPaper":["visualPaper","visualPaper","A4 PAPER"],
-  "home.visualSpecification":["visualSpecification","visualSpecification","SPECIFICATION"],
-  "home.visualFilms":["visualFilms","visualFilms","FILMS"],
-  "home.visualConverting":["visualConverting","visualConverting","CONVERTING"],
-  "home.visualPackaging":["visualPackaging","visualPackaging","PACKAGING"],
-  "home.visualSupply":["visualSupply","visualSupply","SUPPLY"],
-  "home.navCompany":["navCompany","navCompany","Company"],
-  "home.navManufacturers":["navManufacturers","navManufacturers","For Manufacturers"]
+  "home.clarityTag":["01 · CLARITY","01 · شفافیت","01 · الوضوح"],
+  "home.clarityTitle":["Clear specifications","مشخصات شفاف","مواصفات واضحة"],
+  "home.clarityText":["Requirements are structured around measurable product, packaging, quantity and delivery details.","نیازها بر اساس مشخصات قابل اندازه‌گیری محصول، بسته‌بندی، مقدار و تحویل ساختاربندی می‌شوند.","تُنظَّم المتطلبات حول تفاصيل قابلة للقياس للمنتج والتغليف والكمية والتسليم."],
+  "home.disciplineTag":["02 · DISCIPLINE","02 · انضباط","02 · الانضباط"],
+  "home.disciplineTitle":["Professional procurement","خرید حرفه‌ای","مشتريات احترافية"],
+  "home.disciplineText":["Technical, commercial and delivery points are reviewed before a transaction is accepted.","نکات فنی، تجاری و تحویل پیش از پذیرش معامله بررسی می‌شوند.","تتم مراجعة الجوانب الفنية والتجارية والتسليم قبل قبول أي معاملة."],
+  "home.relationshipsTag":["03 · RELATIONSHIPS","03 · روابط","03 · العلاقات"],
+  "home.relationshipsTitle":["Long-term cooperation","همکاری بلندمدت","تعاون طويل الأمد"],
+  "home.relationshipsText":["We seek repeatable B2B supply relationships with capable manufacturers and serious export partners.","هدف ما ایجاد روابط پایدار تأمین B2B با تولیدکنندگان توانمند و شرکای صادراتی جدی است.","نسعى إلى علاقات توريد B2B قابلة للتكرار مع مصنعين مؤهلين وشركاء تصدير جادين."],
+  "home.procurementEyebrow":["PROCUREMENT MODEL","مدل تأمین","نموذج التوريد"],
+  "home.procurementTitle":["Requirement-led, not catalog-led.","نیازمحور، نه کاتالوگ‌محور.","مبني على المتطلبات، وليس على الكتالوج."],
+  "home.procurementText":["We start with the application and commercial requirement, then identify supply options that can be evaluated on comparable technical and delivery terms.","کار را از کاربرد و نیاز تجاری آغاز می‌کنیم و سپس گزینه‌های تأمین را بر اساس شرایط فنی و تحویل قابل مقایسه بررسی می‌کنیم.","نبدأ بالتطبيق والمتطلب التجاري، ثم نحدد خيارات التوريد التي يمكن تقييمها وفق شروط فنية وتسليم قابلة للمقارنة."],
+  "home.defineTag":["01 · DEFINE","01 · تعریف","01 · تحديد"],
+  "home.defineTitle":["Requirement brief","شرح نیاز","ملخص المتطلبات"],
+  "home.defineText":["Product, application, specification, quantity, packaging, destination and timing are clarified first.","ابتدا محصول، کاربرد، مشخصات، مقدار، بسته‌بندی، مقصد و زمان‌بندی مشخص می‌شوند.","يتم أولًا توضيح المنتج والتطبيق والمواصفات والكمية والتغليف والوجهة والجدول الزمني."],
+  "home.reviewTag":["02 · REVIEW","02 · بررسی","02 · المراجعة"],
+  "home.reviewTitle":["Supply screening","غربالگری تأمین","فحص خيارات التوريد"],
+  "home.reviewText":["Relevant manufacturers and export partners are reviewed against technical, commercial and documentation requirements.","تولیدکنندگان و شرکای صادراتی مرتبط بر اساس الزامات فنی، تجاری و مستندات بررسی می‌شوند.","تتم مراجعة المصنعين وشركاء التصدير المناسبين وفق المتطلبات الفنية والتجارية ومتطلبات الوثائق."],
+  "home.coordinateTag":["03 · COORDINATE","03 · هماهنگی","03 · التنسيق"],
+  "home.coordinateTitle":["Commercial discussion","گفت‌وگوی تجاری","المناقشة التجارية"],
+  "home.coordinateText":["Quotations, samples, terms and delivery details are discussed before any purchasing commitment.","پیش از هر تعهد خرید، قیمت‌ها، نمونه‌ها، شرایط و جزئیات تحویل بررسی و مذاکره می‌شوند.","تتم مناقشة عروض الأسعار والعينات والشروط وتفاصيل التسليم قبل أي التزام بالشراء."],
+  "home.businessEyebrow":["BUSINESS PROFILE","معرفی کسب‌وکار","ملف الأعمال"],
+  "home.businessTitle":["Built for buyers and export partners.","ساخته‌شده برای خریداران و شرکای صادراتی.","مصمم للمشترين وشركاء التصدير."],
+  "home.businessText":["SEC PACK structures product requirements, evaluates supply options and coordinates practical B2B procurement. Confidential supplier identities, purchase prices and internal commercial records are kept outside the public website.","SEC PACK نیازهای محصول را ساختاربندی، گزینه‌های تأمین را ارزیابی و خرید عملی B2B را هماهنگ می‌کند. هویت تأمین‌کنندگان محرمانه، قیمت‌های خرید و سوابق تجاری داخلی خارج از سایت عمومی نگهداری می‌شوند.","تعمل SEC PACK على هيكلة متطلبات المنتجات وتقييم خيارات التوريد وتنسيق المشتريات العملية B2B. وتبقى هويات الموردين السرية وأسعار الشراء والسجلات التجارية الداخلية خارج الموقع العام."],
+  "home.companyTitle":["Company Profile","معرفی شرکت","ملف الشركة"],
+  "home.companyText":["How SEC PACK works, what we source and the principles behind our commercial process.","نحوه فعالیت SEC PACK، حوزه‌های تأمین و اصول فرآیند تجاری ما.","كيف تعمل SEC PACK وما الذي نوردّه والمبادئ التي تقوم عليها عمليتنا التجارية."],
+  "home.manufacturersTitle":["For Manufacturers","برای تولیدکنندگان","للمصنعين"],
+  "home.manufacturersText":["Information for factories and export sales teams considering a supply relationship.","اطلاعاتی برای کارخانه‌ها و تیم‌های فروش صادراتی که همکاری تأمین را بررسی می‌کنند.","معلومات للمصانع وفرق المبيعات التصديرية التي تدرس علاقة توريد."],
+  "home.discussionTitle":["Start a Business Discussion","شروع گفت‌وگوی تجاری","ابدأ مناقشة تجارية"],
+  "home.discussionText":["Send product, specification, quantity and destination requirements for review.","محصول، مشخصات، مقدار و مقصد موردنیاز را برای بررسی ارسال کنید.","أرسل متطلبات المنتج والمواصفات والكمية والوجهة للمراجعة."],
+  "home.visualCaption":["From specification to supply","از مشخصات تا تأمین","من المواصفات إلى التوريد"],
+  "home.globalSourcing":["GLOBAL SOURCING","تأمین جهانی","التوريد العالمي"],
+  "home.visualPaper":["A4 PAPER","کاغذ A4","ورق A4"],
+  "home.visualSpecification":["SPECIFICATION","مشخصات","المواصفات"],
+  "home.visualFilms":["FILMS","فیلم‌ها","الأفلام"],
+  "home.visualConverting":["CONVERTING","کانورتینگ","التحويل"],
+  "home.visualPackaging":["PACKAGING","بسته‌بندی","التغليف"],
+  "home.visualSupply":["SUPPLY","تأمین","التوريد"],
+  "home.navCompany":["Company","شرکت","الشركة"],
+  "home.navManufacturers":["For Manufacturers","برای تولیدکنندگان","للمصنعين"]
 };
 Object.assign(CORE,HOME_CORE);
 Object.assign(CORE,{
@@ -812,6 +812,8 @@ Object.assign(CORE,{
 
 const LANG_INDEX={en:0,fa:1,ar:2};
 let currentLanguage="en";
+Object.assign(CORE,{"common.logoAlt":["SEC PACK logo","لوگوی SEC PACK","شعار SEC PACK"],"form.name":["Name","نام","الاسم"],"form.company":["Company","شرکت","الشركة"],"form.productRequirement":["Product / Requirement","محصول / نیاز","المنتج / المتطلب"],"form.message":["Message","پیام","الرسالة"],"store.cart":["Cart","سبد خرید","السلة"],"dynamic.decrease":["Decrease quantity","کاهش تعداد","تقليل الكمية"],"dynamic.increase":["Increase quantity","افزایش تعداد","زيادة الكمية"],"dynamic.inquiryReady":["Your inquiry is ready. Please use your preferred SEC PACK business email or communication channel to send the prepared details.","درخواست شما آماده است. لطفاً جزئیات آماده‌شده را از طریق ایمیل تجاری یا کانال ارتباطی موردنظر SEC PACK ارسال کنید.","طلبك جاهز. يرجى استخدام بريد SEC PACK التجاري المفضل أو قناة الاتصال المناسبة لإرسال التفاصيل المعدة."],"dynamic.visitorReady":["Thank you. Your registration details are not stored by this static site. The form is ready for connection to a secure business database when a backend is activated.","متشکریم. اطلاعات ثبت‌نام شما توسط این سایت ایستا ذخیره نمی‌شود. فرم برای اتصال به یک پایگاه داده امن تجاری پس از فعال‌سازی Backend آماده است.","شكرًا لك. لا يتم تخزين بيانات تسجيلك بواسطة هذا الموقع الثابت. النموذج جاهز للربط بقاعدة بيانات أعمال آمنة عند تفعيل الواجهة الخلفية."],"metaDesc.home":["SEC PACK provides international sourcing, procurement and trade coordination for professional B2B buyers and export partners.","SEC PACK خدمات تأمین بین‌المللی، خرید و هماهنگی تجارت را برای خریداران حرفه‌ای B2B و شرکای صادراتی ارائه می‌کند.","تقدم SEC PACK خدمات التوريد الدولي والمشتريات وتنسيق التجارة للمشترين المحترفين وشركاء التصدير."],"metaDesc.products":["SEC PACK product portfolio for A4 copy paper, lamination films, water-based adhesives and packaging materials.","سبد محصولات SEC PACK شامل کاغذ کپی A4، فیلم‌های لمینیشن، چسب‌های پایه آب و مواد بسته‌بندی است.","محفظة منتجات SEC PACK تشمل ورق النسخ A4 وأفلام التصفيح والمواد اللاصقة المائية ومواد التغليف."],"metaDesc.a4":["A4 copy paper sourcing for professional B2B buyers, including 75–80 GSM programs, OEM and private-label options.","تأمین کاغذ کپی A4 برای خریداران حرفه‌ای B2B، شامل برنامه‌های ۷۵–۸۰ گرم و گزینه‌های OEM و برند اختصاصی.","توريد ورق النسخ A4 للمشترين المحترفين B2B، بما في ذلك برامج 75–80 GSM وخيارات OEM والعلامة الخاصة."],"metaDesc.film":["BOPP, PET and MPET lamination film sourcing for printing, paper, board and packaging applications.","تأمین فیلم‌های لمینیشن BOPP، PET و MPET برای کاربردهای چاپ، کاغذ، مقوا و بسته‌بندی.","توريد أفلام التصفيح BOPP وPET وMPET لتطبيقات الطباعة والورق والكرتون والتغليف."],"metaDesc.adhesive":["Water-based adhesive sourcing for paper, film and board lamination and industrial converting applications.","تأمین چسب‌های پایه آب برای لمینیشن کاغذ، فیلم و مقوا و کاربردهای صنعتی کانورتینگ.","توريد المواد اللاصقة المائية لتصفيح الورق والأفلام والكرتون وتطبيقات التحويل الصناعية."],"metaDesc.packaging":["Specification-led packaging material sourcing for printers, converters and packaging manufacturers.","تأمین مواد بسته‌بندی بر اساس مشخصات برای چاپخانه‌ها، کانورتورها و تولیدکنندگان بسته‌بندی.","توريد مواد التغليف وفق المواصفات للمطابع والمحوّلين ومصنعي التغليف."],"metaDesc.company":["SEC PACK company profile, sourcing approach and principles for international B2B trade.","معرفی SEC PACK، روش تأمین و اصول فعالیت در تجارت بین‌المللی B2B.","ملف SEC PACK ومنهج التوريد ومبادئ العمل في التجارة الدولية B2B."],"metaDesc.manufacturers":["Information for manufacturers and export partners considering a structured B2B supply relationship with SEC PACK.","اطلاعات برای تولیدکنندگان و شرکای صادراتی که همکاری ساختاریافته B2B با SEC PACK را بررسی می‌کنند.","معلومات للمصنعين وشركاء التصدير الذين يدرسون علاقة توريد B2B منظمة مع SEC PACK."],"metaDesc.market":["Practical knowledge from SEC PACK covering A4 paper, supplier evaluation, landed cost and procurement specifications.","دانش کاربردی SEC PACK درباره کاغذ A4، ارزیابی تأمین‌کننده، هزینه نهایی و مشخصات خرید.","معرفة عملية من SEC PACK حول ورق A4 وتقييم الموردين والتكلفة النهائية ومواصفات الشراء."],"metaDesc.documents":["SEC PACK resources for product specifications, technical documentation, supplier evaluation and RFQ preparation.","منابع SEC PACK برای مشخصات محصول، مستندات فنی، ارزیابی تأمین‌کننده و آماده‌سازی RFQ.","موارد SEC PACK حول مواصفات المنتجات والوثائق الفنية وتقييم الموردين وإعداد طلبات عروض الأسعار."],"metaDesc.store":["SEC PACK online B2B supply center for preparing product and quantity requests before commercial confirmation.","مرکز تأمین آنلاین B2B SEC PACK برای آماده‌سازی درخواست محصول و مقدار پیش از تأیید تجاری.","مركز SEC PACK الإلكتروني للتوريد B2B لإعداد طلبات المنتجات والكميات قبل التأكيد التجاري."],"metaDesc.contact":["Contact SEC PACK for international sourcing, procurement and B2B supply discussions.","برای گفت‌وگو درباره تأمین بین‌المللی، خرید و همکاری B2B با SEC PACK تماس بگیرید.","تواصل مع SEC PACK لمناقشات التوريد الدولي والمشتريات والتعاون B2B."],"metaDesc.privacy":["Public privacy and data-handling information for SEC PACK website visitors and B2B inquiries.","اطلاعات عمومی حریم خصوصی و مدیریت داده برای بازدیدکنندگان سایت SEC PACK و درخواست‌های B2B.","معلومات الخصوصية ومعالجة البيانات العامة لزوار موقع SEC PACK وطلبات B2B."],"metaDesc.terms":["General SEC PACK website and B2B supply request terms.","شرایط عمومی استفاده از سایت SEC PACK و درخواست‌های تأمین B2B.","الشروط العامة لموقع SEC PACK وطلبات التوريد B2B."],"metaDesc.404":["SEC PACK page not found.","صفحه موردنظر در SEC PACK پیدا نشد.","الصفحة المطلوبة في SEC PACK غير موجودة."]} );
+
 function t(key,lang=currentLanguage){const row=CORE[key];return row?row[LANG_INDEX[lang]]??row[0]:key}
 window.secpackT=t;
 window.secpackI18n={translations:CORE,t,langs:SUPPORTED};
@@ -822,8 +824,9 @@ function applyCoreKeys(lang){
  [["data-i18n-placeholder","placeholder"],["data-i18n-title","title"],["data-i18n-aria-label","aria-label"],["data-i18n-alt","alt"]].forEach(([ka,a])=>document.querySelectorAll("["+ka+"]").forEach(el=>{const key=el.getAttribute(ka),value=t(key,lang);if(value!==key)el.setAttribute(a,value)}));
 }
 function applyDocumentMeta(lang){
- const titleKey=document.documentElement.dataset.i18nTitleKey;if(titleKey)document.title=t(titleKey,lang);
- const meta=document.querySelector('meta[name="description"][data-i18n]');if(meta)meta.content=t(meta.dataset.i18n,lang);
+ const titleEl=document.querySelector("title[data-i18n-title-key]");
+ if(titleEl)document.title=t(titleEl.getAttribute("data-i18n-title-key"),lang);
+ document.querySelectorAll('meta[name="description"][data-i18n]').forEach(meta=>{meta.content=t(meta.dataset.i18n,lang)});
 }
 function captureLegacyOriginals(){document.querySelectorAll("body *").forEach(el=>{if(el.children.length||el.hasAttribute("data-i18n")||el.hasAttribute("data-i18n-html"))return;const raw=(el.textContent||"").replace(/\s+/g," ").trim();if(raw&&!el.dataset.legacyOriginal)el.dataset.legacyOriginal=raw})}
 function applyLanguage(lang){
