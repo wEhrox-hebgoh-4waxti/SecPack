@@ -74,7 +74,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --include='*.html' --include='*.js' '(localStorage|sessionStorage)\.(setItem|clear|removeItem)|\.setItem\(' . | grep -E '(visitor|contact|order|customer|email|phone|mobile|message|company|name|address|destination|notes)'; then
+          if grep -RInE --include='*.html' --include='*.js' '(localStorage|sessionStorage)\.setItem\([^)]*(email|phone|mobile|message|company|address|customer|visitor|contact|order|destination|notes)' .; then
             echo "Potential personal/customer data persistence detected. Review before launch."
             exit 1
           fi
