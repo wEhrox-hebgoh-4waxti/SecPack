@@ -19,25 +19,25 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Reject obvious secret material
+      - name: Reject obvious credential material
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --exclude-dir=.git --exclude='security-audit.yml' '(BEGIN (RSA|EC|OPENSSH|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{20,})' .; then
+          if grep -RInE --exclude-dir=.git --exclude='security-audit.yml' '(BEGIN (RSA|EC|OPENSSH|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,}|xox[baprs]-[A-Za-z0-9-]{20,})' .; then
             echo "Potential credential material detected."
             exit 1
           fi
 
-      - name: Reject insecure HTTP resources
+      - name: Reject insecure HTTP application resources
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --include='*.html' --include='*.js' --include='*.css' 'http://' .; then
-            echo "Potential insecure HTTP resource detected."
+          if grep -RInE --include='*.html' --include='*.js' --include='*.css' '(src|href|action|url)[[:space:]]*=[[:space:]]*["'"'"']http://|url\([[:space:]]*["'"'"']?http://' .; then
+            echo "Potential insecure HTTP application resource detected."
             exit 1
           fi
 
-      - name: Check required security files
+      - name: Check required security controls
         shell: bash
         run: |
           set -euo pipefail
@@ -46,12 +46,64 @@ jobs:
           test -f .github/CODEOWNERS
           test -f .github/dependabot.yml
           test -f .github/workflows/codeql.yml
+          test -f .github/workflows/pages.yml
 
-      - name: Check dangerous client-side patterns
+      - name: Detect dangerous DOM and script patterns
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --include='*.html' --include='*.js' 'eval\(|new Function\(|document\.write\(' .; then
+          if grep -RInE --include='*.html' --include='*.js' 'eval\(|new Function\(|document\.write\(|insertAdjacentHTML\(|outerHTML[[:space:]]*=|\.innerHTML[[:space:]]*=' .; then
             echo "Potentially dangerous client-side pattern detected."
+            exit 1
+          fi
+
+      - name: Detect inline JavaScript that blocks a strict CSP
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --include='*.html' '<script([[:space:]>]|$)' . | grep -vE '<script[[:space:]][^>]*src='; then
+            echo "Inline script detected. Externalize JavaScript before enabling a strict CSP."
+            exit 1
+          fi
+          if grep -RInE --include='*.html' --include='*.js' '(^|[[:space:]])on[a-zA-Z]+[[:space:]]*=' .; then
+            echo "Inline event handler detected. Replace it with addEventListener."
+            exit 1
+          fi
+
+      - name: Detect unsafe client-side persistence of form data
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --include='*.html' --include='*.js' '(localStorage|sessionStorage)\.(setItem|clear|removeItem)|\.setItem\(' . | grep -E '(visitor|contact|order|customer|email|phone|mobile|message|company|name|address|destination|notes)'; then
+            echo "Potential personal/customer data persistence detected. Review before launch."
+            exit 1
+          fi
+
+      - name: Validate workflow permissions
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in .github/workflows/*.yml .github/workflows/*.yaml; do
+            [ -f "$f" ] || continue
+            grep -q '^permissions:' "$f" || { echo "Missing top-level permissions in $f"; exit 1; }
+            grep -q 'persist-credentials: false' "$f" || { echo "Checkout credential persistence is not explicitly disabled in $f"; exit 1; }
+          done
+
+      - name: Validate security.txt
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s .well-known/security.txt
+          grep -q '^Contact:' .well-known/security.txt
+          grep -q '^Policy:' .well-known/security.txt
+          grep -q '^Canonical:' .well-known/security.txt
+          grep -q '^Expires:' .well-known/security.txt
+
+      - name: Check for wildcard DNS instructions
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=.git '\*\.[A-Za-z0-9.-]+' .; then
+            echo "Wildcard DNS reference detected; review for subdomain-takeover risk."
             exit 1
           fi
