@@ -849,6 +849,7 @@ function applyLanguage(lang){
 }
 function setLanguage(lang){applyLanguage(lang)}
 window.secpackSetLanguage=setLanguage;
+window.secpackGetLanguage=()=>currentLanguage;
 function init(){document.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>setLanguage(b.dataset.lang)));captureLegacyOriginals();const saved=localStorage.getItem(KEY);applyLanguage(SUPPORTED.includes(saved)?saved:"en")}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
