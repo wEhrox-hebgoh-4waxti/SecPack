@@ -1,10 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /data/
-Disallow: /pages/dashboard.html
-Disallow: /pages/supplier-profile.html
-Disallow: /pages/ai.html
-Disallow: /pages/email.html
-Disallow: /pages/settings.html
 
 Sitemap: https://wehrox-hebgoh-4waxti.github.io/SecPack/sitemap.xml
