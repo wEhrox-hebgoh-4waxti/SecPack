@@ -24,7 +24,7 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm install --force --no-audit --no-fund
 
       - name: Run commerce integration tests
         run: npm test
