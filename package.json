@@ -4,10 +4,6 @@
   "version": "1.0.0",
   "scripts": {
     "deploy": "npx wrangler d1 migrations apply DB --remote && npx wrangler deploy",
-    "test": "vitest run"
-  },
-  "devDependencies": {
-    "vitest": "^4.1.0",
-    "wrangler": "^4.102.0"
+    "test": "node test/commerce.smoke.mjs"
   }
 }
