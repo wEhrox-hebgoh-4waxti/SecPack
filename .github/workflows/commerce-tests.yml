@@ -27,5 +27,8 @@ jobs:
       - name: Validate storefront script syntax
         run: node --check assets/js/pages-store.js
 
+      - name: Validate Wrangler Worker bundle
+        run: npx --yes wrangler@4.102.0 deploy --dry-run --config wrangler.toml
+
       - name: Run end-to-end commerce smoke test
         run: node test/commerce.smoke.mjs
