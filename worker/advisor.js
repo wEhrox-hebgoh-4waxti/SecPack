@@ -60,7 +60,7 @@ async function digest(value) {
 
 async function clientKey(request, env) {
   const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-  const salt = env[RATE_SALT];
+  const salt = env[RATE_SALT] || env[KEY];
   if (!salt) return null;
   return digest(salt + "|" + ip);
 }
@@ -86,7 +86,7 @@ async function rateLimit(env, request, bucket, limit) {
 }
 
 async function ensureReady(env) {
-  return Boolean(env.DB && env[RATE_SALT]);
+  return Boolean(env.DB && env[KEY]);
 }
 
 async function handleForm(request, env, origin) {
