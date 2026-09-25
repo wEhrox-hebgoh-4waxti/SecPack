@@ -135,7 +135,7 @@ async function handleForm(request, env, origin) {
     await env.DB.prepare(
       "INSERT INTO inquiries (id,request_id,form_type,name,company,email,phone,product,destination,payment,notes,message,items,created_at,visitor_details) " +
       "VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)"
-    ).bind(id, requestId || null, type, name, company, email, phone, product, destination, payment, notes, message, items, now).run();
+    ).bind(id, requestId || null, type, name, company, email, phone, product, destination, payment, notes, message, items, now, visitorDetails).run();
 
     return response({ ok: true }, 202, origin);
   } catch (_) {
