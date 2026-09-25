@@ -204,7 +204,7 @@ async function handleOrder(request, env, origin) {
       products.push({...p,qty:item.qty});
     }
     const existing=await env.DB.prepare("SELECT id FROM customers WHERE email=?1").bind(email).first();
-    const customerId=existing?.id||crypto.randomUUID(),orderId=crypto.randomUUID(),orderNo=makeOrderNo(),now=new Date().toISOString();
+    const customerId=existing?.id||await digest(email),orderId=crypto.randomUUID(),orderNo=makeOrderNo(),now=new Date().toISOString();
     const currency=products[0]?.currency||"USD";
     let subtotal=0;
     for(const p of products){
@@ -248,21 +248,41 @@ async function handleAdminStatus(request,env,orderId){
     if(!order)return response({error:"Order not found."},404,null);
     const now=new Date().toISOString(),statements=[];
     if(status==="confirmed"){
+      if(!["received","awaiting_payment"].includes(order.status)) return response({error:"Invalid order transition."},409,null);
       const items=await env.DB.prepare("SELECT product_id,qty FROM order_items WHERE order_id=?1").bind(orderId).all();
+      for(const item of items.results||[]){
+        const stock=await env.DB.prepare("SELECT on_hand,reserved FROM inventory WHERE product_id=?1 AND warehouse_id='wh-main'").bind(item.product_id).first();
+        if(!stock || Number(stock.on_hand)-Number(stock.reserved)<Number(item.qty)) return response({error:"Insufficient inventory for this order."},409,null);
+      }
       statements.push(env.DB.prepare("UPDATE orders SET status='confirmed',fulfillment_status='reserved',updated_at=?1 WHERE id=?2").bind(now,orderId));
       for(const item of items.results||[]){
-        statements.push(env.DB.prepare("UPDATE inventory SET reserved=reserved+?1,updated_at=?2 WHERE product_id=?3 AND warehouse_id='wh-main' AND on_hand-reserved>=?1").bind(Number(item.qty),now,item.product_id));
+        statements.push(env.DB.prepare("UPDATE inventory SET reserved=reserved+?1,updated_at=?2 WHERE product_id=?3 AND warehouse_id='wh-main'").bind(Number(item.qty),now,item.product_id));
         statements.push(env.DB.prepare("INSERT INTO stock_movements(id,product_id,warehouse_id,order_id,movement_type,qty,reference,created_at) VALUES(?1,?2,'wh-main',?3,'reservation',?4,?5,?6)").bind(crypto.randomUUID(),item.product_id,orderId,Number(item.qty),order.order_no,now));
       }
     }else if(status==="dispatched"){
+      if(order.status!=="confirmed" || order.fulfillment_status!=="reserved") return response({error:"Order must be confirmed and reserved before dispatch."},409,null);
       const items=await env.DB.prepare("SELECT product_id,qty FROM order_items WHERE order_id=?1").bind(orderId).all();
+      for(const item of items.results||[]){
+        const stock=await env.DB.prepare("SELECT on_hand,reserved FROM inventory WHERE product_id=?1 AND warehouse_id='wh-main'").bind(item.product_id).first();
+        if(!stock || Number(stock.reserved)<Number(item.qty) || Number(stock.on_hand)<Number(item.qty)) return response({error:"Reserved inventory is not available for dispatch."},409,null);
+      }
       statements.push(env.DB.prepare("UPDATE orders SET status='dispatched',fulfillment_status='dispatched',updated_at=?1 WHERE id=?2").bind(now,orderId));
       for(const item of items.results||[]){
-        statements.push(env.DB.prepare("UPDATE inventory SET on_hand=on_hand-?1,reserved=reserved-?1,updated_at=?2 WHERE product_id=?3 AND warehouse_id='wh-main' AND on_hand>=?1 AND reserved>=?1").bind(Number(item.qty),now,item.product_id));
+        statements.push(env.DB.prepare("UPDATE inventory SET on_hand=on_hand-?1,reserved=reserved-?1,updated_at=?2 WHERE product_id=?3 AND warehouse_id='wh-main'").bind(Number(item.qty),now,item.product_id));
         statements.push(env.DB.prepare("INSERT INTO stock_movements(id,product_id,warehouse_id,order_id,movement_type,qty,reference,created_at) VALUES(?1,?2,'wh-main',?3,'sale',?4,?5,?6)").bind(crypto.randomUUID(),item.product_id,orderId,Number(item.qty),order.order_no,now));
       }
+    }else if(status==="cancelled"){
+      if(["dispatched","in_transit","delivered","cancelled"].includes(order.status)) return response({error:"Invalid cancellation transition."},409,null);
+      const items=order.fulfillment_status==="reserved" ? await env.DB.prepare("SELECT product_id,qty FROM order_items WHERE order_id=?1").bind(orderId).all() : {results:[]};
+      statements.push(env.DB.prepare("UPDATE orders SET status='cancelled',fulfillment_status='cancelled',updated_at=?1 WHERE id=?2").bind(now,orderId));
+      for(const item of items.results||[]){
+        const stock=await env.DB.prepare("SELECT reserved FROM inventory WHERE product_id=?1 AND warehouse_id='wh-main'").bind(item.product_id).first();
+        if(!stock || Number(stock.reserved)<Number(item.qty)) return response({error:"Reserved inventory state is inconsistent."},409,null);
+        statements.push(env.DB.prepare("UPDATE inventory SET reserved=reserved-?1,updated_at=?2 WHERE product_id=?3 AND warehouse_id='wh-main'").bind(Number(item.qty),now,item.product_id));
+        statements.push(env.DB.prepare("INSERT INTO stock_movements(id,product_id,warehouse_id,order_id,movement_type,qty,reference,created_at) VALUES(?1,?2,'wh-main',?3,'release',?4,?5,?6)").bind(crypto.randomUUID(),item.product_id,orderId,Number(item.qty),order.order_no,now));
+      }
     }else{
-      const fulfillment=status==="delivered"?"delivered":status==="cancelled"?"cancelled":order.fulfillment_status;
+      const fulfillment=status==="delivered"?"delivered":order.fulfillment_status;
       const paymentStatus=status==="paid"?"paid":order.payment_status;
       statements.push(env.DB.prepare("UPDATE orders SET status=?1,payment_status=?2,fulfillment_status=?3,updated_at=?4 WHERE id=?5").bind(status,paymentStatus,fulfillment,now,orderId));
     }
