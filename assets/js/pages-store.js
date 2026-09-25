@@ -26,12 +26,16 @@ function toggleCart(){document.getElementById("orderPanel")?.classList.toggle("o
 async function prepareOrder(){
   if(!items.length){alert(t()("dynamic.addProduct"));return;}
   const status=document.getElementById("orderResult");
-  const data={name:document.getElementById("customerName").value,email:document.getElementById("customerEmail").value,phone:document.getElementById("customerPhone").value,destination:document.getElementById("destination").value,payment:document.getElementById("payment").value,notes:document.getElementById("notes").value,items:JSON.stringify(items)};
+  const data={name:document.getElementById("customerName").value,email:document.getElementById("customerEmail").value,phone:document.getElementById("customerPhone").value,destination:document.getElementById("destination").value,payment:document.getElementById("payment").value,notes:document.getElementById("notes").value,items};
   const result=await window.secpackSubmitOrder(data,status,null);
   const box=document.createElement("div");box.className="quote";
-  const strong=document.createElement("strong");strong.textContent=t()( "dynamic.orderPrepared");
-  const p1=document.createElement("p");p1.textContent=t()( "dynamic.orderDraft");
+  const strong=document.createElement("strong");strong.textContent=t()("dynamic.orderPrepared");
+  const p1=document.createElement("p");p1.textContent=t()("dynamic.orderDraft");
   const p2=document.createElement("p");p2.className="form-status";if(result.ok)p2.classList.add("success");p2.textContent=t()(result.ok?"dynamic.formSent":(result.configured?"dynamic.formError":"dynamic.formNotConfigured"));
+  if(result.ok&&result.result?.orderNo){
+    const p3=document.createElement("p");p3.className="form-status success";p3.textContent="Order reference: "+result.result.orderNo;
+    box.append(strong,p1,p2,p3);status.replaceChildren(box);items.splice(0,items.length);save();return;
+  }
   box.append(strong,p1,p2);status.replaceChildren(box);
 }
 document.addEventListener("click",(event)=>{
