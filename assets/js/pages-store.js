@@ -27,7 +27,7 @@ async function prepareOrder(){
   if(!items.length){alert(t()("dynamic.addProduct"));return;}
   const status=document.getElementById("orderResult");
   const data={name:document.getElementById("customerName").value,email:document.getElementById("customerEmail").value,phone:document.getElementById("customerPhone").value,destination:document.getElementById("destination").value,payment:document.getElementById("payment").value,notes:document.getElementById("notes").value,items:JSON.stringify(items)};
-  const result=await window.secpackSubmitPayload(data,"order",status,null);
+  const result=await window.secpackSubmitOrder(data,status,null);
   const box=document.createElement("div");box.className="quote";
   const strong=document.createElement("strong");strong.textContent=t()( "dynamic.orderPrepared");
   const p1=document.createElement("p");p1.textContent=t()( "dynamic.orderDraft");
