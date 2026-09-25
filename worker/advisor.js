@@ -60,10 +60,9 @@ async function digest(value) {
 
 async function clientKey(request, env) {
   const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-  const ua = text(request.headers.get("User-Agent"), 300);
   const salt = env[RATE_SALT];
   if (!salt) return null;
-  return digest(salt + "|" + ip + "|" + ua);
+  return digest(salt + "|" + ip);
 }
 
 async function rateLimit(env, request, bucket, limit) {
@@ -146,9 +145,6 @@ async function handleForm(request, env, origin) {
 async function handleAdvisor(request, env, origin) {
   if (!await ensureReady(env) || !env[KEY]) return response({ error: "Advisor service is temporarily unavailable." }, 503, origin);
 
-  const length = Number(request.headers.get("Content-Length") || 0);
-  if (length > MAX_BODY) return response({ error: "Request too large." }, 413, origin);
-
   const limited = await rateLimit(env, request, "advisor", ADVISOR_LIMIT);
   if (!limited.allowed) {
     const status = limited.reason === "storage" ? 503 : 429;
@@ -156,7 +152,11 @@ async function handleAdvisor(request, env, origin) {
   }
 
   let body;
-  try { body = await request.json(); } catch (_) {
+  try {
+    const raw = await request.text();
+    if (raw.length > MAX_BODY) return response({ error: "Request too large." }, 413, origin);
+    body = JSON.parse(raw);
+  } catch (_) {
     return response({ error: "Invalid request." }, 400, origin);
   }
 
