@@ -3,9 +3,12 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "deploy": "npx wrangler d1 migrations apply DB --remote && npx wrangler deploy"
+    "deploy": "npx wrangler d1 migrations apply DB --remote && npx wrangler deploy",
+    "test": "vitest run"
   },
   "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.0.0",
+    "vitest": "^4.1.0",
     "wrangler": "^4.102.0"
   }
 }
