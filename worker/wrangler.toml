@@ -1,4 +1,4 @@
-name = "secpack-advisor"
+name = "secpack"
 main = "advisor.js"
 compatibility_date = "2026-09-24"
 
