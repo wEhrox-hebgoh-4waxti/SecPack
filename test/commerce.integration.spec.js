@@ -104,6 +104,9 @@ describe("SEC PACK commerce flow", () => {
     }));
     expect(confirmed.status).toBe(200);
     expect((await env.DB.prepare("SELECT reserved FROM inventory WHERE product_id='paper' AND warehouse_id='wh-main'").first()).reserved).toBe(10);
+    expect((await env.DB.prepare("SELECT COUNT(*) AS n FROM invoices").first()).n).toBe(1);
+    const invoiceEntry=await env.DB.prepare("SELECT id FROM accounting_entries WHERE source_type='order.invoice' LIMIT 1").first();
+    expect(invoiceEntry).toBeTruthy();
 
     const duplicateConfirm = await exports.default.fetch(request("/admin/orders/" + orderId + "/status", {
       method: "POST",
