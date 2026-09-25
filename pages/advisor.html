@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.secpackco.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="SEC PACK Professional Advisor for printing, packaging, paper, films, adhesives and converting.">
 <meta name="robots" content="index, follow">
@@ -21,7 +21,7 @@
 <div class="card"><form id="advisorForm">
 <label><span data-t="question">Question / requirement</span><textarea id="advisorQuestion" rows="7" required placeholder="Describe your product, application, substrate, process, quantity or technical problem..."></textarea></label>
 <div class="grid three"><label><span data-t="area">Area</span><select id="advisorArea">
-<option data-opt="printing">Printing</option><option data-opt="packaging">Packaging</option><option data-opt="paper">Paper & Board</option><option data-opt="films">Films</option><option data-opt="adhesives">Adhesives</option><option data-opt="converting">Converting</option><option data-opt="procurement">Procurement</option><option data-opt="other">Other</option></select></label>
+<option value="Printing" data-opt="printing">Printing</option><option value="Packaging" data-opt="packaging">Packaging</option><option value="Paper & Board" data-opt="paper">Paper & Board</option><option value="Films" data-opt="films">Films</option><option value="Adhesives" data-opt="adhesives">Adhesives</option><option value="Converting" data-opt="converting">Converting</option><option value="Procurement" data-opt="procurement">Procurement</option><option value="Other" data-opt="other">Other</option></select></label>
 <label><span data-t="language">Language</span><select id="advisorLanguage"><option value="en">English</option><option value="fa">فارسی</option><option value="ar">العربية</option></select></label>
 <label><span data-t="depth">Answer style</span><select id="advisorDepth"><option value="practical" data-opt="practical">Practical recommendation</option><option value="technical" data-opt="technical">Technical analysis</option><option value="commercial" data-opt="commercial">Technical + commercial analysis</option></select></label></div>
 <label><input type="checkbox" id="advisorWeb"> <span data-t="fresh">Use current public information when freshness matters.</span></label>
