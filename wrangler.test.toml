@@ -1,15 +1,14 @@
-name = "secpack"
+name = "secpack-test"
 main = "worker/advisor.js"
 compatibility_date = "2026-09-25"
 workers_dev = false
 preview_urls = false
 
-[[routes]]
-pattern = "api.secpackco.com"
-custom_domain = true
-
 [vars]
 OPENAI_MODEL = "gpt-5.6-terra"
+ADMIN_API_KEY = "test-admin-key"
+RATE_LIMIT_SALT = "test-rate-salt"
+OPENAI_API_KEY = "test-openai-key"
 
 [[d1_databases]]
 binding = "DB"
@@ -17,6 +16,3 @@ database_name = "secpack-prod"
 database_id = "a0c162d5-2706-428c-9be8-802968b2273c"
 preview_database_id = "secpack-test"
 migrations_dir = "migrations"
-
-[triggers]
-crons = ["*/15 * * * *"]

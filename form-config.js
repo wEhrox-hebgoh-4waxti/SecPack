@@ -1,5 +1,7 @@
 window.SEC_PACK_FORMS = Object.freeze({
-  endpoint: "https://api.secpackco.com/forms"
+  endpoint: "https://api.secpackco.com/forms",
+  orderEndpoint: "https://api.secpackco.com/orders",
+  catalogEndpoint: "https://api.secpackco.com/catalog"
 });
 
 (function(){
@@ -43,4 +45,23 @@ window.SEC_PACK_FORMS = Object.freeze({
     }
   }
   window.secpackSubmitPayload=submitPayload;
+
+  async function submitOrder(payload,statusEl,button){
+    const endpoint=window.SEC_PACK_FORMS && window.SEC_PACK_FORMS.orderEndpoint;
+    if(!endpoint){ setStatus(statusEl,"dynamic.formNotConfigured","local"); return {ok:false,configured:false}; }
+    if(button) button.disabled=true;
+    setStatus(statusEl,"dynamic.formSending","sending");
+    const body={...payload,_request_id:crypto.randomUUID()};
+    try{
+      const response=await fetch(endpoint,{method:"POST",headers:{"Accept":"application/json","Content-Type":"application/json"},body:JSON.stringify(body)});
+      let result={}; try{result=await response.json();}catch(_){}
+      if(!response.ok) throw new Error(result.error||"Order submission failed");
+      setStatus(statusEl,"dynamic.formSent","success");
+      return {ok:true,configured:true,result};
+    }catch(error){
+      setStatus(statusEl,"dynamic.formError","error");
+      return {ok:false,configured:true,error};
+    }finally{ if(button) button.disabled=false; }
+  }
+  window.secpackSubmitOrder=submitOrder;
 })();
