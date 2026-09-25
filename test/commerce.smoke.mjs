@@ -27,7 +27,7 @@ async function expectJson(response) {
 run(["d1", "migrations", "apply", "DB", "--local", "--persist-to", ".wrangler/commerce-test-state"]);
 run(["d1", "execute", "DB", "--local", "--persist-to", ".wrangler/commerce-test-state", "--command", "DELETE FROM stock_movements; DELETE FROM audit_log; DELETE FROM notification_outbox; DELETE FROM invoice_items; DELETE FROM invoices; DELETE FROM accounting_lines; DELETE FROM accounting_entries; DELETE FROM payments; DELETE FROM order_items; DELETE FROM orders; DELETE FROM customers; DELETE FROM rate_limits; UPDATE inventory SET on_hand=0,reserved=0 WHERE product_id='paper' AND warehouse_id='wh-main';"]);
 
-const child = spawn("npx", ["--yes", ...wrangler, "dev", "--local", "--persist-to", ".wrangler/commerce-test-state", "--config", "wrangler.test.toml", "--port", port, "--ip", "127.0.0.1"], { stdio: ["ignore", "pipe", "pipe"] });
+const child = spawn("npx", ["--yes", ...wrangler, "dev", "--local", "--persist-to", ".wrangler/commerce-test-state", "--config", "wrangler.test.toml", "--port", port], { stdio: ["ignore", "pipe", "pipe"] });
 let logs = "";
 child.stdout.on("data", d => { logs += d.toString(); });
 child.stderr.on("data", d => { logs += d.toString(); });
