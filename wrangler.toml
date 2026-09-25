@@ -11,9 +11,6 @@ custom_domain = true
 [vars]
 OPENAI_MODEL = "gpt-5.6-terra"
 
-[secrets]
-required = ["OPENAI_API_KEY", "RATE_LIMIT_SALT"]
-
 [[d1_databases]]
 binding = "DB"
 database_name = "secpack-prod"
