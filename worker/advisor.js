@@ -211,6 +211,14 @@ async function handleAdvisor(request, env, origin) {
 }
 
 export default {
+  async scheduled(_controller, env) {
+    if (!env.DB) return;
+    try {
+      const cutoff = Date.now() - (2 * WINDOW_MS);
+      await env.DB.prepare("DELETE FROM rate_limits WHERE window_start < ?1").bind(cutoff).run();
+    } catch (_) {}
+  },
+
   async fetch(request, env) {
     const origin = request.headers.get("Origin");
     if (!origin || !ORIGINS.has(origin)) return response({ error: "Origin not allowed." }, 403, origin);
