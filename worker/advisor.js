@@ -277,6 +277,8 @@ async function handleAdminStatus(request,env,orderId){
         if(!stock || Number(stock.reserved)<Number(item.qty) || Number(stock.on_hand)<Number(item.qty)) return response({error:"Reserved inventory is not available for dispatch."},409,null);
       }
       statements.push(env.DB.prepare("UPDATE orders SET status='dispatched',fulfillment_status='dispatched',updated_at=?1 WHERE id=?2").bind(now,orderId));
+      statements.push(env.DB.prepare("INSERT OR IGNORE INTO shipments(id,order_id,status,origin,destination,shipped_at,created_at,updated_at) VALUES(?1,?2,'dispatched','',?3,?4,?4,?4)").bind(crypto.randomUUID(),orderId,order.destination,now));
+      statements.push(env.DB.prepare("UPDATE shipments SET status='dispatched',destination=?1,shipped_at=COALESCE(shipped_at,?2),updated_at=?2 WHERE order_id=?3").bind(order.destination,now,orderId));
       for(const item of items.results||[]){
         statements.push(env.DB.prepare("UPDATE inventory SET on_hand=on_hand-?1,reserved=reserved-?1,updated_at=?2 WHERE product_id=?3 AND warehouse_id='wh-main'").bind(Number(item.qty),now,item.product_id));
         statements.push(env.DB.prepare("INSERT INTO stock_movements(id,product_id,warehouse_id,order_id,movement_type,qty,reference,created_at) VALUES(?1,?2,'wh-main',?3,'sale',?4,?5,?6)").bind(crypto.randomUUID(),item.product_id,orderId,Number(item.qty),order.order_no,now));
@@ -285,6 +287,7 @@ async function handleAdminStatus(request,env,orderId){
       if(["dispatched","in_transit","delivered","cancelled"].includes(order.status)) return response({error:"Invalid cancellation transition."},409,null);
       const items=order.fulfillment_status==="reserved" ? await env.DB.prepare("SELECT product_id,qty FROM order_items WHERE order_id=?1").bind(orderId).all() : {results:[]};
       statements.push(env.DB.prepare("UPDATE orders SET status='cancelled',fulfillment_status='cancelled',updated_at=?1 WHERE id=?2").bind(now,orderId));
+      statements.push(env.DB.prepare("UPDATE shipments SET status='cancelled',updated_at=?1 WHERE order_id=?2 AND status NOT IN ('delivered','cancelled')").bind(now,orderId));
       for(const item of items.results||[]){
         const stock=await env.DB.prepare("SELECT reserved FROM inventory WHERE product_id=?1 AND warehouse_id='wh-main'").bind(item.product_id).first();
         if(!stock || Number(stock.reserved)<Number(item.qty)) return response({error:"Reserved inventory state is inconsistent."},409,null);
@@ -303,6 +306,11 @@ async function handleAdminStatus(request,env,orderId){
       const fulfillment=status==="preparing"?"preparing":status==="in_transit"?"in_transit":status==="delivered"?"delivered":order.fulfillment_status;
       const paymentStatus=status==="paid"?"paid":order.payment_status;
       statements.push(env.DB.prepare("UPDATE orders SET status=?1,payment_status=?2,fulfillment_status=?3,updated_at=?4 WHERE id=?5").bind(status,paymentStatus,fulfillment,now,orderId));
+      if(status==="in_transit"){
+        statements.push(env.DB.prepare("UPDATE shipments SET status='in_transit',updated_at=?1 WHERE order_id=?2").bind(now,orderId));
+      }else if(status==="delivered"){
+        statements.push(env.DB.prepare("UPDATE shipments SET status='delivered',delivered_at=COALESCE(delivered_at,?1),updated_at=?1 WHERE order_id=?2").bind(now,orderId));
+      }
       if(status==="paid"){
         if(Number(order.total_minor)<=0) return response({error:"Commercial total must be greater than zero before payment."},409,null);
         const paymentMethod=order.payment_method||"";
@@ -317,6 +325,7 @@ async function handleAdminStatus(request,env,orderId){
       }
     }
     statements.push(env.DB.prepare("INSERT INTO audit_log(id,actor_type,actor_id,action,entity_type,entity_id,details_json,created_at) VALUES(?1,'admin','admin','order.status_changed','order',?2,?3,?4)").bind(crypto.randomUUID(),orderId,JSON.stringify({status}),now));
+    statements.push(env.DB.prepare("INSERT INTO notification_outbox(id,event_type,entity_type,entity_id,payload_json,status,attempts,created_at,updated_at) VALUES(?1,?2,'order',?3,?4,'pending',0,?5,?5)").bind(crypto.randomUUID(),"order."+status,orderId,JSON.stringify({orderNo:order.order_no,status,customerId:order.customer_id,destination:order.destination}),now));
     await env.DB.batch(statements);
     return response({ok:true,orderId,status},200,null);
   }catch(_){return response({error:"Status change failed; no partial change was committed."},409,null);}
