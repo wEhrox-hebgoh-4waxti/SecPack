@@ -1,4 +1,4 @@
-const AI_ENDPOINT = "/api/advisor";
+const AI_ENDPOINT = "https://api.secpackco.com";
 
 const TEXT = {
   en: {
