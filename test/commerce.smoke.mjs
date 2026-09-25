@@ -1,12 +1,11 @@
 import { spawn, execFileSync } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
 
-const port = "8787";
+const stage = process.argv[2] || "all";
+const port = stage === "catalog" ? "8787" : "8788";
 const base = "http://127.0.0.1:" + port;
 const origin = "https://secpackco.com";
 const wrangler = ["wrangler@4.141.0"];
-const stage = process.argv[2] || "all";
-
 function run(args) {
   return execFileSync("npx", ["--yes", ...wrangler, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 }
