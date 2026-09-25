@@ -5,6 +5,7 @@ const port = "8787";
 const base = "http://127.0.0.1:" + port;
 const origin = "https://secpackco.com";
 const wrangler = ["wrangler@4.102.0"];
+const stage = process.argv[2] || "all";
 
 function run(args) {
   return execFileSync("npx", ["--yes", ...wrangler, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -42,6 +43,7 @@ try {
   if (!catalog.products?.some(p => p.id === "paper" && p.sku === "SEC-A4-80")) throw new Error("catalog missing A4");
 
   await expectStatus(await req("/admin/orders", { method: "GET", headers: { Authorization: "Bearer wrong-key" }}), 401, "admin protection");
+  if(stage==="catalog"){ child.kill("SIGTERM"); console.log("COMMERCE_CATALOG_OK"); process.exit(0); }
 
   const requestId = crypto.randomUUID();
   const orderPayload = {
