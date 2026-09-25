@@ -33,5 +33,8 @@ jobs:
       - name: Validate local D1 migrations
         run: npx --yes wrangler@4.102.0 d1 migrations apply DB --local --persist-to .wrangler/commerce-test-state
 
-      - name: Run end-to-end commerce smoke test
-        run: node test/commerce.smoke.mjs
+      - name: Smoke test public catalog and access boundaries
+        run: node test/commerce.smoke.mjs catalog
+
+      - name: Smoke test order, accounting and fulfillment lifecycle
+        run: node test/commerce.smoke.mjs all
