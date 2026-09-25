@@ -28,7 +28,7 @@ function renderProducts(){
   });
 }
 function save(){localStorage.setItem("secpack-cart",JSON.stringify(items));render()}
-function addToCart(id){if(!productNames[id])return;const x=items.find(i=>i.id===id);if(x)x.qty++;else items.push({id,qty:1});save();document.getElementById("orderPanel")?.classList.add("open")}
+function addToCart(id){if(!catalog.some(p=>p.id===id))return;const x=items.find(i=>i.id===id);if(x)x.qty++;else items.push({id,qty:1});save();document.getElementById("orderPanel")?.classList.add("open")}
 function changeQty(id,delta){const x=items.find(i=>i.id===id);if(!x)return;x.qty+=delta;if(x.qty<1)items.splice(items.indexOf(x),1);save()}
 function render(){
   const translate=t();
@@ -40,7 +40,7 @@ function render(){
   if(!items.length){const empty=document.createElement("p");empty.textContent=translate("dynamic.cartEmpty");rows.appendChild(empty);return;}
   items.forEach(item=>{
     const row=document.createElement("div");row.className="cart-row";
-    const strong=document.createElement("strong");strong.textContent=translate(productNames[item.id]);
+    const strong=document.createElement("strong");const product=catalog.find(p=>p.id===item.id);strong.textContent=product?(product.name?.[document.documentElement.lang]||product.name?.en||item.id):translate(productNames[item.id]||item.id);
     const controls=document.createElement("span");controls.className="qty";
     const minus=document.createElement("button");minus.type="button";minus.dataset.qtyChange="-1";minus.dataset.itemId=item.id;minus.title=translate("dynamic.decrease");minus.setAttribute("aria-label",translate("dynamic.decrease"));minus.textContent="−";
     const qty=document.createElement("span");qty.textContent=String(item.qty);
