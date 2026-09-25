@@ -68,7 +68,7 @@ try {
     body: JSON.stringify({ status: "confirmed" })
   }), 409, "insufficient stock");
 
-  run(["d1", "execute", "DB", "--local", "--command", "UPDATE inventory SET on_hand=20 WHERE product_id='paper' AND warehouse_id='wh-main';"]);
+  run(["d1", "execute", "DB", "--local", "--command", "UPDATE inventory SET on_hand=20 WHERE product_id='paper' AND warehouse_id='wh-main'; UPDATE orders SET subtotal_minor=25000,total_minor=25000 WHERE order_no='" + firstBody.orderNo + "';"]);
 
   await expectStatus(await req("/admin/orders/" + order.id + "/status", {
     method: "POST", headers: { Authorization: "Bearer test-admin-key", "Content-Type": "application/json" },
@@ -93,6 +93,7 @@ try {
   const invoiceCheck = JSON.parse(run(["d1", "execute", "DB", "--local", "--json", "--command", "SELECT COUNT(*) AS n FROM invoices; SELECT COUNT(*) AS n FROM payments; SELECT COALESCE(SUM(debit_minor),0) AS debit, COALESCE(SUM(credit_minor),0) AS credit FROM accounting_lines;"]));
   const outputText = JSON.stringify(invoiceCheck);
   if (!outputText.includes('"n":1')) throw new Error("invoice/payment record missing");
+  if (!outputText.includes('"debit":50000') || !outputText.includes('"credit":50000')) throw new Error("accounting ledger is not balanced");
 
   await expectStatus(await req("/admin/orders/" + order.id + "/status", {
     method: "POST", headers: { Authorization: "Bearer test-admin-key", "Content-Type": "application/json" },
