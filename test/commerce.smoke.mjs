@@ -96,13 +96,23 @@ try {
 
   await expectStatus(await req("/admin/orders/" + order.id + "/status", {
     method: "POST", headers: { Authorization: "Bearer test-admin-key", "Content-Type": "application/json" },
-    body: JSON.stringify({ status: "preparing" })
-  }), 200, "preparing");
+    body: JSON.stringify({ status: "dispatched" })
+  }), 200, "dispatch");
+
+  await expectStatus(await req("/admin/orders/" + order.id + "/status", {
+    method: "POST", headers: { Authorization: "Bearer test-admin-key", "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "in_transit" })
+  }), 200, "in transit");
+
+  await expectStatus(await req("/admin/orders/" + order.id + "/status", {
+    method: "POST", headers: { Authorization: "Bearer test-admin-key", "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "delivered" })
+  }), 200, "delivery");
 
   await expectStatus(await req("/admin/orders/" + order.id + "/status", {
     method: "POST", headers: { Authorization: "Bearer test-admin-key", "Content-Type": "application/json" },
     body: JSON.stringify({ status: "dispatched" })
-  }), 409, "dispatch without reservation state");
+  }), 409, "redispatch");
 
   child.kill("SIGTERM");
   console.log("COMMERCE_SMOKE_OK");
