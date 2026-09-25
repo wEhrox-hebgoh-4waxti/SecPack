@@ -249,7 +249,7 @@ async function handleAdminStatus(request,env,orderId){
     const now=new Date().toISOString(),statements=[];
     if(status==="confirmed"){
       if(!["received","awaiting_payment"].includes(order.status)) return response({error:"Invalid order transition."},409,null);
-      const items=await env.DB.prepare("SELECT product_id,qty FROM order_items WHERE order_id=?1").bind(orderId).all();
+      const items=await env.DB.prepare("SELECT id,product_id,qty FROM order_items WHERE order_id=?1").bind(orderId).all();
       for(const item of items.results||[]){
         const stock=await env.DB.prepare("SELECT on_hand,reserved FROM inventory WHERE product_id=?1 AND warehouse_id='wh-main'").bind(item.product_id).first();
         if(!stock || Number(stock.on_hand)-Number(stock.reserved)<Number(item.qty)) return response({error:"Insufficient inventory for this order."},409,null);
