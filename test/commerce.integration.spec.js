@@ -116,7 +116,7 @@ describe("SEC PACK commerce flow", () => {
   it("posts a balanced ledger entry exactly when payment is confirmed", async () => {
     await createOrder();
     const orderId = (await env.DB.prepare("SELECT id,total_minor FROM orders LIMIT 1").first()).id;
-    await env.DB.prepare("UPDATE orders SET status='awaiting_payment' WHERE id=?1").bind(orderId).run();
+    await env.DB.prepare("UPDATE orders SET status='awaiting_payment',total_minor=25000 WHERE id=?1").bind(orderId).run();
 
     const paid = await exports.default.fetch(request("/admin/orders/" + orderId + "/status", {
       method: "POST",
@@ -126,10 +126,11 @@ describe("SEC PACK commerce flow", () => {
     expect(paid.status).toBe(200);
 
     const payment = await env.DB.prepare("SELECT amount_minor FROM payments WHERE order_id=?1").bind(orderId).first();
-    expect(payment.amount_minor).toBe(0);
+    expect(payment.amount_minor).toBe(25000);
 
     const totals = await env.DB.prepare("SELECT COALESCE(SUM(debit_minor),0) AS debit,COALESCE(SUM(credit_minor),0) AS credit FROM accounting_lines WHERE entry_id=(SELECT id FROM accounting_entries WHERE source_id=?1 ORDER BY created_at DESC LIMIT 1)").bind(orderId).first();
-    expect(totals.debit).toBe(totals.credit);
+    expect(totals.debit).toBe(25000);
+    expect(totals.credit).toBe(25000);
   });
 
   it("does not allow invalid fulfillment transitions", async () => {
