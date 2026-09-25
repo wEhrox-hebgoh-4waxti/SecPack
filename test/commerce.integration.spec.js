@@ -149,6 +149,30 @@ describe("SEC PACK commerce flow", () => {
     expect(delivered.status).toBe(409);
   });
 
+  it("releases reserved stock when a confirmed order is cancelled", async () => {
+    await createOrder();
+    const orderId = (await env.DB.prepare("SELECT id FROM orders LIMIT 1").first()).id;
+    await env.DB.prepare("UPDATE inventory SET on_hand=20 WHERE product_id='paper' AND warehouse_id='wh-main'").run();
+
+    const confirmed = await exports.default.fetch(request("/admin/orders/" + orderId + "/status", {
+      method: "POST",
+      headers: { Authorization: "Bearer test-admin-key", "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "confirmed" })
+    }));
+    expect(confirmed.status).toBe(200);
+
+    const cancelled = await exports.default.fetch(request("/admin/orders/" + orderId + "/status", {
+      method: "POST",
+      headers: { Authorization: "Bearer test-admin-key", "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "cancelled" })
+    }));
+    expect(cancelled.status).toBe(200);
+
+    const stock = await env.DB.prepare("SELECT on_hand,reserved FROM inventory WHERE product_id='paper' AND warehouse_id='wh-main'").first();
+    expect(stock.on_hand).toBe(20);
+    expect(stock.reserved).toBe(0);
+  });
+
   it("dispatches only after reservation and reduces on-hand stock exactly once", async () => {
     await createOrder();
     const orderId = (await env.DB.prepare("SELECT id FROM orders LIMIT 1").first()).id;
