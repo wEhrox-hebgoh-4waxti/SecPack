@@ -1,6 +1,6 @@
 name = "secpack"
 main = "worker/advisor.js"
-compatibility_date = "2026-09-24"
+compatibility_date = "2026-09-25"
 workers_dev = false
 preview_urls = false
 
@@ -9,4 +9,13 @@ pattern = "api.secpackco.com"
 custom_domain = true
 
 [vars]
-OPENAI_MODEL = "gpt-5.5"
+OPENAI_MODEL = "gpt-5.6-terra"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "secpack-prod"
+database_id = "a0c162d5-2706-428c-9be8-802968b2273c"
+migrations_dir = "migrations"
+
+[triggers]
+crons = ["*/15 * * * *"]
