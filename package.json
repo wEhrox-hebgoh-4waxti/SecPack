@@ -7,7 +7,6 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@cloudflare/vitest-plugin": "^1.0.0",
     "vitest": "^4.1.0",
     "wrangler": "^4.102.0"
   }
