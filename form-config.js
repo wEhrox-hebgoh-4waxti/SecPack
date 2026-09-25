@@ -1,5 +1,5 @@
 window.SEC_PACK_FORMS = Object.freeze({
-  endpoint: ""
+  endpoint: "https://api.secpackco.com/forms"
 });
 
 (function(){
@@ -23,7 +23,7 @@ window.SEC_PACK_FORMS = Object.freeze({
       if(value!==undefined && value!==null) body.append(key,String(value));
     });
     body.append("form_type",type);
-    body.append("subject","SEC PACK — "+type);
+    body.append("_request_id",crypto.randomUUID());
     try{
       const response=await fetch(endpoint,{
         method:"POST",

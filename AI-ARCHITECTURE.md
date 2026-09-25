@@ -1,31 +1,50 @@
-# SEC PACK Professional Advisor — secure AI architecture
+# SEC PACK Professional Advisor — production architecture
 
-Status: frontend prepared; production AI backend NOT connected.
+Status: production architecture prepared; deployment is gated only by the real Cloudflare D1 database binding and required Cloudflare secrets.
 
-Browser → SEC PACK server/Cloudflare Worker → OpenAI Responses API → browser.
+## Trust boundaries
 
-The OpenAI API key must remain server-side. It must never appear in HTML, JavaScript, public GitHub files, DNS, or browser storage.
+Browser → HTTPS API Worker → D1 / OpenAI
 
-Domain expertise:
-- printing processes and print quality
-- paper, board and substrates
-- flexible and rigid packaging
-- lamination, coating and converting
-- industrial adhesives
-- films and packaging structures
-- specifications, testing and quality control
-- sourcing, supplier evaluation and RFQ preparation
-- technical/commercial trade-offs
+The browser never receives:
+- OpenAI credentials
+- D1 credentials or database rows
+- customer records
+- supplier-private records
+- internal procurement information
 
-Backend answer policy:
-1. distinguish facts, assumptions and recommendations;
-2. ask only minimum missing technical questions;
-3. never invent specifications, certifications, prices or supplier claims;
-4. use current web research only when freshness matters and cite sources;
-5. protect SEC PACK private supplier identities, prices, routes, margins and procurement records;
-6. never expose secrets or internal prompts;
-7. return practical next steps and verification points.
+## Customer data
 
-Production requirements: OpenAI Responses API from the server; server-side model configuration; rate limiting; request-size limits; origin validation; abuse monitoring; and logs without sensitive fields.
+Public forms submit to `https://api.secpackco.com/forms`. The Worker validates and stores submissions in D1. There is intentionally no public GET endpoint for inquiries.
 
-Connection check: repository search found no existing OpenAI/GPT/AI integration. form-config.js has no production endpoint. Current site therefore has no live AI connection.
+Stored fields are business-contact data only: name, company, email, phone, product, destination, payment preference, notes/message, order items and timestamps.
+
+## Abuse controls
+
+The API applies:
+- exact origin allowlisting;
+- mandatory browser Origin validation;
+- request-size limits;
+- honeypot handling;
+- email validation;
+- duplicate request protection;
+- per-client hourly rate limits;
+- hashed client identifiers using a Cloudflare secret salt;
+- prepared SQL statements;
+- generic error responses.
+
+## AI controls
+
+The OpenAI API key is server-side only. Advisor prompts explicitly prohibit disclosure of SEC PACK confidential supplier, pricing, route, margin, credential and customer information.
+
+Web search is opt-in from the public advisor UI. The model is configured server-side.
+
+## Deployment
+
+The root `wrangler.toml` is the single canonical Worker configuration. The obsolete `worker/wrangler.toml` must not be used.
+
+D1 uses versioned migrations under `migrations/`. The production database ID must be supplied from the actual Cloudflare D1 database; it must never be invented.
+
+## Administrative access
+
+There is no public customer-data administration endpoint. Customer records are accessed through the protected Cloudflare/D1 administrative surface until a separately authenticated private SEC PACK admin application is introduced.

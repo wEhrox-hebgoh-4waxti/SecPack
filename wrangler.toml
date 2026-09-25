@@ -1,6 +1,6 @@
 name = "secpack"
 main = "worker/advisor.js"
-compatibility_date = "2026-09-24"
+compatibility_date = "2026-09-25"
 workers_dev = false
 preview_urls = false
 
@@ -9,4 +9,7 @@ pattern = "api.secpackco.com"
 custom_domain = true
 
 [vars]
-OPENAI_MODEL = "gpt-5.5"
+OPENAI_MODEL = "gpt-5.6-terra"
+
+# D1 production binding must be added with the real database_id from Cloudflare.
+# database_id is intentionally not fabricated in source control.
