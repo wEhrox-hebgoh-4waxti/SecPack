@@ -118,6 +118,7 @@ async function handleForm(request, env, origin) {
   const message = text(form.get("message"), 4000);
   const items = text(form.get("items"), 4000);
   const requestId = text(form.get("_request_id"), 80);
+  const visitorDetails = type === "visitor" ? JSON.stringify({ location: text(form.get("location"), 160), role: text(form.get("role"), 160), business: text(form.get("business"), 240), interest: text(form.get("interest"), 240), mobile: text(form.get("mobile"), 80), website: text(form.get("website"), 300) }) : null;
 
   if (!name || !email || !validEmail(email)) return response({ error: "Please provide a valid name and email address." }, 400, origin);
   if (type === "order" && !product && !items) return response({ error: "Order details are required." }, 400, origin);
@@ -132,8 +133,8 @@ async function handleForm(request, env, origin) {
     }
 
     await env.DB.prepare(
-      "INSERT INTO inquiries (id,request_id,form_type,name,company,email,phone,product,destination,payment,notes,message,items,created_at) " +
-      "VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14)"
+      "INSERT INTO inquiries (id,request_id,form_type,name,company,email,phone,product,destination,payment,notes,message,items,created_at,visitor_details) " +
+      "VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)"
     ).bind(id, requestId || null, type, name, company, email, phone, product, destination, payment, notes, message, items, now).run();
 
     return response({ ok: true }, 202, origin);
