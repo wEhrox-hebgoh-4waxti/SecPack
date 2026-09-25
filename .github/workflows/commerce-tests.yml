@@ -30,5 +30,8 @@ jobs:
       - name: Validate Wrangler Worker bundle
         run: npx --yes wrangler@4.102.0 deploy --dry-run --config wrangler.toml
 
+      - name: Validate local D1 migrations
+        run: npx --yes wrangler@4.102.0 d1 migrations apply DB --local --persist-to .wrangler/commerce-test-state
+
       - name: Run end-to-end commerce smoke test
         run: node test/commerce.smoke.mjs
