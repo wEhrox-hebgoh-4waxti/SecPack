@@ -112,6 +112,11 @@ try {
     body: JSON.stringify({ status: "delivered" })
   }), 200, "delivery");
 
+  const opsCheck = JSON.parse(run(["d1", "execute", "DB", "--local", "--persist-to", ".wrangler/commerce-test-state", "--json", "--command", "SELECT status FROM shipments WHERE order_id='" + order.id + "'; SELECT event_type,status FROM notification_outbox WHERE entity_id='" + order.id + "' ORDER BY created_at;"]));
+  const opsText = JSON.stringify(opsCheck);
+  if (!opsText.includes('"status":"delivered"')) throw new Error("shipment tracking was not synchronized");
+  if (!opsText.includes('"event_type":"order.dispatched"') || !opsText.includes('"event_type":"order.in_transit"') || !opsText.includes('"event_type":"order.delivered"')) throw new Error("operational notifications missing");
+
   await expectStatus(await req("/admin/orders/" + order.id + "/status", {
     method: "POST", headers: { Authorization: "Bearer test-admin-key", "Content-Type": "application/json" },
     body: JSON.stringify({ status: "dispatched" })
