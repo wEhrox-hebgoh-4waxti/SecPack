@@ -1,24 +1,37 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="SEC PACK Professional Advisor for printing, packaging, paper, films, adhesives and converting.">
-<meta name="robots" content="index, follow"><link rel="canonical" href="https://secpackco.com/pages/advisor.html">
-<link rel="icon" href="../logo.jpg"><link rel="stylesheet" href="../style.css"><title>SEC PACK Professional Advisor</title>
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://secpackco.com/pages/advisor.html">
+<link rel="icon" href="../logo.jpg"><link rel="stylesheet" href="../style.css">
+<title>SEC PACK | Professional Advisor</title>
 </head>
 <body>
-<header class="topbar"><a class="brand" href="../index.html"><img src="../logo.jpg" alt="SEC PACK"><span><b>SEC PACK</b><small>Professional Advisor</small></span></a>
-<div class="langs"><button type="button" data-lang="en">EN</button><button type="button" data-lang="fa">فارسی</button><button type="button" data-lang="ar">العربي</button></div></header>
-<main id="main-content"><section class="section"><div class="section-head"><span class="eyebrow">SEC PACK · PROFESSIONAL ADVISOR</span>
-<h1>Printing & Packaging Technical Advisor</h1><p>A structured workspace for product selection, specifications, printing, packaging, converting, sourcing and commercial questions.</p></div>
-<div class="card"><form id="advisorForm"><label><span>Question / requirement</span><textarea id="advisorQuestion" rows="7" required placeholder="Describe your product, application, substrate, process, quantity or technical problem..."></textarea></label>
-<div class="grid three"><label><span>Area</span><select id="advisorArea"><option>Printing</option><option>Packaging</option><option>Paper & Board</option><option>Films</option><option>Adhesives</option><option>Converting</option><option>Procurement</option><option>Other</option></select></label>
-<label><span>Language</span><select id="advisorLanguage"><option value="en">English</option><option value="fa">فارسی</option><option value="ar">العربية</option></select></label>
-<label><span>Answer style</span><select id="advisorDepth"><option value="practical">Practical recommendation</option><option value="technical">Technical analysis</option><option value="commercial">Technical + commercial analysis</option></select></label></div>
-<label><input type="checkbox" id="advisorWeb"> Use current public information when freshness matters.</label>
-<button class="btn primary" type="submit" id="advisorSubmit">Start professional discussion</button><p id="advisorStatus" class="form-status" role="status" aria-live="polite"></p></form></div>
-<div class="card"><span class="tag">SEC PACK METHOD</span><h2>How the advisor should work</h2><div class="grid three">
-<article><h3>1. Clarify</h3><p>Separate application, substrate, machine/process, quality target, quantity and destination.</p></article>
-<article><h3>2. Analyze</h3><p>Compare technical options, trade-offs, risks and relevant standards without inventing missing facts.</p></article>
-<article><h3>3. Decide</h3><p>Present assumptions, alternatives and verification steps for the user's decision.</p></article></div></div></section></main>
-<script src="../i18n.js"></script><script src="../assets/js/advisor.js"></script></body></html>
+<header class="topbar">
+<a class="brand" href="../index.html"><img src="../logo.jpg" alt="SEC PACK"><span><b>SEC PACK</b><small data-t="brand">Professional Advisor</small></span></a>
+<div class="langs"><button type="button" data-lang="en">EN</button><button type="button" data-lang="fa">فارسی</button><button type="button" data-lang="ar">العربي</button></div>
+</header>
+<main id="main-content"><section class="section">
+<div class="section-head"><span class="eyebrow" data-t="eyebrow">SEC PACK · PROFESSIONAL ADVISOR</span>
+<h1 data-t="title">Printing & Packaging Technical Advisor</h1><p data-t="intro">A structured workspace for product selection, specifications, printing, packaging, converting, sourcing and commercial questions.</p></div>
+<div class="card"><form id="advisorForm">
+<label><span data-t="question">Question / requirement</span><textarea id="advisorQuestion" rows="7" required placeholder="Describe your product, application, substrate, process, quantity or technical problem..."></textarea></label>
+<div class="grid three"><label><span data-t="area">Area</span><select id="advisorArea">
+<option data-opt="printing">Printing</option><option data-opt="packaging">Packaging</option><option data-opt="paper">Paper & Board</option><option data-opt="films">Films</option><option data-opt="adhesives">Adhesives</option><option data-opt="converting">Converting</option><option data-opt="procurement">Procurement</option><option data-opt="other">Other</option></select></label>
+<label><span data-t="language">Language</span><select id="advisorLanguage"><option value="en">English</option><option value="fa">فارسی</option><option value="ar">العربية</option></select></label>
+<label><span data-t="depth">Answer style</span><select id="advisorDepth"><option value="practical" data-opt="practical">Practical recommendation</option><option value="technical" data-opt="technical">Technical analysis</option><option value="commercial" data-opt="commercial">Technical + commercial analysis</option></select></label></div>
+<label><input type="checkbox" id="advisorWeb"> <span data-t="fresh">Use current public information when freshness matters.</span></label>
+<button class="btn primary" type="submit" id="advisorSubmit" data-t="submit">Start professional discussion</button>
+<p id="advisorStatus" class="form-status" role="status" aria-live="polite"></p>
+</form></div>
+<div class="card"><span class="tag" data-t="method">SEC PACK METHOD</span><h2 data-t="how">How the advisor should work</h2><div class="grid three">
+<article><h3 data-t="clarify">1. Clarify</h3><p data-t="clarifyText">Separate application, substrate, machine/process, quality target, quantity and destination.</p></article>
+<article><h3 data-t="analyze">2. Analyze</h3><p data-t="analyzeText">Compare technical options, trade-offs, risks and relevant standards without inventing missing facts.</p></article>
+<article><h3 data-t="decide">3. Decide</h3><p data-t="decideText">Present assumptions, alternatives and verification steps for the user's decision.</p></article>
+</div></div></section></main>
+<script src="../i18n.js"></script><script src="../assets/js/advisor.js"></script>
+</body></html>
