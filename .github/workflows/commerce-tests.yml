@@ -28,10 +28,10 @@ jobs:
         run: node --check assets/js/pages-store.js
 
       - name: Validate Wrangler Worker bundle
-        run: npx --yes wrangler@4.102.0 deploy --dry-run --config wrangler.toml
+        run: npx --yes wrangler@4.141.0 deploy --dry-run --config wrangler.toml
 
       - name: Validate local D1 migrations
-        run: npx --yes wrangler@4.102.0 d1 migrations apply DB --local --persist-to .wrangler/commerce-test-state
+        run: npx --yes wrangler@4.141.0 d1 migrations apply DB --local --persist-to .wrangler/commerce-test-state
 
       - name: Smoke test public catalog and access boundaries
         run: node test/commerce.smoke.mjs catalog
