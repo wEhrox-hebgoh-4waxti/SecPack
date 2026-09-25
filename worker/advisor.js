@@ -255,7 +255,16 @@ async function handleAdminStatus(request,env,orderId){
         if(!stock || Number(stock.on_hand)-Number(stock.reserved)<Number(item.qty)) return response({error:"Insufficient inventory for this order."},409,null);
       }
       statements.push(env.DB.prepare("UPDATE orders SET status='confirmed',fulfillment_status='reserved',updated_at=?1 WHERE id=?2").bind(now,orderId));
+      const invoiceId=crypto.randomUUID();
+      const invoiceNo="INV-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+crypto.randomUUID().replaceAll("-","").slice(0,6).toUpperCase();
+      const entryId=crypto.randomUUID();
+      const entryNo="JE-"+Date.now()+"-"+crypto.randomUUID().replaceAll("-","").slice(0,6).toUpperCase();
+      statements.push(env.DB.prepare("INSERT INTO invoices(id,invoice_no,order_id,customer_id,status,currency,subtotal_minor,shipping_minor,tax_minor,total_minor,issued_at,created_at,updated_at) VALUES(?1,?2,?3,?4,'issued',?5,?6,?7,?8,?9,?10,?10,?10)").bind(invoiceId,invoiceNo,orderId,order.customer_id,order.currency,Number(order.subtotal_minor),Number(order.shipping_minor),Number(order.tax_minor),Number(order.total_minor),now));
+      statements.push(env.DB.prepare("INSERT INTO accounting_entries(id,entry_no,source_type,source_id,description,entry_date,created_at) VALUES(?1,?2,'order.invoice',?3,?4,?5,?5)").bind(entryId,entryNo,orderId,"Invoice "+invoiceNo,now.slice(0,10)));
+      statements.push(env.DB.prepare("INSERT INTO accounting_lines(id,entry_id,account_id,debit_minor,credit_minor,currency) VALUES(?1,?2,'acct-receivable',?3,0,?4)").bind(crypto.randomUUID(),entryId,Number(order.total_minor),order.currency));
+      statements.push(env.DB.prepare("INSERT INTO accounting_lines(id,entry_id,account_id,debit_minor,credit_minor,currency) VALUES(?1,?2,'acct-sales',0,?3,?4)").bind(crypto.randomUUID(),entryId,Number(order.total_minor),order.currency));
       for(const item of items.results||[]){
+        statements.push(env.DB.prepare("INSERT INTO invoice_items(id,invoice_id,order_item_id,description,qty,unit_price_minor,line_total_minor) SELECT ?1,?2,id,name_snapshot,qty,unit_price_minor,line_total_minor FROM order_items WHERE id=?3").bind(crypto.randomUUID(),invoiceId,item.id));
         statements.push(env.DB.prepare("UPDATE inventory SET reserved=reserved+?1,updated_at=?2 WHERE product_id=?3 AND warehouse_id='wh-main'").bind(Number(item.qty),now,item.product_id));
         statements.push(env.DB.prepare("INSERT INTO stock_movements(id,product_id,warehouse_id,order_id,movement_type,qty,reference,created_at) VALUES(?1,?2,'wh-main',?3,'reservation',?4,?5,?6)").bind(crypto.randomUUID(),item.product_id,orderId,Number(item.qty),order.order_no,now));
       }
@@ -284,7 +293,7 @@ async function handleAdminStatus(request,env,orderId){
     }else{
       const transitions = {
         awaiting_payment: new Set(["received","confirmed"]),
-        paid: new Set(["awaiting_payment","confirmed"]),
+        paid: new Set(["awaiting_payment"]),
         preparing: new Set(["paid","confirmed"]),
         in_transit: new Set(["dispatched"]),
         delivered: new Set(["in_transit"])
@@ -302,6 +311,7 @@ async function handleAdminStatus(request,env,orderId){
         statements.push(env.DB.prepare("INSERT INTO accounting_entries(id,entry_no,source_type,source_id,description,entry_date,created_at) VALUES(?1,?2,'order.payment',?3,?4,?5,?5)").bind(entryId,entryNo,orderId,"Customer payment "+order.order_no,now.slice(0,10)));
         statements.push(env.DB.prepare("INSERT INTO accounting_lines(id,entry_id,account_id,debit_minor,credit_minor,currency) VALUES(?1,?2,?3,?4,0,?5)").bind(crypto.randomUUID(),entryId,accountId,Number(order.total_minor),order.currency));
         statements.push(env.DB.prepare("INSERT INTO accounting_lines(id,entry_id,account_id,debit_minor,credit_minor,currency) VALUES(?1,?2,'acct-receivable',0,?3,?4)").bind(crypto.randomUUID(),entryId,Number(order.total_minor),order.currency));
+        statements.push(env.DB.prepare("UPDATE invoices SET status='paid',paid_at=?1,updated_at=?1 WHERE order_id=?2").bind(now,orderId));
       }
     }
     statements.push(env.DB.prepare("INSERT INTO audit_log(id,actor_type,actor_id,action,entity_type,entity_id,details_json,created_at) VALUES(?1,'admin','admin','order.status_changed','order',?2,?3,?4)").bind(crypto.randomUUID(),orderId,JSON.stringify({status}),now));
