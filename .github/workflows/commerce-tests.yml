@@ -1,0 +1,30 @@
+name: SEC PACK Commerce Tests
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main", "commerce-foundation-v1"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run commerce integration tests
+        run: npm test
