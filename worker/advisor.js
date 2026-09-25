@@ -282,9 +282,27 @@ async function handleAdminStatus(request,env,orderId){
         statements.push(env.DB.prepare("INSERT INTO stock_movements(id,product_id,warehouse_id,order_id,movement_type,qty,reference,created_at) VALUES(?1,?2,'wh-main',?3,'release',?4,?5,?6)").bind(crypto.randomUUID(),item.product_id,orderId,Number(item.qty),order.order_no,now));
       }
     }else{
-      const fulfillment=status==="delivered"?"delivered":order.fulfillment_status;
+      const transitions = {
+        awaiting_payment: new Set(["received","confirmed"]),
+        paid: new Set(["awaiting_payment","confirmed"]),
+        preparing: new Set(["paid","confirmed"]),
+        in_transit: new Set(["dispatched"]),
+        delivered: new Set(["in_transit"])
+      };
+      if(!transitions[status] || !transitions[status].has(order.status)) return response({error:"Invalid order transition."},409,null);
+      const fulfillment=status==="preparing"?"preparing":status==="in_transit"?"in_transit":status==="delivered"?"delivered":order.fulfillment_status;
       const paymentStatus=status==="paid"?"paid":order.payment_status;
       statements.push(env.DB.prepare("UPDATE orders SET status=?1,payment_status=?2,fulfillment_status=?3,updated_at=?4 WHERE id=?5").bind(status,paymentStatus,fulfillment,now,orderId));
+      if(status==="paid"){
+        const paymentMethod=order.payment_method||"";
+        const accountId=paymentMethod.toLowerCase().includes("bank")?"acct-bank":"acct-cash";
+        const entryId=crypto.randomUUID();
+        const entryNo="JE-"+Date.now()+"-"+crypto.randomUUID().replaceAll("-","").slice(0,6).toUpperCase();
+        statements.push(env.DB.prepare("INSERT INTO payments(id,order_id,status,method,amount_minor,currency,provider_ref,created_at) VALUES(?1,?2,'paid',?3,?4,?5,'admin-confirmed',?6)").bind(crypto.randomUUID(),orderId,paymentMethod,Number(order.total_minor),order.currency,now));
+        statements.push(env.DB.prepare("INSERT INTO accounting_entries(id,entry_no,source_type,source_id,description,entry_date,created_at) VALUES(?1,?2,'order.payment',?3,?4,?5,?5)").bind(entryId,entryNo,orderId,"Customer payment "+order.order_no,now.slice(0,10)));
+        statements.push(env.DB.prepare("INSERT INTO accounting_lines(id,entry_id,account_id,debit_minor,credit_minor,currency) VALUES(?1,?2,?3,?4,0,?5)").bind(crypto.randomUUID(),entryId,accountId,Number(order.total_minor),order.currency));
+        statements.push(env.DB.prepare("INSERT INTO accounting_lines(id,entry_id,account_id,debit_minor,credit_minor,currency) VALUES(?1,?2,'acct-receivable',0,?3,?4)").bind(crypto.randomUUID(),entryId,Number(order.total_minor),order.currency));
+      }
     }
     statements.push(env.DB.prepare("INSERT INTO audit_log(id,actor_type,actor_id,action,entity_type,entity_id,details_json,created_at) VALUES(?1,'admin','admin','order.status_changed','order',?2,?3,?4)").bind(crypto.randomUUID(),orderId,JSON.stringify({status}),now));
     await env.DB.batch(statements);
