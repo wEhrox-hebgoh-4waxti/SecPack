@@ -23,10 +23,10 @@ async function expectJson(response) {
   try { return JSON.parse(text); } catch { throw new Error("Invalid JSON response: " + text); }
 }
 
-run(["d1", "migrations", "apply", "DB", "--local"]);
-run(["d1", "execute", "DB", "--local", "--command", "DELETE FROM stock_movements; DELETE FROM audit_log; DELETE FROM notification_outbox; DELETE FROM invoice_items; DELETE FROM invoices; DELETE FROM accounting_lines; DELETE FROM accounting_entries; DELETE FROM payments; DELETE FROM order_items; DELETE FROM orders; DELETE FROM customers; DELETE FROM rate_limits; UPDATE inventory SET on_hand=0,reserved=0 WHERE product_id='paper' AND warehouse_id='wh-main';"]);
+run(["d1", "migrations", "apply", "DB", "--local", "--persist-to", ".wrangler/commerce-test-state"]);
+run(["d1", "execute", "DB", "--local", "--persist-to", ".wrangler/commerce-test-state", "--command", "DELETE FROM stock_movements; DELETE FROM audit_log; DELETE FROM notification_outbox; DELETE FROM invoice_items; DELETE FROM invoices; DELETE FROM accounting_lines; DELETE FROM accounting_entries; DELETE FROM payments; DELETE FROM order_items; DELETE FROM orders; DELETE FROM customers; DELETE FROM rate_limits; UPDATE inventory SET on_hand=0,reserved=0 WHERE product_id='paper' AND warehouse_id='wh-main';"]);
 
-const child = spawn("npx", ["--yes", ...wrangler, "dev", "--local", "--config", "wrangler.test.toml", "--port", port, "--ip", "127.0.0.1"], { stdio: ["ignore", "pipe", "pipe"] });
+const child = spawn("npx", ["--yes", ...wrangler, "dev", "--local", "--persist-to", ".wrangler/commerce-test-state", "--config", "wrangler.test.toml", "--port", port, "--ip", "127.0.0.1", "--persist-to", ".wrangler/commerce-test-state"], { stdio: ["ignore", "pipe", "pipe"] });
 let logs = "";
 child.stdout.on("data", d => { logs += d.toString(); });
 child.stderr.on("data", d => { logs += d.toString(); });
@@ -68,7 +68,7 @@ try {
     body: JSON.stringify({ status: "confirmed" })
   }), 409, "insufficient stock");
 
-  run(["d1", "execute", "DB", "--local", "--command", "UPDATE inventory SET on_hand=20 WHERE product_id='paper' AND warehouse_id='wh-main'; UPDATE orders SET subtotal_minor=25000,total_minor=25000 WHERE order_no='" + firstBody.orderNo + "';"]);
+  run(["d1", "execute", "DB", "--local", "--persist-to", ".wrangler/commerce-test-state", "--command", "UPDATE inventory SET on_hand=20 WHERE product_id='paper' AND warehouse_id='wh-main'; UPDATE orders SET subtotal_minor=25000,total_minor=25000 WHERE order_no='" + firstBody.orderNo + "';"]);
 
   await expectStatus(await req("/admin/orders/" + order.id + "/status", {
     method: "POST", headers: { Authorization: "Bearer test-admin-key", "Content-Type": "application/json" },
@@ -90,7 +90,7 @@ try {
     body: JSON.stringify({ status: "paid" })
   }), 200, "payment");
 
-  const invoiceCheck = JSON.parse(run(["d1", "execute", "DB", "--local", "--json", "--command", "SELECT COUNT(*) AS n FROM invoices; SELECT COUNT(*) AS n FROM payments; SELECT COALESCE(SUM(debit_minor),0) AS debit, COALESCE(SUM(credit_minor),0) AS credit FROM accounting_lines;"]));
+  const invoiceCheck = JSON.parse(run(["d1", "execute", "DB", "--local", "--persist-to", ".wrangler/commerce-test-state", "--json", "--command", "SELECT COUNT(*) AS n FROM invoices; SELECT COUNT(*) AS n FROM payments; SELECT COALESCE(SUM(debit_minor),0) AS debit, COALESCE(SUM(credit_minor),0) AS credit FROM accounting_lines;"]));
   const outputText = JSON.stringify(invoiceCheck);
   if (!outputText.includes('"n":1')) throw new Error("invoice/payment record missing");
   if (!outputText.includes('"debit":50000') || !outputText.includes('"credit":50000')) throw new Error("accounting ledger is not balanced");
