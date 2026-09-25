@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://wehrox-hebgoh-4waxti.github.io/SecPack/sitemap.xml
+Sitemap: https://secpackco.com/sitemap.xml
