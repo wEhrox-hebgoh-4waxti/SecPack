@@ -249,6 +249,7 @@ async function handleAdminStatus(request,env,orderId){
     const now=new Date().toISOString(),statements=[];
     if(status==="confirmed"){
       if(!["received","awaiting_payment"].includes(order.status)) return response({error:"Invalid order transition."},409,null);
+      if(Number(order.total_minor)<=0) return response({error:"Commercial total must be set before order confirmation."},409,null);
       const items=await env.DB.prepare("SELECT id,product_id,qty FROM order_items WHERE order_id=?1").bind(orderId).all();
       for(const item of items.results||[]){
         const stock=await env.DB.prepare("SELECT on_hand,reserved FROM inventory WHERE product_id=?1 AND warehouse_id='wh-main'").bind(item.product_id).first();
@@ -303,6 +304,7 @@ async function handleAdminStatus(request,env,orderId){
       const paymentStatus=status==="paid"?"paid":order.payment_status;
       statements.push(env.DB.prepare("UPDATE orders SET status=?1,payment_status=?2,fulfillment_status=?3,updated_at=?4 WHERE id=?5").bind(status,paymentStatus,fulfillment,now,orderId));
       if(status==="paid"){
+        if(Number(order.total_minor)<=0) return response({error:"Commercial total must be greater than zero before payment."},409,null);
         const paymentMethod=order.payment_method||"";
         const accountId=paymentMethod.toLowerCase().includes("bank")?"acct-bank":"acct-cash";
         const entryId=crypto.randomUUID();
