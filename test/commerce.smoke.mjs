@@ -4,7 +4,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 const port = "8787";
 const base = "http://127.0.0.1:" + port;
 const origin = "https://secpackco.com";
-const wrangler = ["wrangler@4.102.0"];
+const wrangler = ["wrangler@4.141.0"];
 const stage = process.argv[2] || "all";
 
 function run(args) {
