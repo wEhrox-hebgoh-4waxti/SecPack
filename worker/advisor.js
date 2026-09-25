@@ -350,20 +350,23 @@ export default {
   },
 
   async fetch(request, env) {
+    const url = new URL(request.url);
+    const path = url.pathname;
     const origin = request.headers.get("Origin");
-    if (!origin || !ORIGINS.has(origin)) return response({ error: "Origin not allowed." }, 403, origin);
-    if (request.method === "OPTIONS") return response({}, 204, origin);
+
     if (path === "/admin/orders" && request.method === "GET") return handleAdminOrders(request, env);
     if (path.startsWith("/admin/orders/") && path.endsWith("/status") && request.method === "POST") {
-      return handleAdminStatus(request, env, path.slice("/admin/orders/".length, -"/status".length));
+      const orderId = path.slice("/admin/orders/".length, -"/status".length);
+      return orderId ? handleAdminStatus(request, env, orderId) : response({ error: "Order not found." }, 404, null);
     }
-    if (request.method !== "POST") return response({ error: "Method not allowed." }, 405, origin);
 
-    const path = new URL(request.url).pathname;
+    if (!origin || !ORIGINS.has(origin)) return response({ error: "Origin not allowed." }, 403, origin);
+    if (request.method === "OPTIONS") return response({}, 204, origin);
+
     if (path === "/catalog" && request.method === "GET") return handleCatalog(env, origin);
+    if (request.method !== "POST") return response({ error: "Method not allowed." }, 405, origin);
     if (path === "/forms") return handleForm(request, env, origin);
     if (path === "/orders") return handleOrder(request, env, origin);
     if (path === "/advisor" || path === "/") return handleAdvisor(request, env, origin);
     return response({ error: "Not found." }, 404, origin);
-  }
-};
+  }};
