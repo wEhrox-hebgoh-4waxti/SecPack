@@ -79,6 +79,15 @@ jobs:
             exit 1
           fi
 
+      - name: Reject client-side session persistence of customer data
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=.git --exclude='security-audit.yml' --include='*.html' --include='*.js' 'sessionStorage\\.(setItem|removeItem)' .; then
+            echo "Client-side session persistence detected. Keep customer/contact data out of browser storage."
+            exit 1
+          fi
+
       - name: Reject unsafe navigation and third-party executable resources
         shell: bash
         run: |
