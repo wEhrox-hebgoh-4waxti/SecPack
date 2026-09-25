@@ -12,8 +12,6 @@ window.SEC_PACK_FORMS = Object.freeze({
   }
   async function submitPayload(payload,type,statusEl,button){
     const endpoint=window.SEC_PACK_FORMS && window.SEC_PACK_FORMS.endpoint;
-    const draftKey="secpack-"+type+"-draft";
-    try{sessionStorage.setItem(draftKey,JSON.stringify(payload));}catch(_){}
     if(!endpoint){
       setStatus(statusEl,"dynamic.formNotConfigured","local");
       return {ok:false,configured:false};
@@ -35,7 +33,6 @@ window.SEC_PACK_FORMS = Object.freeze({
       let result={};
       try{result=await response.json();}catch(_){}
       if(!response.ok) throw new Error("Form submission failed");
-      try{sessionStorage.removeItem(draftKey);}catch(_){}
       setStatus(statusEl,"dynamic.formSent","success");
       return {ok:true,configured:true,result};
     }catch(error){
