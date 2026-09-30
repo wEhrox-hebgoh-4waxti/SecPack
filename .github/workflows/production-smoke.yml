@@ -1,0 +1,45 @@
+name: SEC PACK Production Smoke Test
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Check production site
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --max-time 20 https://secpackco.com/ > /tmp/home.html
+          grep -q "SEC PACK" /tmp/home.html
+          curl --fail --silent --show-error --location --max-time 20 https://secpackco.com/pages/advisor.html > /tmp/advisor.html
+          grep -q "api.secpackco.com" /tmp/advisor.html
+
+      - name: Check production API health
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --max-time 20 https://api.secpackco.com/health > /tmp/health.json
+          grep -q '"ok":true' /tmp/health.json
+          grep -q '"service":"secpack-api"' /tmp/health.json
+
+      - name: Check API rejects unauthenticated public POSTs
+        shell: bash
+        run: |
+          set -euo pipefail
+          code=$(curl --silent --show-error --location --max-time 20 -o /tmp/rejected.json -w "%{http_code}" \
+            -X POST https://api.secpackco.com/advisor \
+            -H "Content-Type: application/json" \
+            --data '{"question":"smoke test"}')
+          test "$code" = "403"
