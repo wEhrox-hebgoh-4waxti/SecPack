@@ -509,8 +509,15 @@ async function adminAccounting(request,env,origin){
     if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
     const journal=await buildJournal(env,{referenceType:"stock_receipt",referenceId:id,description:"Stock purchase / receipt",currency,requestId,lines:[{accountId:"inventory",side:"debit",amount:total},{accountId,side:"credit",amount:total}]});
     if(!journal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
+    if(p.currency!==currency)return response({error:"Receipt currency must match product currency."},409,origin);
+    const oldStock=Number(p.stock_qty||0),oldCost=Number(p.unit_cost_minor||0);
+    const weightedDen=oldStock+qty;
+    const weightedNum=safeMultiply(oldStock,oldCost);
+    const receiptWeighted=safeMultiply(qty,unitCost);
+    if(weightedNum===null||receiptWeighted===null||weightedDen<=0)return response({error:"Inventory valuation is outside the supported range."},409,origin);
+    const weightedCost=Math.floor((weightedNum+receiptWeighted)/weightedDen);
     try{
-      await env.DB.batch([env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,updated_at=?2 WHERE id=?3").bind(qty,now,productId),
+      await env.DB.batch([env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,unit_cost_minor=?2,updated_at=?3 WHERE id=?4").bind(qty,weightedCost,now,productId),
         env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RESTOCK',?3,?4,?5,?6,?7)").bind(crypto.randomUUID(),productId,qty,id,(text(b.note,240)||"Stock receipt")+" · Warehouse: Gorgan",requestId,now),
         ...journal.statements,
         await auditStatement(env,{action:"STOCK_RECEIPT",entityType:"stock",entityId:id,after:{product_id:productId,quantity:qty,total_minor:total,currency},requestId})]);
