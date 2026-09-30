@@ -69,10 +69,10 @@ async function rateLimit(env,request,bucket,limit){
 async function signSession(payload,env){
   const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(env[ADMIN_KEY]),{name:"HMAC",hash:"SHA-256"},false,["sign","verify"]);
   const sig=await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(payload));
-  return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\\+/g,"-").replace(/\\//g,"_").replace(/=+$/,"");
+  return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 }
 async function verifySession(request,env){
-  const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\\s*)sp_admin=([^;]+)/);if(!m||!env[ADMIN_KEY])return false;
+  const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\s*)sp_admin=([^;]+)/);if(!m||!env[ADMIN_KEY])return false;
   const parts=decodeURIComponent(m[1]).split(".");if(parts.length!==2)return false;
   const payload=parts[0],sig=parts[1],ts=Number(payload);if(!Number.isFinite(ts)||Date.now()-ts>8*60*60*1000||Date.now()<ts-60000)return false;
   const expected=await signSession(payload,env);return expected===sig;
