@@ -317,7 +317,7 @@ async function createOrder(data,env,origin){
 }
 
 async function catalog(env){
-  const rows=await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price_minor,stock_qty,active FROM products WHERE active=1 AND unit_price_minor>0 ORDER BY id").all();
+  const rows=await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price_minor,stock_qty,reserved_qty,active FROM products WHERE active=1 AND unit_price_minor>0 ORDER BY id").all();
   return rows.results.map(p=>({...p,available_qty:Math.max(0,Number(p.stock_qty||0)-Number(p.reserved_qty||0)),unit_price:minorToMoney(p.unit_price_minor,p.currency),unit_price_minor:Number(p.unit_price_minor)}));
 }
 async function adminDashboard(env){
