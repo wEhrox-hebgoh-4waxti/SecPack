@@ -76,6 +76,12 @@ async function readJson(request,max=MAX_BODY){
 async function ensureReady(env){return Boolean(env.DB&&env[KEY]);}
 
 let operationsSchemaPromise=null;
+async function ensureColumn(env,table,column,definition){
+  const allowed=new Set(["inquiries","products","orders","order_items","inventory_ledger","accounting_ledger"]);
+  if(!allowed.has(table))throw new Error("invalid_table");
+  const rows=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];
+  if(!rows.some(x=>x.name===column))await env.DB.prepare("ALTER TABLE "+table+" ADD COLUMN "+column+" "+definition).run();
+}
 async function auditStatement(env,{action,entityType,entityId,before=null,after=null,requestId=null,actor="admin"}){
   return env.DB.prepare("INSERT INTO audit_log(id,actor,action,entity_type,entity_id,before_json,after_json,request_id,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)")
     .bind(crypto.randomUUID(),actor,action,entityType,entityId||null,before?JSON.stringify(before):null,after?JSON.stringify(after):null,requestId||null,new Date().toISOString());
@@ -117,7 +123,25 @@ async function ensureOperationsSchema(env){
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_supply_milestones_status_due ON supply_milestones(status,due_date)"),
       env.DB.prepare("INSERT OR IGNORE INTO operational_settings(key,value,updated_at) VALUES ('low_stock_threshold','100',datetime('now'))"),
       env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,created_at,updated_at) VALUES ('cash','صندوق','cash','USD',datetime('now'),datetime('now')),('bank','بانک','bank','USD',datetime('now'),datetime('now')),('receivables','حساب‌های دریافتنی','receivable','USD',datetime('now'),datetime('now')),('payable','حساب‌های پرداختنی','payable','USD',datetime('now'),datetime('now')),('inventory','موجودی کالا','inventory','USD',datetime('now'),datetime('now')),('expense','هزینه‌ها','expense','USD',datetime('now'),datetime('now')),('income','درآمد','income','USD',datetime('now'),datetime('now'))")
-    ]).then(()=>true).catch(()=>false);
+    ]).then(async()=>{
+      await ensureColumn(env,"inquiries","visitor_details","TEXT");
+      await ensureColumn(env,"products","unit_price_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"products","warehouse","TEXT NOT NULL DEFAULT 'Gorgan'");
+      await ensureColumn(env,"orders","request_id","TEXT");
+      await ensureColumn(env,"orders","subtotal_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"orders","total_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"order_items","unit_price_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"order_items","line_total_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"inventory_ledger","warehouse","TEXT NOT NULL DEFAULT 'Gorgan'");
+      await ensureColumn(env,"accounting_ledger","amount_minor","INTEGER NOT NULL DEFAULT 0");
+      await env.DB.batch([
+        env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('paper','A4 Copy Paper','کاغذ کپی A4','ورق نسخ A4','ream','USD',0,0,0,0,0,'Gorgan',1,datetime('now'))"),
+        env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('film','Lamination Films','فیلم لمینیشن','أفلام التغليف','kg','USD',0,0,0,0,0,'Gorgan',0,datetime('now'))"),
+        env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('adhesive','Water-Based Adhesives','چسب‌های پایه آب','لاصقات مائية','kg','USD',0,0,0,0,0,'Gorgan',0,datetime('now'))"),
+        env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('packaging','Packaging Materials','مواد بسته‌بندی','مواد التغليف','unit','USD',0,0,0,0,0,'Gorgan',0,datetime('now'))")
+      ]);
+      return true;
+    }).catch(()=>false);
   }
   return operationsSchemaPromise;
 }
