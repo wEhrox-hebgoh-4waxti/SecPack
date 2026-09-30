@@ -181,3 +181,17 @@ button{font-family:inherit}
 .product-card:hover,.card:hover{border-color:#8fd6e6}
 .cta{background:linear-gradient(125deg,#071321,#0d4d68 65%,#087f9d)}
 @media(max-width:560px){.hero h1{font-size:34px}.hero-brand{width:96px;height:96px;margin-bottom:18px}.section-tight{padding-left:6%;padding-right:6%}}
+
+/* Final homepage visual balance */
+.hero h1{font-size:clamp(30px,4vw,45px);max-width:720px}
+.hero p{font-size:16px}
+.hero .actions{margin-top:24px}
+.section:not(.dark) .card{background:linear-gradient(145deg,#ffffff 0%,#f5fbfd 100%);border-color:#cdeaf2}
+.section:not(.dark) .card:nth-child(3n+1){box-shadow:0 14px 38px rgba(19,168,216,.10)}
+.section:not(.dark) .card:nth-child(3n+2){box-shadow:0 14px 38px rgba(77,221,180,.09)}
+.section:not(.dark) .card:nth-child(3n){box-shadow:0 14px 38px rgba(245,166,35,.08)}
+.product-card:nth-child(4n+1){background:linear-gradient(145deg,#fff,#effbff)}
+.product-card:nth-child(4n+2){background:linear-gradient(145deg,#fff,#f1fffa)}
+.product-card:nth-child(4n+3){background:linear-gradient(145deg,#fff,#fff8eb)}
+.product-card:nth-child(4n){background:linear-gradient(145deg,#fff,#f7f1ff)}
+@media(max-width:560px){.hero h1{font-size:30px;line-height:1.08}.hero p{font-size:14px}}
