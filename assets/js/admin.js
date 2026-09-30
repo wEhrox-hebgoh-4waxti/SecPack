@@ -40,6 +40,17 @@ function renderProducts(ps){
   ps.filter(p=>p.active).forEach(p=>{const o=el("option",p.name_fa);o.value=p.id;rf.append(o);});
   $("receiptProduct")?.replaceChildren(rf);
 }
+function renderAuditLog(rows){
+  const box=$("auditLog"); if(!box)return;
+  const frag=document.createDocumentFragment();
+  if(!rows.length){frag.append(el("span","هنوز تغییری ثبت نشده است."));box.replaceChildren(frag);return;}
+  rows.slice(0,40).forEach(x=>{
+    const item=el("div"); item.className="alert-item";
+    item.append(el("b",x.action+" · "+x.entity_type),el("br"),el("span",x.entity_id||"—"),el("br"),el("small",new Date(x.created_at).toLocaleString()));
+    frag.append(item);
+  });
+  box.replaceChildren(frag);
+}
 function renderOrders(os){
   const frag=document.createDocumentFragment();
   os.forEach(o=>{
@@ -51,7 +62,8 @@ function renderOrders(os){
   });
   $("orders").replaceChildren(frag);
 }
-async function load(){try{const d=await api("/admin/dashboard",{method:"GET"});renderStats(d);renderAlerts(d.alerts);renderProducts(d.products);renderOrders(d.orders);for(const a of d.alerts){if(!lastAlertIds.has(a.id)){lastAlertIds.add(a.id);startTitleAlarm("سفارش جدید SEC PACK");if("vibrate"in navigator)navigator.vibrate?.([250,100,250]);if("Notification"in window&&Notification.permission==="granted")new Notification("SEC PACK · "+a.title,{body:a.message});}}}catch(e){$("loginStatus").textContent=e.message;logout();}}
+async function load(){try{const d=await api("/admin/dashboard",{method:"GET"});renderStats(d);renderAlerts(d.alerts);renderProducts(d.products);renderOrders(d.orders);
+    const audit=await api("/admin/audit-log",{method:"GET"});renderAuditLog(audit.entries||[]);for(const a of d.alerts){if(!lastAlertIds.has(a.id)){lastAlertIds.add(a.id);startTitleAlarm("سفارش جدید SEC PACK");if("vibrate"in navigator)navigator.vibrate?.([250,100,250]);if("Notification"in window&&Notification.permission==="granted")new Notification("SEC PACK · "+a.title,{body:a.message});}}}catch(e){$("loginStatus").textContent=e.message;logout();}}
 function stopTitleAlarm(){if(titleTimer)clearInterval(titleTimer);titleTimer=null;document.title=originalTitle;}
 function beepAlarm(){
   try{
