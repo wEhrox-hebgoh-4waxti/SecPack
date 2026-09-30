@@ -326,13 +326,17 @@ async function adminSale(request,env,origin){
   const priceMinor=b.unit_price===undefined||b.unit_price===""?Number(p.unit_price_minor):moneyToMinor(b.unit_price,p.currency);
   if(priceMinor===null||priceMinor<=0)return response({error:"Invalid sale price."},400,origin);
   const total=safeMultiply(qty,priceMinor);if(total===null)return response({error:"Sale value is outside the supported accounting range."},400,origin);
+  const costPerUnit=Number(p.unit_cost_minor||0),costTotal=safeMultiply(qty,costPerUnit);
+  if(costPerUnit<=0||costTotal===null)return response({error:"Inventory cost is not configured for this product."},409,origin);
   const saleId=crypto.randomUUID(),now=new Date().toISOString();
   const journal=await buildJournal(env,{referenceType:"manual_sale",referenceId:saleId,description:"In-person sale"+(text(b.customer,160)?" · Customer: "+text(b.customer,160):""),currency:p.currency,requestId,lines:[{accountId:"cash",side:"debit",amount:total},{accountId:"income",side:"credit",amount:total}]});
-  if(!journal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
+  const cogsJournal=await buildJournal(env,{referenceType:"manual_cogs",referenceId:saleId,description:"COGS · In-person sale",currency:p.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"cogs",side:"debit",amount:costTotal},{accountId:"inventory",side:"credit",amount:costTotal}]});
+  if(!journal||!cogsJournal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
   try{
     const stm=[env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3 AND active=1").bind(qty,now,id),
       env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'SALE',?3,?4,?5,?6,?7)").bind(crypto.randomUUID(),id,qty,saleId,"Manual / in-person sale",requestId||null,now),
       ...journal.statements,
+      ...cogsJournal.statements,
       env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'SALE',?2,'In-person sale recorded',?3,?4)").bind(crypto.randomUUID(),saleId,qty+" × "+p.name_en+" sold",now),
       await auditStatement(env,{action:"MANUAL_SALE",entityType:"sale",entityId:saleId,after:{product_id:id,quantity:qty,total_minor:total,currency:p.currency,customer:text(b.customer,160)||null},requestId})];
     await env.DB.batch(stm);return response({ok:true,total:minorToMoney(total,p.currency),currency:p.currency},200,origin);
