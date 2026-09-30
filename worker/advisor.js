@@ -318,7 +318,7 @@ async function createOrder(data,env,origin){
 
 async function catalog(env){
   const rows=await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price_minor,stock_qty,active FROM products WHERE active=1 AND unit_price_minor>0 ORDER BY id").all();
-  return rows.results.map(p=>({...p,available_qty:Number(p.stock_qty),unit_price:minorToMoney(p.unit_price_minor,p.currency),unit_price_minor:Number(p.unit_price_minor)}));
+  return rows.results.map(p=>({...p,available_qty:Math.max(0,Number(p.stock_qty||0)-Number(p.reserved_qty||0)),unit_price:minorToMoney(p.unit_price_minor,p.currency),unit_price_minor:Number(p.unit_price_minor)}));
 }
 async function adminDashboard(env){
   const products=(await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price,stock_qty,reserved_qty,sold_qty,active,updated_at FROM products ORDER BY id").all()).results;
@@ -384,7 +384,7 @@ async function adminOrderStatus(request,env,origin){
   const now=new Date().toISOString(),items=(await env.DB.prepare("SELECT * FROM order_items WHERE order_id=?1").bind(orderId).all()).results,stm=[];
   if(next==="cancelled"){
     for(const x of items){
-      stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,reserved_qty=reserved_qty-?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
+      stm.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty-?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
       stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RELEASE',?3,?4,'Order cancelled',?5,?6)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,now));
     }
   }
@@ -395,7 +395,7 @@ async function adminOrderStatus(request,env,origin){
       if(!p||p.currency!==order.currency||Number(p.unit_cost_minor||0)<=0)return response({error:"Inventory cost is not configured for one or more products."},409,origin);
       const lineCost=safeMultiply(Number(x.quantity),Number(p.unit_cost_minor));if(lineCost===null)return response({error:"Inventory cost is outside the supported accounting range."},409,origin);
       cogsTotal+=lineCost;
-      stm.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
+      stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
       stm.push(env.DB.prepare("UPDATE order_items SET unit_cost_minor=(SELECT unit_cost_minor FROM products WHERE id=?1) WHERE order_id=?2 AND product_id=?1").bind(x.product_id,orderId));
       stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'FULFILL',?3,?4,'Order fulfilled',?5,?6)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,now));
     }
