@@ -212,6 +212,7 @@ async function ensureOperationsSchema(env){
       await ensureColumn(env,"orders","total_minor","INTEGER NOT NULL DEFAULT 0");
       await ensureColumn(env,"order_items","unit_price_minor","INTEGER NOT NULL DEFAULT 0");
       await ensureColumn(env,"order_items","line_total_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"order_items","unit_cost_minor","INTEGER NOT NULL DEFAULT 0");
       await ensureColumn(env,"inventory_ledger","warehouse","TEXT NOT NULL DEFAULT 'Gorgan'");
       await ensureColumn(env,"inventory_ledger","request_id","TEXT");
       await ensureColumn(env,"financial_entries","request_id","TEXT");
@@ -389,6 +390,7 @@ async function adminOrderStatus(request,env,origin){
       const lineCost=safeMultiply(Number(x.quantity),Number(p.unit_cost_minor));if(lineCost===null)return response({error:"Inventory cost is outside the supported accounting range."},409,origin);
       cogsTotal+=lineCost;
       stm.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
+      stm.push(env.DB.prepare("UPDATE order_items SET unit_cost_minor=(SELECT unit_cost_minor FROM products WHERE id=?1) WHERE order_id=?2 AND product_id=?1").bind(x.product_id,orderId));
       stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'FULFILL',?3,?4,'Order fulfilled',?5,?6)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,now));
     }
     const cogsJournal=await buildJournal(env,{referenceType:"order_cogs",referenceId:orderId,description:"COGS · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"cogs",side:"debit",amount:cogsTotal},{accountId:"inventory",side:"credit",amount:cogsTotal}]});
