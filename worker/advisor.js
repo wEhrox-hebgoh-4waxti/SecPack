@@ -418,17 +418,13 @@ async function adminAccounting(request,env,origin){
     return response({ok:true,id},200,origin);
   }
   if(path==="/admin/accounting/entry"&&request.method==="POST"){
-    const b=await readJson(request),accountId=text(b.account_id,60),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency),direction=text(b.direction,3),type=text(b.entry_type,30)||"adjustment";
+    const b=await readJson(request),accountId=text(b.account_id,60),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency),direction=text(b.direction,3),type=text(b.entry_type,30)||"adjustment",offsetId=text(b.offset_account_id,60);
     if(!accountId||amount===null||amount<=0||!["in","out"].includes(direction))return response({error:"Invalid accounting entry."},400,origin);
-    const account=await env.DB.prepare("SELECT * FROM accounts WHERE id=?1 AND active=1").bind(accountId).first();if(!account)return response({error:"Account not found."},404,origin);
-    if(account.currency!==currency)return response({error:"Account currency does not match."},409,origin);
-    const id=crypto.randomUUID(),now=new Date().toISOString(),delta=direction==="in"?amount:-amount;
-    await env.DB.batch([
-      env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)").bind(id,accountId,type,amount,currency,direction,text(b.reference_type,40),text(b.reference_id,80),text(b.description,300),now),
-      env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id=?3").bind(delta,now,accountId),
-      env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7)").bind(id,type,minorToMoney(amount,currency),amount,currency,text(b.description,300),now)
-    ]);
-    return response({ok:true,id},200,origin);
+    const counterpart=offsetId||(direction==="in"?"income":"expense");
+    if(counterpart===accountId)return response({error:"A journal needs two different accounts."},400,origin);
+    const journal=await buildJournal(env,{referenceType:type,referenceId:text(b.reference_id,100)||crypto.randomUUID(),description:text(b.description,300)||type,currency,lines:direction==="in"?[{accountId,side:"debit",amount},{accountId:counterpart,side:"credit",amount}]:[{accountId,side:"credit",amount},{accountId:counterpart,side:"debit",amount}],requestId:text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null});
+    if(!journal)return response({error:"Unable to create a balanced journal for these accounts."},409,origin);
+    try{await env.DB.batch(journal.statements);return response({ok:true,id:journal.txId},200,origin)}catch(e){return response({error:"Accounting entry could not be posted."},500,origin)}
   }
   if(path==="/admin/supply-cost"&&request.method==="POST"){
     const b=await readJson(request),category=text(b.category,40),description=text(b.description,240),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency);
