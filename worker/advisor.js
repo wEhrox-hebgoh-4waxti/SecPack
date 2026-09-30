@@ -234,7 +234,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === "/health" && request.method === "GET") {
-      return response({ ok: true, service: "secpack-api", ready: await ensureReady(env) }, 200, null);
+      return response({ ok: true, service: "secpack-api" }, 200, null);
     }
     const origin = request.headers.get("Origin");
     if (!origin || !ORIGINS.has(origin)) return response({ error: "Origin not allowed." }, 403, origin);
