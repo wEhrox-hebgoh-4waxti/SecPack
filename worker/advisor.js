@@ -219,7 +219,9 @@ async function accountingSnapshot(env){
   const entries=(await env.DB.prepare("SELECT id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at FROM financial_entries ORDER BY created_at DESC LIMIT 100").all()).results;
   const docs=(await env.DB.prepare("SELECT id,document_type,title,reference_type,reference_id,mime_type,size_bytes,notes,captured_offline,created_at FROM documents ORDER BY created_at DESC LIMIT 50").all()).results;
   const flags=(await env.DB.prepare("SELECT * FROM audit_flags WHERE is_resolved=0 ORDER BY CASE severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END,created_at DESC LIMIT 80").all()).results;
-  return {accounts,costs,entries,docs,flags};
+  const summary=(await env.DB.prepare("SELECT COALESCE(SUM(CASE WHEN entry_type='SALE' THEN amount_minor ELSE 0 END),0) sales_minor,COALESCE(SUM(CASE WHEN entry_type='PAYMENT' THEN amount_minor ELSE 0 END),0) payments_minor,COALESCE(SUM(CASE WHEN entry_type='EXPENSE' THEN amount_minor ELSE 0 END),0) expenses_minor FROM accounting_ledger").first())||{};
+  const inventory=(await env.DB.prepare("SELECT COALESCE(SUM(stock_qty),0) qty,COALESCE(SUM(reserved_qty),0) reserved,COALESCE(SUM(sold_qty),0) sold FROM products WHERE active=1").first())||{};
+  return {accounts,costs,entries,docs,flags,summary,inventory};
 }
 
 async function runAudit(env){
