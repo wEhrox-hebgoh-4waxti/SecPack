@@ -135,7 +135,7 @@ async function buildJournal(env,{referenceType,referenceId,description,currency,
     const row=x.account, normal=["cash","bank","receivable","inventory","expense","cogs"].includes(row.account_type)?"debit":"credit",delta=x.side===normal?x.amount:-x.amount;
     stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id=?3").bind(delta,now,x.accountId));
   }
-  stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)").bind(txId,referenceType==="order"?referenceId:null,referenceType.toUpperCase(),minorToMoney(debit,currency),debit,currency,text(description,300),now));
+  stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)").bind(txId,String(referenceType).startsWith("order_")?referenceId:null,referenceType.toUpperCase(),minorToMoney(debit,currency),debit,currency,text(description,300),now));
   return {txId,statements:stm};
 }
 
