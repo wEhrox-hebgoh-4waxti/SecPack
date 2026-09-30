@@ -332,6 +332,33 @@ async function adminAccounting(request,env,origin){
     const d=await env.DB.prepare("SELECT id,title,mime_type,data_url FROM documents WHERE id=?1").bind(id).first();if(!d)return response({error:"Document not found."},404,origin);
     return response(d,200,origin);
   }
+  if(path==="/admin/supply-cases"&&request.method==="GET"){
+    const cases=(await env.DB.prepare("SELECT * FROM supply_cases ORDER BY updated_at DESC LIMIT 100").all()).results;
+    const milestones=(await env.DB.prepare("SELECT * FROM supply_milestones ORDER BY due_date IS NULL, due_date ASC, updated_at DESC").all()).results;
+    return response({cases,milestones},200,origin);
+  }
+  if(path==="/admin/supply-case"&&request.method==="POST"){
+    const b=await readJson(request),id=crypto.randomUUID(),now=new Date().toISOString();
+    const productId=text(b.product_id,50)||null,caseNo=text(b.case_no,60)||("SC-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+id.slice(0,6).toUpperCase());
+    const qty=Number(b.quantity)||0,currency=text(b.currency,8)||"USD",total=moneyToMinor(b.purchase_total,currency);
+    if(qty<0||!Number.isInteger(qty)||total===null||total<0)return response({error:"Invalid supply case."},400,origin);
+    const types=["factory_order","factory_payment","customs","transport","warehouse_receipt","ready_for_delivery"];
+    const stm=[env.DB.prepare("INSERT INTO supply_cases(id,case_no,product_id,quantity,supplier,currency,purchase_total_minor,status,expected_date,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,'open',?8,?9,?10,?10)").bind(id,caseNo,productId,qty,text(b.supplier,160),currency,total,text(b.expected_date,30)||null,text(b.notes,500)||null,now)];
+    for(const type of types)stm.push(env.DB.prepare("INSERT INTO supply_milestones(id,case_id,milestone_type,status,created_at,updated_at) VALUES(?1,?2,?3,'pending',?4,?4)").bind(crypto.randomUUID(),id,type,now));
+    await env.DB.batch(stm);
+    return response({ok:true,id,caseNo},200,origin);
+  }
+  if(path==="/admin/supply-milestone"&&request.method==="POST"){
+    const b=await readJson(request),id=text(b.id,80),status=text(b.status,20);
+    if(!id||!["pending","in_progress","done","blocked"].includes(status))return response({error:"Invalid milestone."},400,origin);
+    const now=new Date().toISOString();
+    const m=await env.DB.prepare("SELECT * FROM supply_milestones WHERE id=?1").bind(id).first();if(!m)return response({error:"Milestone not found."},404,origin);
+    await env.DB.batch([
+      env.DB.prepare("UPDATE supply_milestones SET status=?1,completed_at=?2,reference_id=?3,notes=?4,updated_at=?5 WHERE id=?6").bind(status,status==="done"?now:null,text(b.reference_id,100)||null,text(b.notes,500)||null,now,id),
+      env.DB.prepare("UPDATE supply_cases SET status=CASE WHEN ?1='done' AND ?2='ready_for_delivery' THEN 'ready_for_delivery' WHEN ?1='blocked' THEN 'blocked' ELSE status END,updated_at=?3 WHERE id=?4").bind(status,m.milestone_type,now,m.case_id)
+    ]);
+    return response({ok:true},200,origin);
+  }
   if(path==="/admin/audit"&&request.method==="POST"){return response({flags:await runAudit(env)},200,origin);}
   if(path==="/admin/accounting/assistant"&&request.method==="POST"){
     const snapshot=await accountingSnapshot(env);
