@@ -44,3 +44,15 @@
 - Retain customer records only as long as operational/legal needs require.
 - Periodically delete records no longer required.
 - Never copy customer records into GitHub, static assets, browser storage or public logs.
+
+
+## Commerce operations layer
+
+- Product catalog is server-controlled in D1; public store reads only active products with a positive selling price.
+- Price editing, stock adjustment, order status, accounting summary and in-person sales are available in `pages/admin.html`.
+- Online orders reserve stock immediately; cancellation releases the reservation; fulfillment converts reserved stock to sold stock.
+- In-person sales decrement available stock and create inventory/accounting ledger entries in the same D1 transaction.
+- New online orders create an unread operational alert in D1. The admin dashboard polls for new alerts and can use browser notifications.
+- Monetary values are stored in integer minor units for accounting accuracy.
+- Before using the admin screen, configure a strong random Cloudflare Secret named `ADMIN_TOKEN`. Do not put it in GitHub or public files.
+- Actual automatic card/payment settlement still requires a payment provider/merchant account and its server-side credentials. The current order flow is production-safe for online order placement and stock reservation, but it deliberately does not pretend that payment has been completed.
