@@ -1,0 +1,3 @@
+-- Compatibility marker for order cost basis.
+-- The runtime schema reconciler adds unit_cost_minor when it is absent, which
+-- keeps both fresh and previously self-healed databases deployable.

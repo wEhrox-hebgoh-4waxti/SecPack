@@ -32,7 +32,7 @@ function securityHeaders() {
 }
 function response(data,status,origin){
   const h=securityHeaders();
-  if(origin&&ORIGINS.has(origin)){h["Access-Control-Allow-Origin"]=origin;h["Access-Control-Allow-Methods"]="GET, POST, OPTIONS";h["Access-Control-Allow-Headers"]="Content-Type, Authorization";h["Vary"]="Origin";}
+  if(origin&&ORIGINS.has(origin)){h["Access-Control-Allow-Origin"]=origin;h["Access-Control-Allow-Methods"]="GET, POST, OPTIONS";h["Access-Control-Allow-Headers"]="Content-Type, Authorization, X-Idempotency-Key";h["Access-Control-Allow-Credentials"]="true";h["Vary"]="Origin";}
   return new Response(JSON.stringify(data),{status,headers:h});
 }
 function text(v,max){return typeof v==="string"?v.trim().slice(0,max):"";}
@@ -47,6 +47,12 @@ function moneyToMinor(value,currency){
   return Number.isSafeInteger(n)&&n>=0?n:null;
 }
 function minorToMoney(minor,currency){const d=currencyDigits(currency);return d?Number(minor||0)/(10**d):Number(minor||0);}
+function safeMultiply(a,b){const x=Number(a),y=Number(b);if(!Number.isSafeInteger(x)||!Number.isSafeInteger(y)||x<0||y<0)return null;const n=x*y;return Number.isSafeInteger(n)?n:null;}
+function allowedOrderTransition(from,to){
+  if(from===to)return true;
+  const map={pending:new Set(["processing","paid","cancelled"]),processing:new Set(["paid","ready","cancelled"]),paid:new Set(["ready","fulfilled"]),ready:new Set(["fulfilled"])};
+  return Boolean(map[from]?.has(to));
+}
 
 async function digest(v){const b=new TextEncoder().encode(v);const h=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,"0")).join("");}
 async function clientKey(request,env){const ip=request.headers.get("CF-Connecting-IP")||"unknown";const salt=env[RATE_SALT]||env[KEY];return salt?digest(salt+"|"+ip):null;}
@@ -60,6 +66,19 @@ async function rateLimit(env,request,bucket,limit){
     return{allowed:Number(row?.count||0)<=limit};
   }catch(_){return{allowed:false,reason:"rate-limit"}}
 }
+async function signSession(payload,env){
+  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(env[ADMIN_KEY]),{name:"HMAC",hash:"SHA-256"},false,["sign","verify"]);
+  const sig=await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(payload));
+  return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+async function verifySession(request,env){
+  const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\s*)__Host-sp_admin=([^;]+)/);if(!m||!env[ADMIN_KEY])return false;
+  const parts=decodeURIComponent(m[1]).split(".");if(parts.length!==2)return false;
+  const payload=parts[0],sig=parts[1],ts=Number(payload);if(!Number.isFinite(ts)||Date.now()-ts>8*60*60*1000||Date.now()<ts-60000)return false;
+  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(env[ADMIN_KEY]),{name:"HMAC",hash:"SHA-256"},false,["verify"]);
+  const bytes=Uint8Array.from(atob(sig.replace(/-/g,"+").replace(/_/g,"/")+"=="),c=>c.charCodeAt(0));
+  return crypto.subtle.verify("HMAC",key,bytes,new TextEncoder().encode(payload));
+}
 function authorized(request,env){
   const expected=env[ADMIN_KEY];if(!expected)return false;
   const got=request.headers.get("Authorization")||"";
@@ -69,6 +88,7 @@ function webhookAuthorized(request,env){
   const expected=env[WEBHOOK_KEY];if(!expected)return false;
   return (request.headers.get("Authorization")||"")==="Bearer "+expected;
 }
+function sessionCookie(value){return "__Host-sp_admin="+encodeURIComponent(value)+"; Max-Age=28800; Path=/; Secure; HttpOnly; SameSite=Strict";}
 async function readJson(request,max=MAX_BODY){
   const raw=await request.text();if(raw.length>max)throw new Error("too_large");
   try{return JSON.parse(raw)}catch(_){throw new Error("invalid")}
@@ -76,18 +96,103 @@ async function readJson(request,max=MAX_BODY){
 async function ensureReady(env){return Boolean(env.DB&&env[KEY]);}
 
 let operationsSchemaPromise=null;
+async function ensureColumn(env,table,column,definition){
+  const allowed=new Set(["inquiries","products","orders","order_items","inventory_ledger","accounting_ledger","financial_entries","supply_costs","documents","supply_cases","supply_milestones","accounts"]);
+  if(!allowed.has(table))throw new Error("invalid_table");
+  const rows=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];
+  if(!rows.some(x=>x.name===column))await env.DB.prepare("ALTER TABLE "+table+" ADD COLUMN "+column+" "+definition).run();
+}
+async function resolveAccount(env,accountId,currency){
+  const raw=text(accountId,60);
+  const exact=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(raw).first();
+  if(exact)return exact;
+  const symbolic=["cash","bank","receivables","payable","inventory","expense","income","cogs"];
+  if(symbolic.includes(raw)){
+    const candidate=raw+":"+currency;
+    const scoped=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(candidate).first();
+    if(scoped)return scoped;
+    if(currency==="USD")return await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(raw).first();
+  }
+  return null;
+}
+async function buildJournal(env,{referenceType,referenceId,description,currency,lines,requestId=null,extraAccounts=[]}){
+  if(!Array.isArray(lines)||lines.length<2)return null;
+  const normalized=[];
+  for(const x of lines){
+    const resolved=text(x.accountId,60);
+    const account=extraAccounts.find(a=>a.id===resolved)||await resolveAccount(env,resolved,currency);
+    if(!account||!account.active||account.currency!==currency)return null;
+    normalized.push({accountId:account.id,side:x.side,amount:Number(x.amount),account});
+  }
+  if(normalized.some(x=>!x.accountId||!["debit","credit"].includes(x.side)||!Number.isSafeInteger(x.amount)||x.amount<=0))return null;
+  const debit=normalized.filter(x=>x.side==="debit").reduce((s,x)=>s+x.amount,0);
+  const credit=normalized.filter(x=>x.side==="credit").reduce((s,x)=>s+x.amount,0);
+  if(!Number.isSafeInteger(debit)||debit!==credit)return null;
+  const rows=normalized.map(x=>x.account);  const txId=crypto.randomUUID(),now=new Date().toISOString(),stm=[
+    env.DB.prepare("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)").bind(txId,text(referenceType,40),text(referenceId,100),text(description,300),currency,debit,requestId||null,now)
+  ];
+  for(const x of normalized){
+    const lineId=crypto.randomUUID();
+    stm.push(env.DB.prepare("INSERT INTO journal_lines(id,transaction_id,account_id,side,amount_minor,currency,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7)").bind(lineId,txId,x.accountId,x.side,x.amount,currency,now));
+    const row=x.account, normal=["cash","bank","receivable","inventory","expense","cogs"].includes(row.account_type)?"debit":"credit",delta=x.side===normal?x.amount:-x.amount;
+    stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id=?3").bind(delta,now,x.accountId));
+  }
+  stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)").bind(txId,String(referenceType).startsWith("order_")?referenceId:null,referenceType.toUpperCase(),minorToMoney(debit,currency),debit,currency,text(description,300),now));
+  return {txId,statements:stm};
+}
+
+async function auditStatement(env,{action,entityType,entityId,before=null,after=null,requestId=null,actor="admin"}){
+  return env.DB.prepare("INSERT INTO audit_log(id,actor,action,entity_type,entity_id,before_json,after_json,request_id,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)")
+    .bind(crypto.randomUUID(),actor,action,entityType,entityId||null,before?JSON.stringify(before):null,after?JSON.stringify(after):null,requestId||null,new Date().toISOString());
+}
+
 async function ensureOperationsSchema(env){
   if(!env.DB)return false;
   if(!operationsSchemaPromise){
     operationsSchemaPromise=env.DB.batch([
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY,name TEXT NOT NULL,account_type TEXT NOT NULL,currency TEXT NOT NULL DEFAULT 'USD',opening_balance_minor INTEGER NOT NULL DEFAULT 0,current_balance_minor INTEGER NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS inquiries (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,form_type TEXT NOT NULL,name TEXT NOT NULL,company TEXT,email TEXT NOT NULL,phone TEXT,product TEXT,destination TEXT,payment TEXT,notes TEXT,message TEXT,items TEXT,created_at TEXT NOT NULL,visitor_details TEXT)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS rate_limits (bucket_key TEXT PRIMARY KEY,window_start INTEGER NOT NULL,count INTEGER NOT NULL)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rate_limits_window_start ON rate_limits(window_start)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY,name_en TEXT NOT NULL,name_fa TEXT NOT NULL,name_ar TEXT NOT NULL,unit TEXT NOT NULL DEFAULT 'unit',currency TEXT NOT NULL DEFAULT 'USD',unit_price REAL NOT NULL DEFAULT 0,unit_price_minor INTEGER NOT NULL DEFAULT 0,unit_cost_minor INTEGER NOT NULL DEFAULT 0,stock_qty INTEGER NOT NULL DEFAULT 0,reserved_qty INTEGER NOT NULL DEFAULT 0,sold_qty INTEGER NOT NULL DEFAULT 0,warehouse TEXT NOT NULL DEFAULT 'Gorgan',active INTEGER NOT NULL DEFAULT 1,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY,order_no TEXT NOT NULL UNIQUE,request_id TEXT UNIQUE,customer_name TEXT NOT NULL,company TEXT,email TEXT NOT NULL,phone TEXT,destination TEXT,payment_method TEXT,status TEXT NOT NULL DEFAULT 'pending',payment_status TEXT NOT NULL DEFAULT 'unpaid',currency TEXT NOT NULL,subtotal REAL NOT NULL DEFAULT 0,total REAL NOT NULL DEFAULT 0,subtotal_minor INTEGER NOT NULL DEFAULT 0,total_minor INTEGER NOT NULL DEFAULT 0,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS order_items (id TEXT PRIMARY KEY,order_id TEXT NOT NULL,product_id TEXT NOT NULL,product_name TEXT NOT NULL,unit TEXT NOT NULL,quantity INTEGER NOT NULL,unit_price REAL NOT NULL,line_total REAL NOT NULL,unit_price_minor INTEGER NOT NULL,line_total_minor INTEGER NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS inventory_ledger (id TEXT PRIMARY KEY,product_id TEXT NOT NULL,movement_type TEXT NOT NULL,quantity INTEGER NOT NULL,reference_id TEXT,note TEXT,warehouse TEXT NOT NULL DEFAULT 'Gorgan',created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS accounting_ledger (id TEXT PRIMARY KEY,order_id TEXT,entry_type TEXT NOT NULL,amount REAL NOT NULL DEFAULT 0,amount_minor INTEGER NOT NULL DEFAULT 0,currency TEXT NOT NULL,description TEXT,created_at TEXT NOT NULL)"),env.DB.prepare("CREATE TABLE IF NOT EXISTS journal_transactions (id TEXT PRIMARY KEY,reference_type TEXT,reference_id TEXT,description TEXT NOT NULL,currency TEXT NOT NULL,total_minor INTEGER NOT NULL,request_id TEXT,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS journal_lines (id TEXT PRIMARY KEY,transaction_id TEXT NOT NULL,account_id TEXT NOT NULL,side TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_journal_lines_tx ON journal_lines(transaction_id)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_journal_lines_account ON journal_lines(account_id,created_at)"),
+      env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_journal_request_id_unique ON journal_transactions(request_id) WHERE request_id IS NOT NULL"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_journal_transactions_reference ON journal_transactions(reference_type,reference_id,created_at)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_journal_transactions_currency ON journal_transactions(currency,created_at)"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_invalid_journal_line_insert BEFORE INSERT ON journal_lines WHEN NEW.amount_minor<=0 OR NEW.side NOT IN ('debit','credit') OR NOT EXISTS (SELECT 1 FROM journal_transactions WHERE id=NEW.transaction_id AND currency=NEW.currency) OR NOT EXISTS (SELECT 1 FROM accounts WHERE id=NEW.account_id AND active=1 AND currency=NEW.currency) BEGIN SELECT RAISE(ABORT,'INVALID_JOURNAL_LINE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_tx_update BEFORE UPDATE ON journal_transactions BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_tx_delete BEFORE DELETE ON journal_transactions BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_line_update BEFORE UPDATE ON journal_lines BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_line_delete BEFORE DELETE ON journal_lines BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS alerts (id TEXT PRIMARY KEY,type TEXT NOT NULL,reference_id TEXT,title TEXT NOT NULL,message TEXT NOT NULL,is_read INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,name TEXT NOT NULL,account_type TEXT NOT NULL,currency TEXT NOT NULL DEFAULT 'USD',opening_balance_minor INTEGER NOT NULL DEFAULT 0,current_balance_minor INTEGER NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS financial_entries (id TEXT PRIMARY KEY,account_id TEXT NOT NULL,entry_type TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,direction TEXT NOT NULL,reference_type TEXT,reference_id TEXT,description TEXT,created_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_costs (id TEXT PRIMARY KEY,category TEXT NOT NULL,supplier TEXT,description TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'planned',due_date TEXT,paid_at TEXT,account_id TEXT,reference_id TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS documents (id TEXT PRIMARY KEY,document_type TEXT NOT NULL,title TEXT NOT NULL,reference_type TEXT,reference_id TEXT,data_url TEXT NOT NULL,mime_type TEXT NOT NULL,size_bytes INTEGER NOT NULL DEFAULT 0,notes TEXT,captured_offline INTEGER NOT NULL DEFAULT 0,share_token_hash TEXT,share_expires_at TEXT,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS documents (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,document_type TEXT NOT NULL,title TEXT NOT NULL,reference_type TEXT,reference_id TEXT,data_url TEXT NOT NULL,mime_type TEXT NOT NULL,size_bytes INTEGER NOT NULL DEFAULT 0,notes TEXT,captured_offline INTEGER NOT NULL DEFAULT 0,share_token_hash TEXT,share_expires_at TEXT,created_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS audit_flags (id TEXT PRIMARY KEY,severity TEXT NOT NULL,category TEXT NOT NULL,reference_type TEXT,reference_id TEXT,title TEXT NOT NULL,message TEXT NOT NULL,suggested_action TEXT,is_resolved INTEGER NOT NULL DEFAULT 0,resolved_at TEXT,created_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS operational_settings (key TEXT PRIMARY KEY,value TEXT NOT NULL,updated_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_cases (id TEXT PRIMARY KEY,case_no TEXT NOT NULL UNIQUE,product_id TEXT,quantity INTEGER NOT NULL DEFAULT 0,supplier TEXT,currency TEXT NOT NULL DEFAULT 'USD',purchase_total_minor INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'open',expected_date TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_milestones (id TEXT PRIMARY KEY,case_id TEXT NOT NULL,milestone_type TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',due_date TEXT,completed_at TEXT,reference_id TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS audit_log (id TEXT PRIMARY KEY,actor TEXT NOT NULL,action TEXT NOT NULL,entity_type TEXT NOT NULL,entity_id TEXT,before_json TEXT,after_json TEXT,request_id TEXT,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type,entity_id,created_at)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at)"),
+      env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_request_id_unique ON orders(request_id) WHERE request_id IS NOT NULL"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_negative_stock BEFORE UPDATE OF stock_qty ON products WHEN NEW.stock_qty < 0 BEGIN SELECT RAISE(ABORT, 'INSUFFICIENT_STOCK'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_reserved_over_available BEFORE UPDATE OF reserved_qty,stock_qty ON products WHEN NEW.reserved_qty < 0 OR NEW.reserved_qty > NEW.stock_qty BEGIN SELECT RAISE(ABORT, 'INVALID_RESERVATION'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_negative_sold BEFORE UPDATE OF sold_qty ON products WHEN NEW.sold_qty < 0 BEGIN SELECT RAISE(ABORT, 'INVALID_SOLD_QTY'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_audit_update BEFORE UPDATE ON audit_log BEGIN SELECT RAISE(ABORT, 'AUDIT_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_audit_delete BEFORE DELETE ON audit_log BEGIN SELECT RAISE(ABORT, 'AUDIT_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_financial_entry_update BEFORE UPDATE ON financial_entries BEGIN SELECT RAISE(ABORT, 'FINANCIAL_LEDGER_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_financial_entry_delete BEFORE DELETE ON financial_entries BEGIN SELECT RAISE(ABORT, 'FINANCIAL_LEDGER_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_inventory_ledger_update BEFORE UPDATE ON inventory_ledger BEGIN SELECT RAISE(ABORT, 'INVENTORY_LEDGER_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_inventory_ledger_delete BEFORE DELETE ON inventory_ledger BEGIN SELECT RAISE(ABORT, 'INVENTORY_LEDGER_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_accounting_ledger_update BEFORE UPDATE ON accounting_ledger BEGIN SELECT RAISE(ABORT, 'ACCOUNTING_LEDGER_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_accounting_ledger_delete BEFORE DELETE ON accounting_ledger BEGIN SELECT RAISE(ABORT, 'ACCOUNTING_LEDGER_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_cases (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,case_no TEXT NOT NULL UNIQUE,product_id TEXT,quantity INTEGER NOT NULL DEFAULT 0,supplier TEXT,currency TEXT NOT NULL DEFAULT 'USD',purchase_total_minor INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'open',expected_date TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_milestones (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,case_id TEXT NOT NULL,milestone_type TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',due_date TEXT,completed_at TEXT,reference_id TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_accounts_type_currency ON accounts(account_type,currency)"),
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_financial_entries_account_created ON financial_entries(account_id,created_at)"),
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_supply_costs_status_due ON supply_costs(status,due_date)"),
@@ -98,7 +203,55 @@ async function ensureOperationsSchema(env){
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_supply_milestones_status_due ON supply_milestones(status,due_date)"),
       env.DB.prepare("INSERT OR IGNORE INTO operational_settings(key,value,updated_at) VALUES ('low_stock_threshold','100',datetime('now'))"),
       env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,created_at,updated_at) VALUES ('cash','صندوق','cash','USD',datetime('now'),datetime('now')),('bank','بانک','bank','USD',datetime('now'),datetime('now')),('receivables','حساب‌های دریافتنی','receivable','USD',datetime('now'),datetime('now')),('payable','حساب‌های پرداختنی','payable','USD',datetime('now'),datetime('now')),('inventory','موجودی کالا','inventory','USD',datetime('now'),datetime('now')),('expense','هزینه‌ها','expense','USD',datetime('now'),datetime('now')),('income','درآمد','income','USD',datetime('now'),datetime('now'))")
-    ]).then(()=>true).catch(()=>false);
+    ]).then(async()=>{
+      await ensureColumn(env,"inquiries","visitor_details","TEXT");
+      await ensureColumn(env,"products","unit_price_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"products","unit_cost_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"products","warehouse","TEXT NOT NULL DEFAULT 'Gorgan'");
+      await ensureColumn(env,"orders","request_id","TEXT");
+      await ensureColumn(env,"orders","subtotal_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"orders","total_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"order_items","unit_price_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"order_items","line_total_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"order_items","unit_cost_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"inventory_ledger","warehouse","TEXT NOT NULL DEFAULT 'Gorgan'");
+      await ensureColumn(env,"inventory_ledger","request_id","TEXT");
+      await ensureColumn(env,"financial_entries","request_id","TEXT");
+      await ensureColumn(env,"supply_costs","request_id","TEXT");
+      await ensureColumn(env,"documents","request_id","TEXT");
+      await ensureColumn(env,"supply_cases","request_id","TEXT");
+      await ensureColumn(env,"supply_milestones","request_id","TEXT");
+      await ensureColumn(env,"accounts","request_id","TEXT");
+      await ensureColumn(env,"accounting_ledger","amount_minor","INTEGER NOT NULL DEFAULT 0");
+      await env.DB.batch([
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_request_id_unique ON inventory_ledger(request_id) WHERE request_id IS NOT NULL"),
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_financial_request_id_unique ON financial_entries(request_id) WHERE request_id IS NOT NULL"),
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_cost_request_id_unique ON supply_costs(request_id) WHERE request_id IS NOT NULL"),
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_documents_request_id_unique ON documents(request_id) WHERE request_id IS NOT NULL"),
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_cases_request_id_unique ON supply_cases(request_id) WHERE request_id IS NOT NULL"),
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_milestones_request_id_unique ON supply_milestones(request_id) WHERE request_id IS NOT NULL"),
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_request_id_unique ON accounts(request_id) WHERE request_id IS NOT NULL")
+      ]);
+      await env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES ('cogs','بهای تمام‌شده','cogs','USD',0,0,1,datetime('now'),datetime('now'))");
+      for(const cur of ["IRR","EUR","TRY","AED","GBP","SAR"]){
+        await env.DB.batch([
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'cash',?3,0,0,1,datetime('now'),datetime('now'))").bind("cash:"+cur,"صندوق "+cur,cur),
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'bank',?3,0,0,1,datetime('now'),datetime('now'))").bind("bank:"+cur,"بانک "+cur,cur),
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'receivable',?3,0,0,1,datetime('now'),datetime('now'))").bind("receivables:"+cur,"دریافتنی "+cur,cur),
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'inventory',?3,0,0,1,datetime('now'),datetime('now'))").bind("inventory:"+cur,"موجودی "+cur,cur),
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'expense',?3,0,0,1,datetime('now'),datetime('now'))").bind("expense:"+cur,"هزینه "+cur,cur),
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'income',?3,0,0,1,datetime('now'),datetime('now'))").bind("income:"+cur,"درآمد "+cur,cur),
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'cogs',?3,0,0,1,datetime('now'),datetime('now'))").bind("cogs:"+cur,"بهای تمام‌شده "+cur,cur)
+        ]);
+      }
+      await env.DB.batch([
+        env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('paper','A4 Copy Paper','کاغذ کپی A4','ورق نسخ A4','ream','USD',0,0,0,0,0,'Gorgan',1,datetime('now'))"),
+        env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('film','Lamination Films','فیلم لمینیشن','أفلام التغليف','kg','USD',0,0,0,0,0,'Gorgan',0,datetime('now'))"),
+        env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('adhesive','Water-Based Adhesives','چسب‌های پایه آب','لاصقات مائية','kg','USD',0,0,0,0,0,'Gorgan',0,datetime('now'))"),
+        env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('packaging','Packaging Materials','مواد بسته‌بندی','مواد التغليف','unit','USD',0,0,0,0,0,'Gorgan',0,datetime('now'))")
+      ]);
+      return true;
+    }).catch(()=>{operationsSchemaPromise=null;return false;});
   }
   return operationsSchemaPromise;
 }
@@ -138,29 +291,35 @@ async function createOrder(data,env,origin){
   }
   const map=new Map(products.map(p=>[p.id,p])),stockStatementIndexes=[],orderId=crypto.randomUUID(),orderNo="SP-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+orderId.slice(0,6).toUpperCase(),now=new Date().toISOString();
   if(new Set(products.map(p=>p.currency)).size!==1)return response({error:"Selected products must use the same currency."},409,origin);
-  const lines=clean.map(x=>{const p=map.get(x.id);return{p,qty:x.qty,line:x.qty*Number(p.unit_price_minor)}});
+  const lines=clean.map(x=>{const p=map.get(x.id),line=safeMultiply(x.qty,Number(p.unit_price_minor));return{p,qty:x.qty,line}});
+  if(lines.some(x=>x.line===null))return response({error:"Order value is outside the supported accounting range."},400,origin);
   const total=lines.reduce((s,x)=>s+x.line,0);
+  if(!Number.isSafeInteger(total)||total<0)return response({error:"Order value is outside the supported accounting range."},400,origin);
   const statements=[env.DB.prepare("INSERT INTO orders(id,order_no,request_id,customer_name,company,email,phone,destination,payment_method,status,payment_status,currency,subtotal,total,subtotal_minor,total_minor,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,'pending','unpaid',?10,?11,?11,?12,?12,?13,?14,?14)").bind(orderId,orderNo,data.requestId||null,data.name,data.company||null,data.email,data.phone||null,data.destination||null,data.payment||null,products[0]?.currency||"USD",minorToMoney(total,products[0]?.currency||"USD"),total,data.notes||null,now,now)];
   for(const x of lines){
-    stockStatementIndexes.push(statements.length); statements.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0").bind(x.qty,now,x.p.id));
+    stockStatementIndexes.push(statements.length);
+    statements.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0").bind(x.qty,now,x.p.id));
     statements.push(env.DB.prepare("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)").bind(crypto.randomUUID(),orderId,x.p.id,x.p.name_en,x.p.unit,x.qty,minorToMoney(x.p.unit_price_minor,x.p.currency),minorToMoney(x.line,x.p.currency),x.p.unit_price_minor,x.line));
-    statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,now));
+    statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5,?6)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,data.requestId||null,now));
   }
-  statements.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,?2,'ORDER',?3,?4,?5,'Order recorded; payment pending',?6)").bind(crypto.randomUUID(),orderId,minorToMoney(total,products[0]?.currency||"USD"),total,products[0]?.currency||"USD",now));
-  statements.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,'receivables','ORDER',?2,?3,'in','order',?4,'Customer receivable created',?5)").bind(crypto.randomUUID(),total,products[0]?.currency||"USD",orderId,now));
-  statements.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id='receivables' AND currency=?3").bind(total,now,products[0]?.currency||"USD"));
   const itemSummary=lines.map(x=>x.qty+" × "+x.p.name_en).join(", ");
   statements.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'NEW_ORDER',?2,'New online order',?3,?4)").bind(crypto.randomUUID(),orderId,orderNo+" · "+data.name+" · "+itemSummary+" · destination: "+(data.destination||"not provided")+" · total "+minorToMoney(total,products[0]?.currency||"USD")+" "+(products[0]?.currency||"USD"),now));
   try{
-    const results=await env.DB.batch(statements);
-    if(stockStatementIndexes.some(i=>Number(results[i]?.meta?.changes||0)!==1))return response({error:"Insufficient stock for one or more products."},409,origin);
+    statements.push(await auditStatement(env,{action:"ORDER_CREATED",entityType:"order",entityId:orderId,after:{order_no:orderNo,total_minor:total,currency:products[0]?.currency||"USD",items:lines.map(x=>({product_id:x.p.id,quantity:x.qty}))},requestId:data.requestId}));
+    await env.DB.batch(statements);
     return response({ok:true,orderId,orderNo,total:minorToMoney(total,products[0]?.currency||"USD"),currency:products[0]?.currency||"USD"},202,origin);
-  }catch(e){return response({error:String(e).toLowerCase().includes("insufficient_stock")||String(e).toLowerCase().includes("stock")?"Insufficient stock for one or more products.":"Order could not be created."},409,origin)}
+  }catch(e){
+    if(data.requestId){
+      const existing=await env.DB.prepare("SELECT id,order_no,total_minor,currency FROM orders WHERE request_id=?1").bind(data.requestId).first();
+      if(existing)return response({ok:true,orderId:existing.id,orderNo:existing.order_no,total:minorToMoney(existing.total_minor,existing.currency),currency:existing.currency},202,origin);
+    }
+    return response({error:String(e).toLowerCase().includes("insufficient_stock")||String(e).toLowerCase().includes("stock")?"Insufficient stock for one or more products.":"Order could not be created."},409,origin)
+  }
 }
 
 async function catalog(env){
-  const rows=await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price_minor,stock_qty,active FROM products WHERE active=1 AND unit_price_minor>0 ORDER BY id").all();
-  return rows.results.map(p=>({...p,available_qty:Number(p.stock_qty),unit_price:minorToMoney(p.unit_price_minor,p.currency),unit_price_minor:Number(p.unit_price_minor)}));
+  const rows=await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price_minor,stock_qty,reserved_qty,active FROM products WHERE active=1 AND unit_price_minor>0 ORDER BY id").all();
+  return rows.results.map(p=>({...p,available_qty:Math.max(0,Number(p.stock_qty||0)-Number(p.reserved_qty||0)),unit_price:minorToMoney(p.unit_price_minor,p.currency),unit_price_minor:Number(p.unit_price_minor)}));
 }
 async function adminDashboard(env){
   const products=(await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price,stock_qty,reserved_qty,sold_qty,active,updated_at FROM products ORDER BY id").all()).results;
@@ -171,68 +330,98 @@ async function adminDashboard(env){
   return{products,orders,alerts,totals};
 }
 async function adminProduct(request,env,origin){
-  if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
+  if(!(await verifySession(request,env)))return response({error:"Unauthorized."},401,origin);
   const b=await readJson(request),id=text(b.id,40),currency=text(b.currency,8)||"USD",priceMinor=moneyToMinor(b.unit_price,currency),stock=Number(b.stock_qty);
   if(!id||priceMinor===null||!Number.isInteger(stock)||stock<0)return response({error:"Invalid product values."},400,origin);
-  const p=await env.DB.prepare("SELECT id,stock_qty,reserved_qty FROM products WHERE id=?1").bind(id).first();if(!p)return response({error:"Product not found."},404,origin);
-  if(stock<Number(p.reserved_qty||0))return response({error:"Stock cannot be lower than reserved quantity."},409,origin);
-  const now=new Date().toISOString(),delta=stock-Number(p.stock_qty);
-  const stm=[env.DB.prepare("UPDATE products SET unit_price=?1,unit_price_minor=?2,currency=?3,active=?4,stock_qty=?5,updated_at=?6 WHERE id=?7").bind(minorToMoney(priceMinor,currency),priceMinor,currency,b.active===false?0:1,stock,now,id)];
-  if(delta)stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,note,created_at) VALUES(?1,?2,?3,?4,?5,?6)").bind(crypto.randomUUID(),id,delta>0?"RESTOCK":"ADJUST",delta,id+" admin adjustment",now));
+  const p=await env.DB.prepare("SELECT id,stock_qty,reserved_qty,sold_qty,unit_cost_minor,currency FROM products WHERE id=?1").bind(id).first();if(!p)return response({error:"Product not found."},404,origin);
+  if(stock!==Number(p.stock_qty||0))return response({error:"Direct stock editing is disabled. Use Stock Receipt or a controlled adjustment workflow so inventory and accounting stay synchronized."},409,origin);
+  if(currency!==p.currency && (Number(p.stock_qty||0)>0||Number(p.reserved_qty||0)>0||Number(p.sold_qty||0)>0||Number(p.unit_cost_minor||0)>0))return response({error:"Currency cannot be changed after inventory or financial history exists. Create a new product code instead."},409,origin);
+  if(b.active===false && Number(p.reserved_qty||0)>0)return response({error:"A product with reserved stock cannot be deactivated."},409,origin);
+  const requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+  if(requestId){const prior=await env.DB.prepare("SELECT id FROM audit_log WHERE request_id=?1 AND action='PRODUCT_UPDATED' LIMIT 1").bind(requestId).first();if(prior)return response({ok:true,replayed:true},200,origin);}
+  const now=new Date().toISOString();
+  const before={stock_qty:Number(p.stock_qty||0),reserved_qty:Number(p.reserved_qty||0)};
+  const stm=[env.DB.prepare("UPDATE products SET unit_price=?1,unit_price_minor=?2,currency=?3,active=?4,updated_at=?5 WHERE id=?6").bind(minorToMoney(priceMinor,currency),priceMinor,currency,b.active===false?0:1,now,id)];
+  stm.push(await auditStatement(env,{action:"PRODUCT_UPDATED",entityType:"product",entityId:id,before,after:{currency,unit_price_minor:priceMinor,stock_qty:stock,active:b.active!==false}}));
   await env.DB.batch(stm);return response({ok:true},200,origin);
 }
 async function adminSale(request,env,origin){
-  if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
-  const b=await readJson(request),id=text(b.product_id,40),qty=Number(b.quantity);
+  if(!(await verifySession(request,env)))return response({error:"Unauthorized."},401,origin);
+  const b=await readJson(request),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100),id=text(b.product_id,40),qty=Number(b.quantity);
+  if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
   if(!id||!Number.isInteger(qty)||qty<1||qty>100000)return response({error:"Invalid sale."},400,origin);
   const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1 AND active=1").bind(id).first();if(!p)return response({error:"Product not found."},404,origin);
   const priceMinor=b.unit_price===undefined||b.unit_price===""?Number(p.unit_price_minor):moneyToMinor(b.unit_price,p.currency);
-  if(priceMinor===null)return response({error:"Invalid sale price."},400,origin);
-  const now=new Date().toISOString(),saleId=crypto.randomUUID(),total=qty*priceMinor;
+  if(priceMinor===null||priceMinor<=0)return response({error:"Invalid sale price."},400,origin);
+  const total=safeMultiply(qty,priceMinor);if(total===null)return response({error:"Sale value is outside the supported accounting range."},400,origin);
+  const costPerUnit=Number(p.unit_cost_minor||0),costTotal=safeMultiply(qty,costPerUnit);
+  if(costPerUnit<=0||costTotal===null)return response({error:"Inventory cost is not configured for this product."},409,origin);
+  const saleId=crypto.randomUUID(),now=new Date().toISOString();
+  const journal=await buildJournal(env,{referenceType:"manual_sale",referenceId:saleId,description:"In-person sale"+(text(b.customer,160)?" · Customer: "+text(b.customer,160):""),currency:p.currency,requestId,lines:[{accountId:"cash",side:"debit",amount:total},{accountId:"income",side:"credit",amount:total}]});
+  const cogsJournal=await buildJournal(env,{referenceType:"manual_cogs",referenceId:saleId,description:"COGS · In-person sale",currency:p.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"cogs",side:"debit",amount:costTotal},{accountId:"inventory",side:"credit",amount:costTotal}]});
+  if(!journal||!cogsJournal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
   try{
-    const r=await env.DB.batch([
-      env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(qty,now,id),
-      env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'SALE',?3,?4,?5,?6)").bind(crypto.randomUUID(),id,qty,saleId,"Manual / in-person sale",now),
-      env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,'SALE',?2,?3,?4,?5,?6)").bind(saleId,minorToMoney(total,p.currency),total,p.currency,"In-person sale"+(text(b.customer,160)?" · Customer: "+text(b.customer,160):""),now),
-      env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,'cash','SALE',?2,?3,'in','sale',?4,'In-person sale receipt',?5)").bind(crypto.randomUUID(),total,p.currency,saleId,now),
-      env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id='cash' AND currency=?3").bind(total,now,p.currency),
-      env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'SALE',?2,'In-person sale recorded',?3,?4)").bind(crypto.randomUUID(),saleId,qty+" × "+p.name_en+" sold",now)
-    ]);
-
-    return response({ok:true,total:minorToMoney(total,p.currency),currency:p.currency},200,origin);
-  }catch(e){return response({error:String(e).includes("INSUFFICIENT_STOCK")?"Insufficient stock.":"Sale could not be recorded."},String(e).includes("INSUFFICIENT_STOCK")?409:500,origin)}
+    const stm=[env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3 AND active=1").bind(qty,now,id),
+      env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'SALE',?3,?4,?5,?6,?7)").bind(crypto.randomUUID(),id,qty,saleId,"Manual / in-person sale",requestId||null,now),
+      ...journal.statements,
+      ...cogsJournal.statements,
+      env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'SALE',?2,'In-person sale recorded',?3,?4)").bind(crypto.randomUUID(),saleId,qty+" × "+p.name_en+" sold",now),
+      await auditStatement(env,{action:"MANUAL_SALE",entityType:"sale",entityId:saleId,after:{product_id:id,quantity:qty,total_minor:total,currency:p.currency,customer:text(b.customer,160)||null},requestId})];
+    await env.DB.batch(stm);return response({ok:true,total:minorToMoney(total,p.currency),currency:p.currency},200,origin);
+  }catch(e){
+    if(requestId){const prior=await env.DB.prepare("SELECT total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first().catch(()=>null);if(prior)return response({ok:true,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+    return response({error:String(e).includes("INSUFFICIENT_STOCK")?"Insufficient stock.":"Sale could not be recorded."},String(e).includes("INSUFFICIENT_STOCK")?409:500,origin)
+  }
 }
 async function adminOrderStatus(request,env,origin){
-  if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
-  const b=await readJson(request),orderId=text(b.order_id,80),next=text(b.status,30);
+  if(!(await verifySession(request,env)))return response({error:"Unauthorized."},401,origin);
+  const b=await readJson(request),orderId=text(b.order_id,80),next=text(b.status,30),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
   if(!orderId||!["pending","processing","paid","ready","fulfilled","cancelled"].includes(next))return response({error:"Invalid order status."},400,origin);
   const order=await env.DB.prepare("SELECT * FROM orders WHERE id=?1").bind(orderId).first();if(!order)return response({error:"Order not found."},404,origin);
-  if(order.status==="fulfilled"||order.status==="cancelled")return response({error:"Closed orders cannot be changed."},409,origin);
+  if(order.status===next)return response({ok:true,replayed:true},200,origin);
+  if(order.status==="fulfilled"||order.status==="cancelled"||!allowedOrderTransition(order.status,next))return response({error:"Invalid order status transition."},409,origin);
   if(next==="cancelled"&&order.payment_status==="paid")return response({error:"A paid order requires a refund/reversal workflow before cancellation."},409,origin);
   if(next==="fulfilled"&&order.payment_status!=="paid")return response({error:"Payment must be confirmed before fulfillment."},409,origin);
-  if(next==="paid"&&order.payment_status==="paid")return response({ok:true},200,origin);
   const now=new Date().toISOString(),items=(await env.DB.prepare("SELECT * FROM order_items WHERE order_id=?1").bind(orderId).all()).results,stm=[];
-  if(next==="cancelled"&&order.payment_status!=="paid")stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) SELECT ?1,'receivables','CANCEL',total_minor,currency,'out','order',id,'Cancelled customer receivable',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
-  if(next==="cancelled"&&order.payment_status!=="paid")stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor-(SELECT total_minor FROM orders WHERE id=?1),updated_at=?2 WHERE id='receivables' AND currency=(SELECT currency FROM orders WHERE id=?1)").bind(orderId,now));
   if(next==="cancelled"){
-    for(const x of items)stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,reserved_qty=MAX(0,reserved_qty-?1),updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
-    for(const x of items)stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RELEASE',?3,?4,'Order cancelled',?5)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,now));
+    for(const x of items){
+      stm.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty-?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
+      stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RELEASE',?3,?4,'Order cancelled',?5,?6)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,now));
+    }
   }
   if(next==="fulfilled"){
+    let cogsTotal=0;
     for(const x of items){
-      stm.push(env.DB.prepare("UPDATE products SET reserved_qty=MAX(0,reserved_qty-?1),sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
-      stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'FULFILL',?3,?4,'Order fulfilled',?5)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,now));
+      const p=await env.DB.prepare("SELECT unit_cost_minor,currency FROM products WHERE id=?1").bind(x.product_id).first();
+      if(!p||p.currency!==order.currency||Number(p.unit_cost_minor||0)<=0)return response({error:"Inventory cost is not configured for one or more products."},409,origin);
+      const lineCost=safeMultiply(Number(x.quantity),Number(p.unit_cost_minor));if(lineCost===null)return response({error:"Inventory cost is outside the supported accounting range."},409,origin);
+      cogsTotal+=lineCost;
+      stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
+      stm.push(env.DB.prepare("UPDATE order_items SET unit_cost_minor=(SELECT unit_cost_minor FROM products WHERE id=?1) WHERE order_id=?2 AND product_id=?1").bind(x.product_id,orderId));
+      stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'FULFILL',?3,?4,'Order fulfilled',?5,?6)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,now));
     }
-    stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) SELECT ?1,id,'SALE',total,total_minor,currency,'Order fulfilled',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
+    const cogsJournal=await buildJournal(env,{referenceType:"order_cogs",referenceId:orderId,description:"COGS · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"cogs",side:"debit",amount:cogsTotal},{accountId:"inventory",side:"credit",amount:cogsTotal}]});
+    if(!cogsJournal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
+    stm.push(...cogsJournal.statements);
   }
-  if(next==="paid")stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) SELECT ?1,id,'PAYMENT',total,total_minor,currency,'Payment confirmed',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
-  if(next==="paid")stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) SELECT ?1,'bank','PAYMENT',total_minor,currency,'in','order',id,'Customer payment received',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
-  if(next==="paid")stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+(SELECT total_minor FROM orders WHERE id=?1),updated_at=?2 WHERE id='bank' AND currency=(SELECT currency FROM orders WHERE id=?1)").bind(orderId,now));
-  if(next==="paid")stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) SELECT ?1,'receivables','PAYMENT',total_minor,currency,'out','order',id,'Receivable settled by payment',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
-  if(next==="paid")stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor-(SELECT total_minor FROM orders WHERE id=?1),updated_at=?2 WHERE id='receivables' AND currency=(SELECT currency FROM orders WHERE id=?1)").bind(orderId,now));
+  if(next==="paid"){
+    const existingSale=await env.DB.prepare("SELECT id FROM journal_transactions WHERE reference_type='order_sale' AND reference_id=?1 LIMIT 1").bind(orderId).first();
+    if(!existingSale){
+      const saleJournal=await buildJournal(env,{referenceType:"order_sale",referenceId:orderId,description:"Sale recognized · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":sale":null,lines:[{accountId:"receivables",side:"debit",amount:Number(order.total_minor)},{accountId:"income",side:"credit",amount:Number(order.total_minor)}]});
+      if(!saleJournal)return response({error:"Accounting accounts are not configured for this order currency."},409,origin);
+      stm.push(...saleJournal.statements);
+    }
+    const existingPayment=await env.DB.prepare("SELECT id FROM journal_transactions WHERE reference_type='order_payment' AND reference_id=?1 LIMIT 1").bind(orderId).first();
+    if(!existingPayment){
+      const paymentJournal=await buildJournal(env,{referenceType:"order_payment",referenceId:orderId,description:"Customer payment received · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":payment":null,lines:[{accountId:"bank",side:"debit",amount:Number(order.total_minor)},{accountId:"receivables",side:"credit",amount:Number(order.total_minor)}]});
+      if(!paymentJournal)return response({error:"Accounting accounts are not configured for this order currency."},409,origin);
+      stm.push(...paymentJournal.statements);
+    }
+  }
   stm.push(env.DB.prepare("UPDATE orders SET status=?1,payment_status=CASE WHEN ?1='paid' OR payment_status='paid' THEN 'paid' ELSE payment_status END,updated_at=?2 WHERE id=?3").bind(next,now,orderId));
+  stm.push(await auditStatement(env,{action:"ORDER_STATUS_CHANGED",entityType:"order",entityId:orderId,before:{status:order.status,payment_status:order.payment_status},after:{status:next,payment_status:next==="paid"?"paid":order.payment_status},requestId}));
   stm.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'ORDER_STATUS',?2,'Order status updated',?3,?4)").bind(crypto.randomUUID(),orderId,order.order_no+" → "+next,now));
-  await env.DB.batch(stm);return response({ok:true},200,origin);
+  try{await env.DB.batch(stm);return response({ok:true},200,origin)}catch(_){return response({error:"Order status could not be updated."},500,origin)}
 }
 
 
@@ -248,9 +437,12 @@ async function accountingSnapshot(env){
   const entries=(await env.DB.prepare("SELECT id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at FROM financial_entries ORDER BY created_at DESC LIMIT 100").all()).results;
   const docs=(await env.DB.prepare("SELECT id,document_type,title,reference_type,reference_id,mime_type,size_bytes,notes,captured_offline,created_at FROM documents ORDER BY created_at DESC LIMIT 50").all()).results;
   const flags=(await env.DB.prepare("SELECT * FROM audit_flags WHERE is_resolved=0 ORDER BY CASE severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END,created_at DESC LIMIT 80").all()).results;
-  const summary=(await env.DB.prepare("SELECT currency,COALESCE(SUM(CASE WHEN entry_type='SALE' THEN amount_minor ELSE 0 END),0) sales_minor,COALESCE(SUM(CASE WHEN entry_type='PAYMENT' THEN amount_minor ELSE 0 END),0) payments_minor,COALESCE(SUM(CASE WHEN entry_type='EXPENSE' THEN amount_minor ELSE 0 END),0) expenses_minor FROM accounting_ledger GROUP BY currency").all()).results;
-  const inventory=(await env.DB.prepare("SELECT COALESCE(SUM(stock_qty),0) qty,COALESCE(SUM(reserved_qty),0) reserved,COALESCE(SUM(sold_qty),0) sold FROM products WHERE active=1").first())||{};
-  return {accounts,costs,entries,docs,flags,summary,inventory};
+  const summary=(await env.DB.prepare("SELECT jt.currency,COALESCE(SUM(CASE WHEN a.account_type='income' AND jl.side='credit' THEN jl.amount_minor ELSE 0 END),0) sales_minor,COALESCE(SUM(CASE WHEN a.account_type IN ('cash','bank') AND jl.side='debit' AND jt.reference_type IN ('order_payment','manual_sale') THEN jl.amount_minor ELSE 0 END),0) payments_minor,COALESCE(SUM(CASE WHEN a.account_type='expense' AND jl.side='debit' THEN jl.amount_minor ELSE 0 END),0) expenses_minor,COALESCE(SUM(CASE WHEN a.account_type='cogs' AND jl.side='debit' THEN jl.amount_minor ELSE 0 END),0) cogs_minor FROM journal_transactions jt JOIN journal_lines jl ON jl.transaction_id=jt.id JOIN accounts a ON a.id=jl.account_id GROUP BY jt.currency").all()).results;
+  const trialBalance=(await env.DB.prepare("SELECT a.id,a.name,a.account_type,a.currency,a.current_balance_minor,COALESCE(SUM(CASE WHEN jl.side='debit' THEN jl.amount_minor ELSE 0 END),0) debit_minor,COALESCE(SUM(CASE WHEN jl.side='credit' THEN jl.amount_minor ELSE 0 END),0) credit_minor FROM accounts a LEFT JOIN journal_lines jl ON jl.account_id=a.id AND jl.currency=a.currency WHERE a.active=1 GROUP BY a.id,a.name,a.account_type,a.currency,a.current_balance_minor ORDER BY a.currency,a.account_type,a.name").all()).results;
+  const trialBalanceTotals=(await env.DB.prepare("SELECT jt.currency,COALESCE(SUM(CASE WHEN jl.side='debit' THEN jl.amount_minor ELSE 0 END),0) debit_minor,COALESCE(SUM(CASE WHEN jl.side='credit' THEN jl.amount_minor ELSE 0 END),0) credit_minor FROM journal_transactions jt JOIN journal_lines jl ON jl.transaction_id=jt.id GROUP BY jt.currency").all()).results;
+  const profitAndLoss=(await env.DB.prepare("SELECT currency,COALESCE(SUM(CASE WHEN account_type='income' AND side='credit' THEN amount_minor WHEN account_type='income' AND side='debit' THEN -amount_minor ELSE 0 END),0) revenue_minor,COALESCE(SUM(CASE WHEN account_type='cogs' AND side='debit' THEN amount_minor WHEN account_type='cogs' AND side='credit' THEN -amount_minor ELSE 0 END),0) cogs_minor,COALESCE(SUM(CASE WHEN account_type='expense' AND side='debit' THEN amount_minor WHEN account_type='expense' AND side='credit' THEN -amount_minor ELSE 0 END),0) expenses_minor FROM (SELECT jt.currency,a.account_type,jl.side,jl.amount_minor FROM journal_transactions jt JOIN journal_lines jl ON jl.transaction_id=jt.id JOIN accounts a ON a.id=jl.account_id) GROUP BY currency").all()).results;
+  const inventory=(await env.DB.prepare("SELECT COALESCE(SUM(stock_qty),0) qty,COALESCE(SUM(reserved_qty),0) reserved,COALESCE(SUM(sold_qty),0) sold,COALESCE(SUM(stock_qty*unit_cost_minor),0) valuation_minor FROM products WHERE active=1").first())||{};
+  return {accounts,costs,entries,docs,flags,summary,trialBalance,trialBalanceTotals,profitAndLoss,inventory};
 }
 
 async function runAudit(env){
@@ -263,90 +455,159 @@ async function runAudit(env){
   const products=(await env.DB.prepare("SELECT id,name_fa,stock_qty,reserved_qty,sold_qty FROM products WHERE active=1").all()).results;
   const threshold=Number((await env.DB.prepare("SELECT value FROM operational_settings WHERE key='low_stock_threshold'").first())?.value||100);
   for(const p of products){
-    if(Number(p.stock_qty)<0||Number(p.reserved_qty)<0) add("critical","inventory",p.id,"مغایرت موجودی","مقدار موجودی یا رزرو منفی است.","موجودی این کالا را فوری بررسی کنید.");
-    if(Number(p.reserved_qty)>Number(p.stock_qty)) add("high","inventory",p.id,"رزرو غیرعادی","رزرو از موجودی قابل ثبت بیشتر است.","سفارش‌های باز و موجودی را تطبیق دهید.");
+    if(Number(p.stock_qty)<0||Number(p.reserved_qty)<0||Number(p.sold_qty)<0) add("critical","inventory",p.id,"مغایرت موجودی","مقدار موجودی، رزرو یا فروش منفی است.","موجودی این کالا را فوری بررسی کنید.");
+    if(Number(p.reserved_qty)>Number(p.stock_qty)) add("critical","inventory",p.id,"رزرو غیرعادی","رزرو از موجودی فیزیکی بیشتر است.","سفارش‌های باز و موجودی را فوراً تطبیق دهید.");
     if(Number(p.stock_qty)<=threshold) add("medium","low_stock",p.id,"موجودی کم","موجودی "+p.name_fa+" به "+p.stock_qty+" رسیده است.","برای تأمین مجدد یا افزایش نقطه سفارش تصمیم بگیرید.");
   }
   const pending=(await env.DB.prepare("SELECT id,order_no FROM orders WHERE status IN ('pending','processing','paid','ready') AND created_at < datetime('now','-1 day')").all()).results;
   for(const o of pending)add("high","order",o.id,"سفارش باز قدیمی","سفارش "+o.order_no+" بیش از ۲۴ ساعت باز مانده است.","وضعیت پرداخت، آماده‌سازی یا تحویل را بررسی کنید.");
   const paid=(await env.DB.prepare("SELECT id,order_no FROM orders WHERE payment_status='paid' AND status NOT IN ('fulfilled','cancelled') AND created_at < datetime('now','-1 day')").all()).results;
   for(const o of paid)add("high","payment",o.id,"پرداخت بدون تحویل","سفارش "+o.order_no+" پرداخت شده اما هنوز تحویل نهایی نشده است.","آماده‌سازی و لجستیک را بررسی کنید.");
-  const missingSale=(await env.DB.prepare("SELECT o.id,o.order_no FROM orders o WHERE o.status='fulfilled' AND NOT EXISTS(SELECT 1 FROM accounting_ledger a WHERE a.order_id=o.id AND a.entry_type='SALE')").all()).results;
+  const unbalanced=(await env.DB.prepare("SELECT jt.id,jt.reference_type,jt.reference_id,jt.currency,jt.total_minor,COALESCE(SUM(CASE WHEN jl.side='debit' THEN jl.amount_minor ELSE 0 END),0) debits,COALESCE(SUM(CASE WHEN jl.side='credit' THEN jl.amount_minor ELSE 0 END),0) credits FROM journal_transactions jt LEFT JOIN journal_lines jl ON jl.transaction_id=jt.id GROUP BY jt.id HAVING debits<>credits OR debits<>jt.total_minor").all()).results;
+  for(const j of unbalanced)add("critical","accounting",j.id,"سند حسابداری نامتوازن","سند "+(j.reference_type||"نامشخص")+" از نظر بدهکار/بستانکار نامتوازن است.","سند را مسدود و قبل از هر اصلاحی Audit و دفتر کل را بررسی کنید.");
+  const orphanLines=(await env.DB.prepare("SELECT jl.id FROM journal_lines jl LEFT JOIN journal_transactions jt ON jt.id=jl.transaction_id WHERE jt.id IS NULL LIMIT 20").all()).results;
+  for(const j of orphanLines)add("critical","accounting",j.id,"خط حسابداری یتیم","خط Journal بدون سند اصلی وجود دارد.","دیتابیس و migration integrity را بررسی کنید.");
+  const missingSale=(await env.DB.prepare("SELECT o.id,o.order_no FROM orders o WHERE o.status IN ('paid','ready','fulfilled') AND NOT EXISTS(SELECT 1 FROM journal_transactions j WHERE j.reference_type='order_sale' AND j.reference_id=o.id)").all()).results;
   for(const o of missingSale)add("critical","accounting",o.id,"فروش بدون ثبت حسابداری","سفارش "+o.order_no+" تحویل شده ولی سند فروش ندارد.","ثبت حسابداری فروش را بررسی کنید.");
-  const missingPayment=(await env.DB.prepare("SELECT o.id,o.order_no FROM orders o WHERE o.payment_status='paid' AND NOT EXISTS(SELECT 1 FROM accounting_ledger a WHERE a.order_id=o.id AND a.entry_type='PAYMENT')").all()).results;
+  const missingPayment=(await env.DB.prepare("SELECT o.id,o.order_no FROM orders o WHERE o.payment_status='paid' AND NOT EXISTS(SELECT 1 FROM journal_transactions j WHERE j.reference_type='order_payment' AND j.reference_id=o.id)").all()).results;
   for(const o of missingPayment)add("critical","accounting",o.id,"دریافت بدون ثبت حسابداری","پرداخت سفارش "+o.order_no+" ثبت شده ولی سند دریافت ندارد.","ثبت دریافت را بررسی کنید.");
   const due=(await env.DB.prepare("SELECT id,description,due_date,amount_minor,currency FROM supply_costs WHERE status='planned' AND due_date IS NOT NULL AND due_date < date('now')").all()).results;
   for(const x of due)add("high","supply_cost",x.id,"هزینه سررسید گذشته","هزینه «"+x.description+"» از موعد پرداخت گذشته است.","پرداخت یا وضعیت آن را ثبت کنید.");
+  const imbalanced=(await env.DB.prepare("SELECT jt.id,jt.reference_type,jt.reference_id,jt.currency,jt.total_minor,COALESCE(SUM(CASE WHEN jl.side='debit' THEN jl.amount_minor ELSE 0 END),0) debit_minor,COALESCE(SUM(CASE WHEN jl.side='credit' THEN jl.amount_minor ELSE 0 END),0) credit_minor FROM journal_transactions jt LEFT JOIN journal_lines jl ON jl.transaction_id=jt.id GROUP BY jt.id HAVING debit_minor<>credit_minor OR debit_minor<>jt.total_minor").all()).results;
+  for(const j of imbalanced)add("critical","journal",j.id,"سند حسابداری نامتوازن","سند "+(j.reference_id||j.id)+" توازن بدهکار و بستانکار ندارد.","سند را مسدود و منبع ثبت را بررسی کنید.");
   const negative=(await env.DB.prepare("SELECT id,name,current_balance_minor,currency FROM accounts WHERE active=1 AND account_type IN ('cash','bank') AND current_balance_minor<0").all()).results;
   for(const a of negative)add("high","account",a.id,"مانده منفی حساب","مانده "+a.name+" منفی است.","ثبت‌ها و انتقال‌های مالی را تطبیق دهید.");
+  const overdue=(await env.DB.prepare("SELECT m.id,m.case_id,m.milestone_type,m.due_date,c.case_no FROM supply_milestones m JOIN supply_cases c ON c.id=m.case_id WHERE m.status NOT IN ('done') AND m.due_date IS NOT NULL AND m.due_date < datetime('now')").all()).results;
+  for(const m of overdue)add("high","supply_chain",m.id,"مرحله زنجیره تأمین عقب‌افتاده","مرحله "+m.milestone_type+" در پرونده "+m.case_no+" از موعد گذشته است.","مرحله را بررسی و وضعیت یا تاریخ آن را به‌روزرسانی کنید.");
   if(flags.length){
     await env.DB.batch(flags.map(x=>env.DB.prepare("INSERT INTO audit_flags(id,severity,category,reference_type,reference_id,title,message,suggested_action,is_resolved,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,0,?9) ON CONFLICT(id) DO UPDATE SET severity=excluded.severity,title=excluded.title,message=excluded.message,suggested_action=excluded.suggested_action,is_resolved=0,resolved_at=NULL").bind(x.id,x.severity,"AUTO",x.reference_type,x.reference_id,x.title,x.message,x.suggested_action,now)));
   }
-  const overdue=(await env.DB.prepare("SELECT m.id,m.case_id,m.milestone_type,m.due_date,c.case_no FROM supply_milestones m JOIN supply_cases c ON c.id=m.case_id WHERE m.status NOT IN ('done') AND m.due_date IS NOT NULL AND m.due_date < datetime('now')").all()).results;
-  for(const m of overdue)add("high","supply_chain",m.id,"مرحله زنجیره تأمین عقب‌افتاده","مرحله "+m.milestone_type+" در پرونده "+m.case_no+" از موعد گذشته است.","مرحله را بررسی و وضعیت یا تاریخ آن را به‌روزرسانی کنید.");
   return flags;
 }
 
 async function adminAccounting(request,env,origin){
-  if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
+  if(!(await verifySession(request,env)))return response({error:"Unauthorized."},401,origin);
   const path=new URL(request.url).pathname;
   if(path==="/admin/accounting"&&request.method==="GET"){
     await runAudit(env);
     return response(await accountingSnapshot(env),200,origin);
   }
   if(path==="/admin/account"&&request.method==="POST"){
-    const b=await readJson(request),id=text(b.id,50)||crypto.randomUUID(),name=text(b.name,120),type=text(b.account_type,30),currency=text(b.currency,8)||"USD";
-    if(!name||!["cash","bank","receivable","payable","inventory","expense","income","other"].includes(type))return response({error:"Invalid account."},400,origin);
+    const b=await readJson(request),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null,id=text(b.id,50)||crypto.randomUUID(),name=text(b.name,120),type=text(b.account_type,30),currency=text(b.currency,8)||"USD",offsetId=text(b.offset_account_id,60);
+    if(requestId){const prior=await env.DB.prepare("SELECT id FROM accounts WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,replayed:true},200,origin);}
+    const existing=await env.DB.prepare("SELECT id FROM accounts WHERE id=?1").bind(id).first();if(existing)return response({error:"Account already exists; ledger accounts are immutable in structure."},409,origin);
+    if(!name||!["cash","bank","receivable","payable","inventory","expense","income","cogs","other"].includes(type))return response({error:"Invalid account."},400,origin);
     const now=new Date().toISOString(),opening=moneyToMinor(b.opening_balance,currency);if(opening===null)return response({error:"Invalid opening balance."},400,origin);
-    await env.DB.prepare("INSERT INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?5,1,?6,?6) ON CONFLICT(id) DO UPDATE SET name=excluded.name,account_type=excluded.account_type,currency=excluded.currency,updated_at=excluded.updated_at").bind(id,name,type,currency,opening,now).run();
-    return response({ok:true,id},200,origin);
+    if(opening>0&&!offsetId)return response({error:"An opening balance requires an offset account."},400,origin);
+    if(offsetId===id)return response({error:"Opening balance requires a different offset account."},400,origin);
+    const normal=["cash","bank","receivable","inventory","expense","cogs"].includes(type)?"debit":"credit";
+    const statements=[env.DB.prepare("INSERT INTO accounts(id,request_id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,0,1,?7,?7) ON CONFLICT(id) DO UPDATE SET name=excluded.name,account_type=excluded.account_type,currency=excluded.currency,updated_at=excluded.updated_at") .bind(id,requestId,name,type,currency,opening,now)];
+    if(opening>0){
+      const offset=await env.DB.prepare("SELECT id,name,account_type,currency,active FROM accounts WHERE id=?1").bind(offsetId).first();
+      if(!offset||!offset.active||offset.currency!==currency)return response({error:"Invalid opening balance offset account."},400,origin);
+      const journal=await buildJournal(env,{referenceType:"opening_balance",referenceId:id,description:"Opening balance · "+name,currency,requestId:requestId?requestId+":opening":null,lines:normal==="debit"?[{accountId:id,side:"debit",amount:opening},{accountId:offsetId,side:"credit",amount:opening}]:[{accountId:id,side:"credit",amount:opening},{accountId:offsetId,side:"debit",amount:opening}],extraAccounts:[{id,name,account_type:type,currency,active:1}]});
+      if(!journal)return response({error:"Unable to create opening balance journal."},409,origin);
+      statements.push(...journal.statements);
+    }
+    try{await env.DB.batch([...statements,await auditStatement(env,{action:"ACCOUNT_CREATED",entityType:"account",entityId:id,after:{name,type,currency,opening_minor:opening},requestId})]);return response({ok:true,id},200,origin);}catch(_){return response({error:"Account could not be saved."},409,origin)}
   }
   if(path==="/admin/accounting/entry"&&request.method==="POST"){
-    const b=await readJson(request),accountId=text(b.account_id,60),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency),direction=text(b.direction,3),type=text(b.entry_type,30)||"adjustment";
+    const b=await readJson(request),accountId=text(b.account_id,60),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency),direction=text(b.direction,3),type=text(b.entry_type,30)||"adjustment",offsetId=text(b.offset_account_id,60);
     if(!accountId||amount===null||amount<=0||!["in","out"].includes(direction))return response({error:"Invalid accounting entry."},400,origin);
-    const account=await env.DB.prepare("SELECT * FROM accounts WHERE id=?1 AND active=1").bind(accountId).first();if(!account)return response({error:"Account not found."},404,origin);
-    if(account.currency!==currency)return response({error:"Account currency does not match."},409,origin);
-    const id=crypto.randomUUID(),now=new Date().toISOString(),delta=direction==="in"?amount:-amount;
-    await env.DB.batch([
-      env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)").bind(id,accountId,type,amount,currency,direction,text(b.reference_type,40),text(b.reference_id,80),text(b.description,300),now),
-      env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id=?3").bind(delta,now,accountId),
-      env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7)").bind(id,type,minorToMoney(amount,currency),amount,currency,text(b.description,300),now)
-    ]);
-    return response({ok:true,id},200,origin);
+    const counterpart=offsetId||(direction==="in"?"income":"expense");
+    if(counterpart===accountId)return response({error:"A journal needs two different accounts."},400,origin);
+    const requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+    const journal=await buildJournal(env,{referenceType:type,referenceId:text(b.reference_id,100)||crypto.randomUUID(),description:text(b.description,300)||type,currency,lines:direction==="in"?[{accountId,side:"debit",amount},{accountId:counterpart,side:"credit",amount}]:[{accountId,side:"credit",amount},{accountId:counterpart,side:"debit",amount}],requestId});
+    if(!journal)return response({error:"Unable to create a balanced journal for these accounts."},409,origin);
+    try{await env.DB.batch([...journal.statements,await auditStatement(env,{action:"ACCOUNTING_ENTRY_POSTED",entityType:"journal",entityId:journal.txId,after:{entry_type:type,amount_minor:amount,currency,direction,account_id:accountId,offset_account_id:counterpart},requestId})]);return response({ok:true,id:journal.txId},200,origin)}
+    catch(e){
+      if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first().catch(()=>null);if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+      return response({error:"Accounting entry could not be posted."},500,origin);
+    }
   }
   if(path==="/admin/supply-cost"&&request.method==="POST"){
-    const b=await readJson(request),category=text(b.category,40),description=text(b.description,240),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency);
+    const b=await readJson(request),category=text(b.category,40),description=text(b.description,240),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency),accountId=text(b.account_id,60)||"cash";
     if(!category||!description||amount===null||amount<=0)return response({error:"Invalid supply cost."},400,origin);
-    const id=crypto.randomUUID(),now=new Date().toISOString(),status=["planned","paid","cancelled"].includes(b.status)?b.status:"planned";
-    const accountId=text(b.account_id,60)||null;
+    const id=crypto.randomUUID(),now=new Date().toISOString(),status=["planned","paid","cancelled"].includes(b.status)?b.status:"planned",requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(requestId){const prior=await env.DB.prepare("SELECT id FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,replayed:true},200,origin);const existing=await env.DB.prepare("SELECT id FROM supply_costs WHERE request_id=?1").bind(requestId).first();if(existing)return response({ok:true,id:existing.id,replayed:true},200,origin);}
     const stm=[env.DB.prepare("INSERT INTO supply_costs(id,category,supplier,description,amount_minor,currency,status,due_date,paid_at,account_id,reference_id,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?12)").bind(id,category,text(b.supplier,160),description,amount,currency,status,text(b.due_date,30)||null,status==="paid"?now:null,accountId,text(b.reference_id,100)||null,now)];
-    if(status==="paid"&&accountId){
-      const acc=await env.DB.prepare("SELECT * FROM accounts WHERE id=?1").bind(accountId).first();if(!acc||acc.currency!==currency)return response({error:"Invalid payment account."},409,origin);
-      stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,?2,'EXPENSE',?3,?4,'out','supply_cost',?5,?6,?7)").bind(crypto.randomUUID(),accountId,amount,currency,id,description,now));
-      stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor-?1,updated_at=?2 WHERE id=?3").bind(amount,now,accountId));
-      stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,'EXPENSE',?2,?3,?4,?5,?6)").bind(crypto.randomUUID(),minorToMoney(amount,currency),amount,currency,description,now));
+    if(status==="paid"){
+      const journal=await buildJournal(env,{referenceType:"supply_cost",referenceId:id,description, currency,requestId,lines:[{accountId:"expense",side:"debit",amount},{accountId,side:"credit",amount}]});
+      if(!journal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
+      stm.push(...journal.statements);
     }
-    await env.DB.batch(stm);return response({ok:true,id},200,origin);
+    stm.push(await auditStatement(env,{action:"SUPPLY_COST_CREATED",entityType:"supply_cost",entityId:id,after:{category,amount_minor:amount,currency,status,account_id:accountId},requestId}));
+    try{await env.DB.batch(stm);return response({ok:true,id},200,origin)}catch(_){return response({error:"Supply cost could not be recorded."},500,origin)}
   }
   if(path==="/admin/stock-receipt"&&request.method==="POST"){
-    const b=await readJson(request),productId=text(b.product_id,50),qty=Number(b.quantity),currency=text(b.currency,8)||"USD",unitCost=moneyToMinor(b.unit_cost,currency);
-    if(!productId||!Number.isInteger(qty)||qty<1||unitCost===null)return response({error:"Invalid stock receipt."},400,origin);
+    const b=await readJson(request),productId=text(b.product_id,50),qty=Number(b.quantity),currency=text(b.currency,8)||"USD",unitCost=moneyToMinor(b.unit_cost,currency),accountId=text(b.account_id,60)||"cash";
+    if(!productId||!Number.isInteger(qty)||qty<1||unitCost===null||unitCost<=0)return response({error:"Invalid stock receipt."},400,origin);
     const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1").bind(productId).first();if(!p)return response({error:"Product not found."},404,origin);
-    const total=qty*unitCost,id=crypto.randomUUID(),now=new Date().toISOString(),accountId=text(b.account_id,60)||null;
-    const stm=[env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,updated_at=?2 WHERE id=?3").bind(qty,now,productId),env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RESTOCK',?3,?4,?5,?6)").bind(crypto.randomUUID(),productId,qty,id,(text(b.note,240)||"Stock receipt")+" · Warehouse: Gorgan",now)];
-    if(accountId){
-      const acc=await env.DB.prepare("SELECT * FROM accounts WHERE id=?1").bind(accountId).first();if(!acc||acc.currency!==currency)return response({error:"Invalid payment account."},409,origin);
-      stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,?2,'PURCHASE',?3,?4,'out','stock_receipt',?5,?6,?7)").bind(crypto.randomUUID(),accountId,total,currency,id,"Stock purchase / receipt",now));
-      stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor-?1,updated_at=?2 WHERE id=?3").bind(total,now,accountId));
-      stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,'PURCHASE',?2,?3,?4,'Stock purchase / receipt',?5)").bind(crypto.randomUUID(),minorToMoney(total,currency),total,currency,now));
+    const total=safeMultiply(qty,unitCost);if(total===null)return response({error:"Purchase value is outside the supported accounting range."},400,origin);
+    const id=crypto.randomUUID(),now=new Date().toISOString(),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+    const journal=await buildJournal(env,{referenceType:"stock_receipt",referenceId:id,description:"Stock purchase / receipt",currency,requestId,lines:[{accountId:"inventory",side:"debit",amount:total},{accountId,side:"credit",amount:total}]});
+    if(!journal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
+    if(p.currency!==currency)return response({error:"Receipt currency must match product currency."},409,origin);
+    const oldStock=Number(p.stock_qty||0),oldCost=Number(p.unit_cost_minor||0);
+    const weightedDen=oldStock+qty;
+    const weightedNum=safeMultiply(oldStock,oldCost);
+    const receiptWeighted=safeMultiply(qty,unitCost);
+    if(weightedNum===null||receiptWeighted===null||weightedDen<=0)return response({error:"Inventory valuation is outside the supported range."},409,origin);
+    const weightedCost=Math.floor((weightedNum+receiptWeighted)/weightedDen);
+    try{
+      await env.DB.batch([env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,unit_cost_minor=?2,updated_at=?3 WHERE id=?4").bind(qty,weightedCost,now,productId),
+        env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RESTOCK',?3,?4,?5,?6,?7)").bind(crypto.randomUUID(),productId,qty,id,(text(b.note,240)||"Stock receipt")+" · Warehouse: Gorgan",requestId,now),
+        ...journal.statements,
+        await auditStatement(env,{action:"STOCK_RECEIPT",entityType:"stock",entityId:id,after:{product_id:productId,quantity:qty,total_minor:total,currency},requestId})]);
+      return response({ok:true,id,total:minorToMoney(total,currency),currency},200,origin);
+    }catch(e){
+      if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first().catch(()=>null);if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+      return response({error:"Stock receipt could not be recorded."},500,origin);
     }
-    await env.DB.batch(stm);return response({ok:true,id,total:minorToMoney(total,currency),currency},200,origin);
   }
+
+  if(path==="/admin/refund"&&request.method==="POST"){
+    const b=await readJson(request),orderId=text(b.order_id,80),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(!orderId)return response({error:"Order id is required."},400,origin);
+    if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+    const order=await env.DB.prepare("SELECT * FROM orders WHERE id=?1").bind(orderId).first();if(!order)return response({error:"Order not found."},404,origin);
+    if(order.payment_status!=="paid")return response({error:"Only paid orders can be refunded."},409,origin);
+    const existing=await env.DB.prepare("SELECT id FROM journal_transactions WHERE reference_type='order_refund_payment' AND reference_id=?1 LIMIT 1").bind(orderId).first();if(existing)return response({error:"This order has already been refunded."},409,origin);
+    const returnInventory=b.return_inventory===true,now=new Date().toISOString(),stm=[];
+    const saleReverse=await buildJournal(env,{referenceType:"order_refund_sale",referenceId:orderId,description:"Refund revenue · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":sale":null,lines:[{accountId:"income",side:"debit",amount:Number(order.total_minor)},{accountId:"receivables",side:"credit",amount:Number(order.total_minor)}]});
+    const paymentReverse=await buildJournal(env,{referenceType:"order_refund_payment",referenceId:orderId,description:"Refund customer payment · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":payment":null,lines:[{accountId:"receivables",side:"debit",amount:Number(order.total_minor)},{accountId:"bank",side:"credit",amount:Number(order.total_minor)}]});
+    if(!saleReverse||!paymentReverse)return response({error:"Refund accounts are not configured for this currency."},409,origin);
+    stm.push(...saleReverse.statements,...paymentReverse.statements);
+    if(order.status==="fulfilled"&&returnInventory){
+      const items=(await env.DB.prepare("SELECT product_id,quantity,unit_cost_minor FROM order_items WHERE order_id=?1").bind(orderId).all()).results;
+      let totalCost=0;
+      for(const x of items){
+        const cost=safeMultiply(Number(x.quantity),Number(x.unit_cost_minor||0));if(cost===null||cost<=0)return response({error:"Exact refund cost basis is unavailable for this fulfilled order."},409,origin);
+        totalCost+=cost;
+        stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,sold_qty=sold_qty-?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
+        stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RETURN',?3,?4,'Refund / inventory returned',?5,?6)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,now));
+      }
+      const cogsReverse=await buildJournal(env,{referenceType:"order_refund_cogs",referenceId:orderId,description:"Reverse COGS · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"inventory",side:"debit",amount:totalCost},{accountId:"cogs",side:"credit",amount:totalCost}]});
+      if(!cogsReverse)return response({error:"Refund COGS accounts are not configured."},409,origin);
+      stm.push(...cogsReverse.statements);
+    }
+    stm.push(env.DB.prepare("UPDATE orders SET status='cancelled',payment_status='refunded',updated_at=?1 WHERE id=?2").bind(now,orderId));
+    stm.push(await auditStatement(env,{action:"ORDER_REFUNDED",entityType:"order",entityId:orderId,before:{status:order.status,payment_status:order.payment_status},after:{status:"cancelled",payment_status:"refunded",return_inventory:returnInventory},requestId}));
+    try{await env.DB.batch(stm);return response({ok:true,orderId,refunded:minorToMoney(order.total_minor,order.currency),currency:order.currency},200,origin)}
+    catch(e){
+      if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first().catch(()=>null);if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+      return response({error:"Refund could not be completed."},500,origin);
+    }
+  }
+
   if(path==="/admin/document"&&request.method==="POST"){
     const b=await readJson(request,1550000),title=text(b.title,160),type=text(b.document_type,40),dataUrl=text(b.data_url,1450000);
     if(!title||!type||!dataUrl.startsWith("data:image/")||dataUrl.length>1450000)return response({error:"Document image is missing or too large."},400,origin);
-    const mime=(dataUrl.match(/^data:([^;]+);base64,/)||[])[1]||"image/jpeg",id=crypto.randomUUID(),now=new Date().toISOString();
-    await env.DB.prepare("INSERT INTO documents(id,document_type,title,reference_type,reference_id,data_url,mime_type,size_bytes,notes,captured_offline,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)").bind(id,type,title,text(b.reference_type,40),text(b.reference_id,100),dataUrl,mime,Math.floor(dataUrl.length*0.75),text(b.notes,300),b.captured_offline?1:0,now).run();
+    const mime=(dataUrl.match(/^data:([^;]+);base64,/)||[])[1]||"image/jpeg",id=crypto.randomUUID(),now=new Date().toISOString(),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(requestId){const existing=await env.DB.prepare("SELECT id FROM documents WHERE request_id=?1").bind(requestId).first();if(existing)return response({ok:true,id:existing.id,replayed:true},200,origin);}
+    await env.DB.prepare("INSERT INTO documents(id,request_id,document_type,title,reference_type,reference_id,data_url,mime_type,size_bytes,notes,captured_offline,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)").bind(id,requestId,type,title,text(b.reference_type,40),text(b.reference_id,100),dataUrl,mime,Math.floor(dataUrl.length*0.75),text(b.notes,300),b.captured_offline?1:0,now).run();
     return response({ok:true,id},202,origin);
   }
 
@@ -368,29 +629,32 @@ async function adminAccounting(request,env,origin){
     return response({cases,milestones},200,origin);
   }
   if(path==="/admin/supply-case"&&request.method==="POST"){
-    const b=await readJson(request),id=crypto.randomUUID(),now=new Date().toISOString();
+    const b=await readJson(request),id=crypto.randomUUID(),now=new Date().toISOString(),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(requestId){const existing=await env.DB.prepare("SELECT id,case_no FROM supply_cases WHERE request_id=?1").bind(requestId).first();if(existing)return response({ok:true,id:existing.id,caseNo:existing.case_no,replayed:true},200,origin);}
     const productId=text(b.product_id,50)||null,caseNo=text(b.case_no,60)||("SC-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+id.slice(0,6).toUpperCase());
     const qty=Number(b.quantity)||0,currency=text(b.currency,8)||"USD",total=moneyToMinor(b.purchase_total,currency);
     if(qty<0||!Number.isInteger(qty)||total===null||total<0)return response({error:"Invalid supply case."},400,origin);
     const types=["factory_order","factory_payment","customs","transport","warehouse_receipt","ready_for_delivery"];
-    const stm=[env.DB.prepare("INSERT INTO supply_cases(id,case_no,product_id,quantity,supplier,currency,purchase_total_minor,status,expected_date,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,'open',?8,?9,?10,?10)").bind(id,caseNo,productId,qty,text(b.supplier,160),currency,total,text(b.expected_date,30)||null,text(b.notes,500)||null,now)];
+    const stm=[env.DB.prepare("INSERT INTO supply_cases(id,request_id,case_no,product_id,quantity,supplier,currency,purchase_total_minor,status,expected_date,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,'open',?9,?10,?11,?11)").bind(id,requestId,caseNo,productId,qty,text(b.supplier,160),currency,total,text(b.expected_date,30)||null,text(b.notes,500)||null,now)];
     for(const type of types)stm.push(env.DB.prepare("INSERT INTO supply_milestones(id,case_id,milestone_type,status,created_at,updated_at) VALUES(?1,?2,?3,'pending',?4,?4)").bind(crypto.randomUUID(),id,type,now));
     await env.DB.batch(stm);
     return response({ok:true,id,caseNo},200,origin);
   }
   if(path==="/admin/supply-milestone"&&request.method==="POST"){
-    const b=await readJson(request),id=text(b.id,80),status=text(b.status,20);
+    const b=await readJson(request),id=text(b.id,80),status=text(b.status,20),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(requestId){const existing=await env.DB.prepare("SELECT id FROM supply_milestones WHERE request_id=?1").bind(requestId).first();if(existing)return response({ok:true,id:existing.id,replayed:true},200,origin);}
     if(!id||!["pending","in_progress","done","blocked"].includes(status))return response({error:"Invalid milestone."},400,origin);
     const now=new Date().toISOString();
     const m=await env.DB.prepare("SELECT * FROM supply_milestones WHERE id=?1").bind(id).first();if(!m)return response({error:"Milestone not found."},404,origin);
     await env.DB.batch([
-      env.DB.prepare("UPDATE supply_milestones SET status=?1,completed_at=?2,reference_id=?3,notes=?4,updated_at=?5 WHERE id=?6").bind(status,status==="done"?now:null,text(b.reference_id,100)||null,text(b.notes,500)||null,now,id),
+      env.DB.prepare("UPDATE supply_milestones SET status=?1,completed_at=?2,reference_id=?3,notes=?4,request_id=COALESCE(request_id,?5),updated_at=?6 WHERE id=?7").bind(status,status==="done"?now:null,text(b.reference_id,100)||null,text(b.notes,500)||null,requestId,now,id),
       env.DB.prepare("UPDATE supply_cases SET status=CASE WHEN ?1='done' AND ?2='ready_for_delivery' THEN 'ready_for_delivery' WHEN ?1='blocked' THEN 'blocked' ELSE status END,updated_at=?3 WHERE id=?4").bind(status,m.milestone_type,now,m.case_id)
     ]);
     return response({ok:true},200,origin);
   }
   if(path==="/admin/audit"&&request.method==="POST"){return response({flags:await runAudit(env)},200,origin);}
   if(path==="/admin/accounting/assistant"&&request.method==="POST"){
+    const limited=await rateLimit(env,request,"accounting-assistant",12);if(!limited.allowed)return response({error:"Too many accounting analysis requests. Please try again later."},limited.reason==="storage"?503:429,origin);
     const snapshot=await accountingSnapshot(env);
     const prompt={accounts:snapshot.accounts.map(x=>({name:x.name,type:x.account_type,currency:x.currency,balance_minor:x.current_balance_minor})),costs:snapshot.costs.map(x=>({category:x.category,description:x.description,amount_minor:x.amount_minor,currency:x.currency,status:x.status,due_date:x.due_date})),flags:snapshot.flags.map(x=>({severity:x.severity,title:x.title,message:x.message}))};
     try{
@@ -403,10 +667,28 @@ async function adminAccounting(request,env,origin){
 }
 
 async function adminRequest(request,env,origin){
-  if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
   const path=new URL(request.url).pathname;
-  if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/document"||path==="/admin/audit")return adminAccounting(request,env,origin);
+  if(path==="/admin/session"&&request.method==="POST"){
+    const limited=await rateLimit(env,request,"admin-auth",10);
+    if(!limited.allowed)return response({error:"Too many authentication attempts."},429,origin);
+    const got=request.headers.get("Authorization")||"";
+    if(!env[ADMIN_KEY]||got!=="Bearer "+env[ADMIN_KEY])return response({error:"Unauthorized."},401,origin);
+    const payload=String(Date.now()),sig=await signSession(payload,env),h=response({ok:true},200,origin).headers;
+    h.set("Set-Cookie",sessionCookie(payload+"."+sig));return new Response(JSON.stringify({ok:true}),{status:200,headers:h});
+  }
+  if(path==="/admin/logout"&&request.method==="POST"){
+    const h=response({ok:true},200,origin).headers;h.set("Set-Cookie","__Host-sp_admin=; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=Strict");return new Response(JSON.stringify({ok:true}),{status:200,headers:h});
+  }
+  if(!(await verifySession(request,env))){
+    const limited=await rateLimit(env,request,"admin-auth",10);
+    return response({error:"Unauthorized."},limited.allowed?401:429,origin);
+  }
+  if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/refund"||path==="/admin/document"||path==="/admin/audit")return adminAccounting(request,env,origin);
   if(path==="/admin/dashboard"&&request.method==="GET")return response(await adminDashboard(env),200,origin);
+  if(path==="/admin/audit-log"&&request.method==="GET"){
+    const rows=(await env.DB.prepare("SELECT id,actor,action,entity_type,entity_id,before_json,after_json,request_id,created_at FROM audit_log ORDER BY created_at DESC LIMIT 100").all()).results;
+    return response({entries:rows},200,origin);
+  }
   if(path==="/admin/product"&&request.method==="POST")return adminProduct(request,env,origin);
   if(path==="/admin/sale"&&request.method==="POST")return adminSale(request,env,origin);
   if(path==="/admin/order-status"&&request.method==="POST")return adminOrderStatus(request,env,origin);
@@ -439,7 +721,21 @@ export default {
       const bin=Uint8Array.from(atob(match[2]),c=>c.charCodeAt(0));
       return new Response(bin,{status:200,headers:{"Content-Type":match[1]||doc.mime_type||"image/jpeg","Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Content-Disposition":"inline"}});
     }
-    if(url.pathname==="/health"&&request.method==="GET"){try{const rows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('products','orders','order_items','inventory_ledger','accounting_ledger','alerts')").all()).results:[];const tables=new Set(rows.map(x=>x.name));return response({ok:true,service:"secpack-api",database:Boolean(env.DB),commerceSchema:tables.size===6,time:new Date().toISOString()},200,null)}catch(_){return response({ok:false,service:"secpack-api",database:Boolean(env.DB),commerceSchema:false},200,null)}}
+    if(url.pathname==="/health"&&request.method==="GET"){try{
+      const ready=await ensureOperationsSchema(env);
+      const required=["products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines"];
+      const rows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results:[];
+      const tables=new Set(rows.map(x=>x.name));
+      const requiredColumns={products:["unit_price_minor","unit_cost_minor","stock_qty","reserved_qty"],orders:["request_id","total_minor"],order_items:["unit_price_minor","line_total_minor","unit_cost_minor"],inventory_ledger:["request_id"],financial_entries:["request_id"],supply_costs:["request_id"],documents:["request_id"],supply_cases:["request_id"],supply_milestones:["request_id"],accounts:["request_id"]};
+      let columnsOk=true;
+      if(ready)for(const [table,cols] of Object.entries(requiredColumns)){const info=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];const have=new Set(info.map(x=>x.name));if(cols.some(x=>!have.has(x))){columnsOk=false;break;}}
+      const requiredTriggers=["prevent_negative_stock","prevent_reserved_over_available","prevent_negative_sold","prevent_audit_update","prevent_audit_delete","prevent_financial_entry_update","prevent_financial_entry_delete","prevent_inventory_ledger_update","prevent_inventory_ledger_delete","prevent_accounting_ledger_update","prevent_accounting_ledger_delete","prevent_invalid_journal_line_insert"];
+      const triggerRows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='trigger'").all()).results||[]:[];
+      const triggers=new Set(triggerRows.map(x=>x.name));
+      const triggersOk=requiredTriggers.every(x=>triggers.has(x));
+      const healthy=Boolean(env.DB)&&ready&&required.every(x=>tables.has(x))&&columnsOk&&triggersOk;
+      return response({ok:healthy,service:"secpack-api",database:Boolean(env.DB),commerceSchema:healthy,time:new Date().toISOString()},healthy?200:503,null);
+    }catch(_){return response({ok:false,service:"secpack-api",database:Boolean(env.DB),commerceSchema:false},503,null)}}
     const needsOperations = url.pathname==="/catalog" || url.pathname==="/forms" || url.pathname==="/advisor" || url.pathname==="/" || url.pathname.startsWith("/admin/") || url.pathname==="/payment/webhook";
     if(needsOperations && env.DB && !await ensureOperationsSchema(env)) return response({error:"Database initialization is temporarily unavailable."},503,null);
     const origin=request.headers.get("Origin");
