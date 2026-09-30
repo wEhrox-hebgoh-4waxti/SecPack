@@ -1,5 +1,6 @@
 name: SEC PACK CI
 # Production validation gate
+# Accounting and session hardening validation
 
 on:
   push:
