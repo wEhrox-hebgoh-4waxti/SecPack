@@ -2,7 +2,7 @@ name: SEC PACK Live Smoke
 
 on:
   push:
-    branches: ["architecture-hardening"]
+    branches: ["main", "architecture-hardening"]
   workflow_dispatch:
 
 jobs:
