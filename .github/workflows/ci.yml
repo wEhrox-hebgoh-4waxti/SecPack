@@ -1,4 +1,5 @@
 name: SEC PACK CI
+# Production validation gate
 
 on:
   push:
