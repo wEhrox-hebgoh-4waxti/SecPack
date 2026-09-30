@@ -75,6 +75,34 @@ async function readJson(request,max=MAX_BODY){
 }
 async function ensureReady(env){return Boolean(env.DB&&env[KEY]);}
 
+let operationsSchemaPromise=null;
+async function ensureOperationsSchema(env){
+  if(!env.DB)return false;
+  if(!operationsSchemaPromise){
+    operationsSchemaPromise=env.DB.batch([
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY,name TEXT NOT NULL,account_type TEXT NOT NULL,currency TEXT NOT NULL DEFAULT 'USD',opening_balance_minor INTEGER NOT NULL DEFAULT 0,current_balance_minor INTEGER NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS financial_entries (id TEXT PRIMARY KEY,account_id TEXT NOT NULL,entry_type TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,direction TEXT NOT NULL,reference_type TEXT,reference_id TEXT,description TEXT,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_costs (id TEXT PRIMARY KEY,category TEXT NOT NULL,supplier TEXT,description TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'planned',due_date TEXT,paid_at TEXT,account_id TEXT,reference_id TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS documents (id TEXT PRIMARY KEY,document_type TEXT NOT NULL,title TEXT NOT NULL,reference_type TEXT,reference_id TEXT,data_url TEXT NOT NULL,mime_type TEXT NOT NULL,size_bytes INTEGER NOT NULL DEFAULT 0,notes TEXT,captured_offline INTEGER NOT NULL DEFAULT 0,share_token_hash TEXT,share_expires_at TEXT,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS audit_flags (id TEXT PRIMARY KEY,severity TEXT NOT NULL,category TEXT NOT NULL,reference_type TEXT,reference_id TEXT,title TEXT NOT NULL,message TEXT NOT NULL,suggested_action TEXT,is_resolved INTEGER NOT NULL DEFAULT 0,resolved_at TEXT,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS operational_settings (key TEXT PRIMARY KEY,value TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_cases (id TEXT PRIMARY KEY,case_no TEXT NOT NULL UNIQUE,product_id TEXT,quantity INTEGER NOT NULL DEFAULT 0,supplier TEXT,currency TEXT NOT NULL DEFAULT 'USD',purchase_total_minor INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'open',expected_date TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_milestones (id TEXT PRIMARY KEY,case_id TEXT NOT NULL,milestone_type TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',due_date TEXT,completed_at TEXT,reference_id TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_accounts_type_currency ON accounts(account_type,currency)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_financial_entries_account_created ON financial_entries(account_id,created_at)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_supply_costs_status_due ON supply_costs(status,due_date)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_documents_reference ON documents(reference_type,reference_id)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_audit_flags_open ON audit_flags(is_resolved,severity,created_at)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_supply_cases_status_updated ON supply_cases(status,updated_at)"),
+      env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_milestone_case_type ON supply_milestones(case_id,milestone_type)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_supply_milestones_status_due ON supply_milestones(status,due_date)"),
+      env.DB.prepare("INSERT OR IGNORE INTO operational_settings(key,value,updated_at) VALUES ('low_stock_threshold','100',datetime('now'))"),
+      env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,created_at,updated_at) VALUES ('cash','صندوق','cash','USD',datetime('now'),datetime('now')),('bank','بانک','bank','USD',datetime('now'),datetime('now')),('receivables','حساب‌های دریافتنی','receivable','USD',datetime('now'),datetime('now')),('payable','حساب‌های پرداختنی','payable','USD',datetime('now'),datetime('now')),('inventory','موجودی کالا','inventory','USD',datetime('now'),datetime('now')),('expense','هزینه‌ها','expense','USD',datetime('now'),datetime('now')),('income','درآمد','income','USD',datetime('now'),datetime('now'))")
+    ]).then(()=>true).catch(()=>false);
+  }
+  return operationsSchemaPromise;
+}
+
 async function handleForm(request,env,origin){
   if(!await ensureReady(env))return response({error:"Form service is temporarily unavailable."},503,origin);
   const raw=await request.text();if(raw.length>MAX_BODY)return response({error:"Request too large."},413,origin);
@@ -411,6 +439,8 @@ export default {
       return new Response(bin,{status:200,headers:{"Content-Type":match[1]||doc.mime_type||"image/jpeg","Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Content-Disposition":"inline"}});
     }
     if(url.pathname==="/health"&&request.method==="GET"){try{const rows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('products','orders','order_items','inventory_ledger','accounting_ledger','alerts')").all()).results:[];const tables=new Set(rows.map(x=>x.name));return response({ok:true,service:"secpack-api",database:Boolean(env.DB),commerceSchema:tables.size===6,time:new Date().toISOString()},200,null)}catch(_){return response({ok:false,service:"secpack-api",database:Boolean(env.DB),commerceSchema:false},200,null)}}
+    const needsOperations = url.pathname==="/catalog" || url.pathname==="/forms" || url.pathname==="/advisor" || url.pathname==="/" || url.pathname.startsWith("/admin/") || url.pathname==="/payment/webhook";
+    if(needsOperations && env.DB && !await ensureOperationsSchema(env)) return response({error:"Database initialization is temporarily unavailable."},503,null);
     const origin=request.headers.get("Origin");
     if(!origin||!ORIGINS.has(origin))return response({error:"Origin not allowed."},403,origin);
     if(request.method==="OPTIONS")return response({},204,origin);
