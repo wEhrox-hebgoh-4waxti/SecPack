@@ -22,8 +22,8 @@
 3. Configure the OpenAI API credential as a Cloudflare Secret.
 4. Configure a strong random `RATE_LIMIT_SALT` as a Cloudflare Secret (recommended; Worker safely falls back to the OpenAI secret until then).
 5. Apply all D1 migrations, including `migrations/0001_secure_inquiries.sql`, `migrations/0002_add_visitor_details.sql` and `migrations/0003_order_payment_lifecycle.sql`.
-6. Verify the Worker custom domain `api.secpackco.com`.
-7. Verify HTTPS and HSTS at the production domain.
+7. Verify the Worker custom domain `api.secpackco.com`.
+8. Verify HTTPS and HSTS at the production domain.
 
 ## Functional QA
 - Contact form submits successfully.
