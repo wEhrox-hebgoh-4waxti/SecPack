@@ -214,7 +214,7 @@ export default {
   async scheduled(_controller,env){if(!env.DB)return;try{await env.DB.prepare("DELETE FROM rate_limits WHERE window_start < ?1").bind(Date.now()-2*WINDOW_MS).run()}catch(_){}},
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.pathname==="/health"&&request.method==="GET")return response({ok:true,service:"secpack-api"},200,null);
+    if(url.pathname==="/health"&&request.method==="GET"){try{const rows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('products','orders','order_items','inventory_ledger','accounting_ledger','alerts')").all()).results:[];const tables=new Set(rows.map(x=>x.name));return response({ok:true,service:"secpack-api",database:Boolean(env.DB),commerceSchema:tables.size===6,openai:Boolean(env[KEY]),admin:Boolean(env[ADMIN_KEY]),time:new Date().toISOString()},200,null)}catch(_){return response({ok:false,service:"secpack-api",database:Boolean(env.DB),commerceSchema:false,openai:Boolean(env[KEY]),admin:Boolean(env[ADMIN_KEY])},200,null)}}
     const origin=request.headers.get("Origin");
     if(!origin||!ORIGINS.has(origin))return response({error:"Origin not allowed."},403,origin);
     if(request.method==="OPTIONS")return response({},204,origin);
