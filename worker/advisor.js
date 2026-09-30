@@ -400,6 +400,8 @@ async function runAudit(env){
   for(const o of missingPayment)add("critical","accounting",o.id,"دریافت بدون ثبت حسابداری","پرداخت سفارش "+o.order_no+" ثبت شده ولی سند دریافت ندارد.","ثبت دریافت را بررسی کنید.");
   const due=(await env.DB.prepare("SELECT id,description,due_date,amount_minor,currency FROM supply_costs WHERE status='planned' AND due_date IS NOT NULL AND due_date < date('now')").all()).results;
   for(const x of due)add("high","supply_cost",x.id,"هزینه سررسید گذشته","هزینه «"+x.description+"» از موعد پرداخت گذشته است.","پرداخت یا وضعیت آن را ثبت کنید.");
+  const imbalanced=(await env.DB.prepare("SELECT jt.id,jt.reference_type,jt.reference_id,jt.currency,jt.total_minor,COALESCE(SUM(CASE WHEN jl.side='debit' THEN jl.amount_minor ELSE 0 END),0) debit_minor,COALESCE(SUM(CASE WHEN jl.side='credit' THEN jl.amount_minor ELSE 0 END),0) credit_minor FROM journal_transactions jt LEFT JOIN journal_lines jl ON jl.transaction_id=jt.id GROUP BY jt.id HAVING debit_minor<>credit_minor OR debit_minor<>jt.total_minor").all()).results;
+  for(const j of imbalanced)add("critical","journal",j.id,"سند حسابداری نامتوازن","سند "+(j.reference_id||j.id)+" توازن بدهکار و بستانکار ندارد.","سند را مسدود و منبع ثبت را بررسی کنید.");
   const negative=(await env.DB.prepare("SELECT id,name,current_balance_minor,currency FROM accounts WHERE active=1 AND account_type IN ('cash','bank') AND current_balance_minor<0").all()).results;
   for(const a of negative)add("high","account",a.id,"مانده منفی حساب","مانده "+a.name+" منفی است.","ثبت‌ها و انتقال‌های مالی را تطبیق دهید.");
   if(flags.length){
