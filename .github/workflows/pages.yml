@@ -31,10 +31,23 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v6
 
+      - name: Assemble public site
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf site
+          mkdir -p site
+          cp index.html style.css i18n.js form-config.js logo.jpg site/
+          cp robots.txt sitemap.xml site/
+          [ -f site.webmanifest ] && cp site.webmanifest site/ || true
+          [ -f CNAME ] && cp CNAME site/ || true
+          cp -R pages assets .well-known site/
+          rm -f site/assets/README* 2>/dev/null || true
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v4
         with:
-          path: .
+          path: ./site
 
       - name: Deploy to GitHub Pages
         id: deployment
