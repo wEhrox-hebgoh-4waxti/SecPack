@@ -20,7 +20,7 @@ async function api(path,opts={}){
 }
 function el(tag,textValue){const e=document.createElement(tag);if(textValue!==undefined)e.textContent=String(textValue);return e;}
 function renderStats(d){
-  const p=d.products.reduce((s,x)=>({stock:s.stock+Number(x.stock_qty||0),res:s.res+Number(x.reserved_qty||0),sold:s.sold+Number(x.sold_qty||0)}),{stock:0,res:0,sold:0});
+  const p=d.products.reduce((s,x)=>({stock:s.stock+Math.max(0,Number(x.stock_qty||0)-Number(x.reserved_qty||0)),res:s.res+Number(x.reserved_qty||0),sold:s.sold+Number(x.sold_qty||0)}),{stock:0,res:0,sold:0});
   const salesRows=(d.totals||[]).map(x=>money(x.sales_minor,x.currency)).join(" · ")||"0";
   const paymentRows=(d.totals||[]).map(x=>money(x.payments_minor,x.currency)).join(" · ")||"0";
   const values=[["موجودی قابل فروش",p.stock],["رزرو سفارش‌ها",p.res],["فروش تجمعی (تعداد)",p.sold],["فروش ثبت‌شده",salesRows],["دریافت‌های ثبت‌شده",paymentRows]];
