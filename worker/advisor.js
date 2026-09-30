@@ -203,7 +203,8 @@ function randomToken(){
   const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 }
-\nasync function accountingSnapshot(env){
+
+async function accountingSnapshot(env){
   const accounts=(await env.DB.prepare("SELECT id,name,account_type,currency,current_balance_minor,active,updated_at FROM accounts WHERE active=1 ORDER BY name").all()).results;
   const costs=(await env.DB.prepare("SELECT id,category,supplier,description,amount_minor,currency,status,due_date,paid_at,account_id,created_at FROM supply_costs ORDER BY created_at DESC LIMIT 80").all()).results;
   const entries=(await env.DB.prepare("SELECT id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at FROM financial_entries ORDER BY created_at DESC LIMIT 100").all()).results;
@@ -349,7 +350,8 @@ async function handleAdvisor(request,env,origin){
   let body;try{body=await readJson(request)}catch(_){return response({error:"Invalid request."},400,origin)}
   const question=text(body.question,MAX_QUESTION);if(!question)return response({error:"Question is required."},400,origin);
   const language=["en","fa","ar"].includes(body.language)?body.language:"en",area=text(body.area,80)||"Other",depth=["practical","technical","commercial"].includes(body.depth)?body.depth:"practical",useWeb=body.useWeb===true;
-  const input=["Language: "+language,"Area: "+area,"Answer style: "+depth,"Current public information requested: "+(useWeb?"yes":"no"),"","User question:",question].join("\n");
+  const input=["Language: "+language,"Area: "+area,"Answer style: "+depth,"Current public information requested: "+(useWeb?"yes":"no"),"","User question:",question].join("
+");
   const payload={model:env.OPENAI_MODEL||MODEL,input:[{role:"system",content:[{type:"input_text",text:SYSTEM_PROMPT}]},{role:"user",content:[{type:"input_text",text:input}]}],max_output_tokens:1800};if(useWeb)payload.tools=[{type:"web_search"}];
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),25000);
   try{const upstream=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Authorization":"Bearer "+env[KEY],"Content-Type":"application/json"},body:JSON.stringify(payload),signal:controller.signal});if(!upstream.ok)return response({error:"Advisor service is temporarily unavailable."},502,origin);const result=await upstream.json(),answer=typeof result.output_text==="string"?result.output_text.trim():"";if(!answer)return response({error:"No advisor response was returned."},502,origin);return response({answer},200,origin)}catch(_){return response({error:"Advisor service is temporarily unavailable."},502,origin)}finally{clearTimeout(timer)}
