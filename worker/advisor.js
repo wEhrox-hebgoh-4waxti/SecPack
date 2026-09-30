@@ -293,27 +293,28 @@ async function adminProduct(request,env,origin){
   await env.DB.batch(stm);return response({ok:true},200,origin);
 }
 async function adminSale(request,env,origin){
-  if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
-  const b=await readJson(request),id=text(b.product_id,40),qty=Number(b.quantity);
+  if(!(await verifySession(request,env)))return response({error:"Unauthorized."},401,origin);
+  const b=await readJson(request),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100),id=text(b.product_id,40),qty=Number(b.quantity);
+  if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
   if(!id||!Number.isInteger(qty)||qty<1||qty>100000)return response({error:"Invalid sale."},400,origin);
   const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1 AND active=1").bind(id).first();if(!p)return response({error:"Product not found."},404,origin);
   const priceMinor=b.unit_price===undefined||b.unit_price===""?Number(p.unit_price_minor):moneyToMinor(b.unit_price,p.currency);
-  if(priceMinor===null)return response({error:"Invalid sale price."},400,origin);
-  const now=new Date().toISOString(),saleId=crypto.randomUUID(),total=safeMultiply(qty,priceMinor);
-  if(total===null||total<=0)return response({error:"Sale value is outside the supported accounting range."},400,origin);
+  if(priceMinor===null||priceMinor<=0)return response({error:"Invalid sale price."},400,origin);
+  const total=safeMultiply(qty,priceMinor);if(total===null)return response({error:"Sale value is outside the supported accounting range."},400,origin);
+  const saleId=crypto.randomUUID(),now=new Date().toISOString();
+  const journal=await buildJournal(env,{referenceType:"manual_sale",referenceId:saleId,description:"In-person sale"+(text(b.customer,160)?" · Customer: "+text(b.customer,160):""),currency:p.currency,requestId,lines:[{accountId:"cash",side:"debit",amount:total},{accountId:"income",side:"credit",amount:total}]});
+  if(!journal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
   try{
-    const r=await env.DB.batch([
-      env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3 AND active=1").bind(qty,now,id),
-      env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'SALE',?3,?4,?5,?6)").bind(crypto.randomUUID(),id,qty,saleId,"Manual / in-person sale",now),
-      env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,'SALE',?2,?3,?4,?5,?6)").bind(saleId,minorToMoney(total,p.currency),total,p.currency,"In-person sale"+(text(b.customer,160)?" · Customer: "+text(b.customer,160):""),now),
-      env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,'cash','SALE',?2,?3,'in','sale',?4,'In-person sale receipt',?5)").bind(crypto.randomUUID(),total,p.currency,saleId,now),
-      env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id='cash' AND currency=?3").bind(total,now,p.currency),
+    const stm=[env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3 AND active=1").bind(qty,now,id),
+      env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'SALE',?3,?4,?5,?6,?7)").bind(crypto.randomUUID(),id,qty,saleId,"Manual / in-person sale",requestId||null,now),
+      ...journal.statements,
       env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'SALE',?2,'In-person sale recorded',?3,?4)").bind(crypto.randomUUID(),saleId,qty+" × "+p.name_en+" sold",now),
-      await auditStatement(env,{action:"MANUAL_SALE",entityType:"sale",entityId:saleId,after:{product_id:id,quantity:qty,total_minor:total,currency:p.currency,customer:text(b.customer,160)||null}})
-    ]);
-
-    return response({ok:true,total:minorToMoney(total,p.currency),currency:p.currency},200,origin);
-  }catch(e){return response({error:String(e).includes("INSUFFICIENT_STOCK")?"Insufficient stock.":"Sale could not be recorded."},String(e).includes("INSUFFICIENT_STOCK")?409:500,origin)}
+      await auditStatement(env,{action:"MANUAL_SALE",entityType:"sale",entityId:saleId,after:{product_id:id,quantity:qty,total_minor:total,currency:p.currency,customer:text(b.customer,160)||null},requestId})];
+    await env.DB.batch(stm);return response({ok:true,total:minorToMoney(total,p.currency),currency:p.currency},200,origin);
+  }catch(e){
+    if(requestId){const prior=await env.DB.prepare("SELECT total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first().catch(()=>null);if(prior)return response({ok:true,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+    return response({error:String(e).includes("INSUFFICIENT_STOCK")?"Insufficient stock.":"Sale could not be recorded."},String(e).includes("INSUFFICIENT_STOCK")?409:500,origin)
+  }
 }
 async function adminOrderStatus(request,env,origin){
   if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
@@ -441,19 +442,23 @@ async function adminAccounting(request,env,origin){
     await env.DB.batch(stm);return response({ok:true,id},200,origin);
   }
   if(path==="/admin/stock-receipt"&&request.method==="POST"){
-    const b=await readJson(request),productId=text(b.product_id,50),qty=Number(b.quantity),currency=text(b.currency,8)||"USD",unitCost=moneyToMinor(b.unit_cost,currency);
-    if(!productId||!Number.isInteger(qty)||qty<1||unitCost===null)return response({error:"Invalid stock receipt."},400,origin);
+    const b=await readJson(request),productId=text(b.product_id,50),qty=Number(b.quantity),currency=text(b.currency,8)||"USD",unitCost=moneyToMinor(b.unit_cost,currency),accountId=text(b.account_id,60)||"cash";
+    if(!productId||!Number.isInteger(qty)||qty<1||unitCost===null||unitCost<=0)return response({error:"Invalid stock receipt."},400,origin);
     const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1").bind(productId).first();if(!p)return response({error:"Product not found."},404,origin);
-    const total=qty*unitCost,id=crypto.randomUUID(),now=new Date().toISOString(),accountId=text(b.account_id,60)||null;
-    const stm=[env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,updated_at=?2 WHERE id=?3").bind(qty,now,productId),env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RESTOCK',?3,?4,?5,?6)").bind(crypto.randomUUID(),productId,qty,id,(text(b.note,240)||"Stock receipt")+" · Warehouse: Gorgan",now)];
-    if(accountId){
-      const acc=await env.DB.prepare("SELECT * FROM accounts WHERE id=?1").bind(accountId).first();if(!acc||acc.currency!==currency)return response({error:"Invalid payment account."},409,origin);
-      stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,?2,'PURCHASE',?3,?4,'out','stock_receipt',?5,?6,?7)").bind(crypto.randomUUID(),accountId,total,currency,id,"Stock purchase / receipt",now));
-      stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor-?1,updated_at=?2 WHERE id=?3").bind(total,now,accountId));
-      stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,'PURCHASE',?2,?3,?4,'Stock purchase / receipt',?5)").bind(crypto.randomUUID(),minorToMoney(total,currency),total,currency,now));
-    }
-    await env.DB.batch(stm);return response({ok:true,id,total:minorToMoney(total,currency),currency},200,origin);
+    const total=safeMultiply(qty,unitCost);if(total===null)return response({error:"Purchase value is outside the supported accounting range."},400,origin);
+    const id=crypto.randomUUID(),now=new Date().toISOString(),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+    const journal=await buildJournal(env,{referenceType:"stock_receipt",referenceId:id,description:"Stock purchase / receipt",currency,requestId,lines:[{accountId:"inventory",side:"debit",amount:total},{accountId,side:"credit",amount:total}]});
+    if(!journal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
+    try{
+      await env.DB.batch([env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,updated_at=?2 WHERE id=?3").bind(qty,now,productId),
+        env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RESTOCK',?3,?4,?5,?6,?7)").bind(crypto.randomUUID(),productId,qty,id,(text(b.note,240)||"Stock receipt")+" · Warehouse: Gorgan",requestId,now),
+        ...journal.statements,
+        await auditStatement(env,{action:"STOCK_RECEIPT",entityType:"stock",entityId:id,after:{product_id:productId,quantity:qty,total_minor:total,currency},requestId})]);
+      return response({ok:true,id,total:minorToMoney(total,currency),currency},200,origin);
+    }catch(e){return response({error:"Stock receipt could not be recorded."},500,origin)}
   }
+
   if(path==="/admin/document"&&request.method==="POST"){
     const b=await readJson(request,1550000),title=text(b.title,160),type=text(b.document_type,40),dataUrl=text(b.data_url,1450000);
     if(!title||!type||!dataUrl.startsWith("data:image/")||dataUrl.length>1450000)return response({error:"Document image is missing or too large."},400,origin);
