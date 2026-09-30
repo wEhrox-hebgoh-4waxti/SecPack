@@ -457,7 +457,11 @@ async function adminAccounting(request,env,origin){
     if(counterpart===accountId)return response({error:"A journal needs two different accounts."},400,origin);
     const journal=await buildJournal(env,{referenceType:type,referenceId:text(b.reference_id,100)||crypto.randomUUID(),description:text(b.description,300)||type,currency,lines:direction==="in"?[{accountId,side:"debit",amount},{accountId:counterpart,side:"credit",amount}]:[{accountId,side:"credit",amount},{accountId:counterpart,side:"debit",amount}],requestId:text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null});
     if(!journal)return response({error:"Unable to create a balanced journal for these accounts."},409,origin);
-    try{await env.DB.batch(journal.statements);return response({ok:true,id:journal.txId},200,origin)}catch(e){return response({error:"Accounting entry could not be posted."},500,origin)}
+    try{await env.DB.batch(journal.statements);return response({ok:true,id:journal.txId},200,origin)}
+    catch(e){
+      if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first().catch(()=>null);if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+      return response({error:"Accounting entry could not be posted."},500,origin);
+    }
   }
   if(path==="/admin/supply-cost"&&request.method==="POST"){
     const b=await readJson(request),category=text(b.category,40),description=text(b.description,240),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency),accountId=text(b.account_id,60)||"cash";
@@ -488,7 +492,10 @@ async function adminAccounting(request,env,origin){
         ...journal.statements,
         await auditStatement(env,{action:"STOCK_RECEIPT",entityType:"stock",entityId:id,after:{product_id:productId,quantity:qty,total_minor:total,currency},requestId})]);
       return response({ok:true,id,total:minorToMoney(total,currency),currency},200,origin);
-    }catch(e){return response({error:"Stock receipt could not be recorded."},500,origin)}
+    }catch(e){
+      if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first().catch(()=>null);if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+      return response({error:"Stock receipt could not be recorded."},500,origin);
+    }
   }
 
   if(path==="/admin/document"&&request.method==="POST"){
