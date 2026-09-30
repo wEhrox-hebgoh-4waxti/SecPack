@@ -47,6 +47,12 @@ function moneyToMinor(value,currency){
   return Number.isSafeInteger(n)&&n>=0?n:null;
 }
 function minorToMoney(minor,currency){const d=currencyDigits(currency);return d?Number(minor||0)/(10**d):Number(minor||0);}
+function safeMultiply(a,b){const x=Number(a),y=Number(b);if(!Number.isSafeInteger(x)||!Number.isSafeInteger(y)||x<0||y<0)return null;const n=x*y;return Number.isSafeInteger(n)?n:null;}
+function allowedOrderTransition(from,to){
+  if(from===to)return true;
+  const map={pending:new Set(["processing","paid","cancelled"]),processing:new Set(["paid","ready","cancelled"]),paid:new Set(["ready","fulfilled"]),ready:new Set(["fulfilled"])};
+  return Boolean(map[from]?.has(to));
+}
 
 async function digest(v){const b=new TextEncoder().encode(v);const h=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,"0")).join("");}
 async function clientKey(request,env){const ip=request.headers.get("CF-Connecting-IP")||"unknown";const salt=env[RATE_SALT]||env[KEY];return salt?digest(salt+"|"+ip):null;}
@@ -144,7 +150,7 @@ async function ensureOperationsSchema(env){
         env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('packaging','Packaging Materials','مواد بسته‌بندی','مواد التغليف','unit','USD',0,0,0,0,0,'Gorgan',0,datetime('now'))")
       ]);
       return true;
-    }).catch(()=>false);
+    }).catch(()=>{operationsSchemaPromise=null;return false;});
   }
   return operationsSchemaPromise;
 }
@@ -185,7 +191,8 @@ async function createOrder(data,env,origin){
   const map=new Map(products.map(p=>[p.id,p])),stockStatementIndexes=[],orderId=crypto.randomUUID(),orderNo="SP-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+orderId.slice(0,6).toUpperCase(),now=new Date().toISOString();
   if(new Set(products.map(p=>p.currency)).size!==1)return response({error:"Selected products must use the same currency."},409,origin);
   const lines=clean.map(x=>{const p=map.get(x.id);return{p,qty:x.qty,line:x.qty*Number(p.unit_price_minor)}});
-  const total=lines.reduce((s,x)=>s+x.line,0);
+  const total=lines.reduce((s,x)=>safeMultiply(1,s+x.line)??-1,0);
+  if(total<0||!Number.isSafeInteger(total))return response({error:"Order value is outside the supported accounting range."},400,origin);
   const statements=[env.DB.prepare("INSERT INTO orders(id,order_no,request_id,customer_name,company,email,phone,destination,payment_method,status,payment_status,currency,subtotal,total,subtotal_minor,total_minor,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,'pending','unpaid',?10,?11,?11,?12,?12,?13,?14,?14)").bind(orderId,orderNo,data.requestId||null,data.name,data.company||null,data.email,data.phone||null,data.destination||null,data.payment||null,products[0]?.currency||"USD",minorToMoney(total,products[0]?.currency||"USD"),total,data.notes||null,now,now)];
   for(const x of lines){
     stockStatementIndexes.push(statements.length); statements.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0").bind(x.qty,now,x.p.id));
@@ -243,7 +250,8 @@ async function adminSale(request,env,origin){
   const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1 AND active=1").bind(id).first();if(!p)return response({error:"Product not found."},404,origin);
   const priceMinor=b.unit_price===undefined||b.unit_price===""?Number(p.unit_price_minor):moneyToMinor(b.unit_price,p.currency);
   if(priceMinor===null)return response({error:"Invalid sale price."},400,origin);
-  const now=new Date().toISOString(),saleId=crypto.randomUUID(),total=qty*priceMinor;
+  const now=new Date().toISOString(),saleId=crypto.randomUUID(),total=safeMultiply(qty,priceMinor);
+  if(total===null||total<=0)return response({error:"Sale value is outside the supported accounting range."},400,origin);
   try{
     const r=await env.DB.batch([
       env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3 AND active=1").bind(qty,now,id),
@@ -264,6 +272,8 @@ async function adminOrderStatus(request,env,origin){
   if(!orderId||!["pending","processing","paid","ready","fulfilled","cancelled"].includes(next))return response({error:"Invalid order status."},400,origin);
   const order=await env.DB.prepare("SELECT * FROM orders WHERE id=?1").bind(orderId).first();if(!order)return response({error:"Order not found."},404,origin);
   if(order.status==="fulfilled"||order.status==="cancelled")return response({error:"Closed orders cannot be changed."},409,origin);
+  if(next===order.status)return response({ok:true},200,origin);
+  if(!allowedOrderTransition(order.status,next))return response({error:"Invalid order status transition."},409,origin);
   if(next==="cancelled"&&order.payment_status==="paid")return response({error:"A paid order requires a refund/reversal workflow before cancellation."},409,origin);
   if(next==="fulfilled"&&order.payment_status!=="paid")return response({error:"Payment must be confirmed before fulfillment."},409,origin);
   if(next==="paid"&&order.payment_status==="paid")return response({ok:true},200,origin);
