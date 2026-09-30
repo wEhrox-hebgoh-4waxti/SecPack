@@ -4,10 +4,50 @@ const $=id=>document.getElementById(id);
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function money(v,c){return Number(v||0).toLocaleString("en-US",{maximumFractionDigits:["USD","EUR","GBP","AED","SAR","TRY"].includes(c)?2:0})+" "+c;}
 async function api(path,opts={}){const headers={"Accept":"application/json","Content-Type":"application/json","Authorization":"Bearer "+token,...(opts.headers||{})};const r=await fetch(API+path,{...opts,headers});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||"خطا");return d;}
-function renderStats(d){const p=d.products.reduce((s,x)=>({stock:s.stock+x.stock_qty,res:s.res+x.reserved_qty,sold:s.sold+x.sold_qty}),{stock:0,res:0,sold:0});const salesRows=(d.totals||[]).map(x=>money(x.sales_minor,x.currency)).join(" · ")||"0";const paymentRows=(d.totals||[]).map(x=>money(x.payments_minor,x.currency)).join(" · ")||"0";$("stats").innerHTML=[["موجودی قابل فروش",p.stock],["رزرو سفارش‌ها",p.res],["فروش تجمعی (تعداد)",p.sold],["فروش ثبت‌شده",salesRows],["دریافت‌های ثبت‌شده",paymentRows]].map((x,i)=>'<div class="admin-card"><h3>'+x[0]+'</h3><div class="stat">'+x[1]+'</div></div>').join("");}
-function renderAlerts(a){$("alerts").innerHTML=a.length?a.map(x=>'<div class="alert-item"><b>'+esc(x.title)+'</b><br>'+esc(x.message)+'<br><small>'+new Date(x.created_at).toLocaleString()+'</small><button class="btn" data-read="'+esc(x.id)+'">خوانده شد</button></div>').join(""):"هشدار جدیدی ندارید.";}
-function renderProducts(ps){$("products").innerHTML=ps.map(p=>'<tr><td><b>'+esc(p.name_fa)+'</b><br><small>'+esc(p.name_en)+'</small></td><td><input data-currency="'+esc(p.id)+'" value="'+esc(p.currency)+'"></td><td><input data-price="'+esc(p.id)+'" inputmode="decimal" value="'+esc(p.unit_price_minor? (["USD","EUR","GBP","AED","SAR","TRY"].includes(p.currency)?(p.unit_price_minor/100):p.unit_price_minor):"")+'"></td><td><input data-stock="'+esc(p.id)+'" type="number" min="0" step="1" value="'+esc(p.stock_qty)+'"></td><td>'+p.reserved_qty+'</td><td>'+p.sold_qty+'</td><td><input data-active="'+esc(p.id)+'" type="checkbox" '+(p.active?"checked":"")+'></td><td><button class="btn" data-save="'+esc(p.id)+'">ذخیره</button></td></tr>').join("");$("saleProduct").innerHTML=ps.filter(p=>p.active).map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name_fa)+" — "+money(p.unit_price_minor? (["USD","EUR","GBP","AED","SAR","TRY"].includes(p.currency)?p.unit_price_minor/100:p.unit_price_minor):0,p.currency)+'</option>').join("");}
-function renderOrders(os){$("orders").innerHTML=os.map(o=>'<tr><td>'+esc(o.order_no)+'</td><td>'+esc(o.customer_name)+'<br><small>'+esc(o.phone||"")+'</small></td><td>'+esc(o.destination||"—")+'</td><td>'+money(o.total,o.currency)+'</td><td>'+esc(o.payment_status)+'</td><td><select data-status="'+esc(o.id)+'">'+["pending","processing","paid","ready","fulfilled","cancelled"].map(s=>'<option '+(o.status===s?"selected":"")+'>'+s+'</option>').join("")+'</select></td><td>'+new Date(o.created_at).toLocaleString()+'</td><td><button class="btn" data-order-save="'+esc(o.id)+'">ذخیره</button></td></tr>').join("");}
+function el(tag,textValue){const e=document.createElement(tag);if(textValue!==undefined)e.textContent=String(textValue);return e;}
+function renderStats(d){
+  const p=d.products.reduce((s,x)=>({stock:s.stock+Number(x.stock_qty||0),res:s.res+Number(x.reserved_qty||0),sold:s.sold+Number(x.sold_qty||0)}),{stock:0,res:0,sold:0});
+  const salesRows=(d.totals||[]).map(x=>money(x.sales_minor,x.currency)).join(" · ")||"0";
+  const paymentRows=(d.totals||[]).map(x=>money(x.payments_minor,x.currency)).join(" · ")||"0";
+  const values=[["موجودی قابل فروش",p.stock],["رزرو سفارش‌ها",p.res],["فروش تجمعی (تعداد)",p.sold],["فروش ثبت‌شده",salesRows],["دریافت‌های ثبت‌شده",paymentRows]];
+  const frag=document.createDocumentFragment();
+  values.forEach(([label,value])=>{const card=el("div");card.className="admin-card";card.append(el("h3",label),el("div",value));card.lastChild.className="stat";frag.append(card);});
+  $("stats").replaceChildren(frag);
+}
+function renderAlerts(a){
+  const frag=document.createDocumentFragment();
+  if(!a.length){frag.append(el("span","هشدار جدیدی ندارید."));$("alerts").replaceChildren(frag);return;}
+  a.forEach(x=>{const box=el("div");box.className="alert-item";box.append(el("b",x.title),el("br"),el("span",x.message),el("br"),el("small",new Date(x.created_at).toLocaleString()));const b=el("button","خوانده شد");b.className="btn";b.dataset.read=x.id;box.append(b);frag.append(box);});
+  $("alerts").replaceChildren(frag);
+}
+function renderProducts(ps){
+  const frag=document.createDocumentFragment();
+  ps.forEach(p=>{
+    const tr=el("tr"), name=el("td"), nameB=el("b",p.name_fa), nameSmall=el("small",p.name_en);name.append(nameB,el("br"),nameSmall);
+    const tdCur=el("td"),cur=el("input");cur.dataset.currency=p.id;cur.value=p.currency;tdCur.append(cur);
+    const tdPrice=el("td"),price=el("input");price.dataset.price=p.id;price.inputMode="decimal";price.value=p.unit_price_minor?((["USD","EUR","GBP","AED","SAR","TRY"].includes(p.currency))?p.unit_price_minor/100:p.unit_price_minor):"";tdPrice.append(price);
+    const tdStock=el("td"),stock=el("input");stock.dataset.stock=p.id;stock.type="number";stock.min="0";stock.step="1";stock.value=p.stock_qty;tdStock.append(stock);
+    const reserved=el("td",p.reserved_qty),sold=el("td",p.sold_qty);
+    const tdActive=el("td"),active=el("input");active.dataset.active=p.id;active.type="checkbox";active.checked=Boolean(p.active);tdActive.append(active);
+    const tdSave=el("td"),save=el("button","ذخیره");save.className="btn";save.dataset.save=p.id;tdSave.append(save);
+    tr.append(name,tdCur,tdPrice,tdStock,reserved,sold,tdActive,tdSave);frag.append(tr);
+  });
+  $("products").replaceChildren(frag);
+  const sf=document.createDocumentFragment();
+  ps.filter(p=>p.active).forEach(p=>{const o=el("option",p.name_fa+" — "+money(p.unit_price_minor?((["USD","EUR","GBP","AED","SAR","TRY"].includes(p.currency))?p.unit_price_minor/100:p.unit_price_minor:0,p.currency));o.value=p.id;sf.append(o);});
+  $("saleProduct").replaceChildren(sf);
+}
+function renderOrders(os){
+  const frag=document.createDocumentFragment();
+  os.forEach(o=>{
+    const tr=el("tr"), order=el("td",o.order_no), customer=el("td");customer.append(el("span",o.customer_name),el("br"),el("small",o.phone||""));
+    const dest=el("td",o.destination||"—"),total=el("td",money(o.total,o.currency)),pay=el("td",o.payment_status),statusTd=el("td"),sel=el("select");sel.dataset.status=o.id;
+    ["pending","processing","paid","ready","fulfilled","cancelled"].forEach(s=>{const op=el("option",s);op.value=s;op.selected=o.status===s;sel.append(op);});statusTd.append(sel);
+    const date=el("td",new Date(o.created_at).toLocaleString()),act=el("td"),b=el("button","ذخیره");b.className="btn";b.dataset.orderSave=o.id;act.append(b);
+    tr.append(order,customer,dest,total,pay,statusTd,date,act);frag.append(tr);
+  });
+  $("orders").replaceChildren(frag);
+}
 async function load(){try{const d=await api("/admin/dashboard",{method:"GET"});renderStats(d);renderAlerts(d.alerts);renderProducts(d.products);renderOrders(d.orders);for(const a of d.alerts){if(!lastAlertIds.has(a.id)){lastAlertIds.add(a.id);startTitleAlarm("سفارش جدید SEC PACK");if("vibrate"in navigator)navigator.vibrate?.([250,100,250]);if("Notification"in window&&Notification.permission==="granted")new Notification("SEC PACK · "+a.title,{body:a.message});try{new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=").play().catch(()=>{});}catch(_){} }}}catch(e){$("loginStatus").textContent=e.message;logout();}}
 function stopTitleAlarm(){if(titleTimer)clearInterval(titleTimer);titleTimer=null;document.title=originalTitle;}
 function startTitleAlarm(message){stopTitleAlarm();let on=false;titleTimer=setInterval(()=>{on=!on;document.title=on?"🔔 "+message:originalTitle;},900);}
