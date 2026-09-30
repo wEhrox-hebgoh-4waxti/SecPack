@@ -514,7 +514,7 @@ async function adminAccounting(request,env,origin){
     const b=await readJson(request),category=text(b.category,40),description=text(b.description,240),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency),accountId=text(b.account_id,60)||"cash";
     if(!category||!description||amount===null||amount<=0)return response({error:"Invalid supply cost."},400,origin);
     const id=crypto.randomUUID(),now=new Date().toISOString(),status=["planned","paid","cancelled"].includes(b.status)?b.status:"planned",requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
-    if(requestId){const prior=await env.DB.prepare("SELECT id FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,replayed:true},200,origin);}
+    if(requestId){const prior=await env.DB.prepare("SELECT id FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,replayed:true},200,origin);const existing=await env.DB.prepare("SELECT id FROM supply_costs WHERE request_id=?1").bind(requestId).first();if(existing)return response({ok:true,id:existing.id,replayed:true},200,origin);}
     const stm=[env.DB.prepare("INSERT INTO supply_costs(id,category,supplier,description,amount_minor,currency,status,due_date,paid_at,account_id,reference_id,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?12)").bind(id,category,text(b.supplier,160),description,amount,currency,status,text(b.due_date,30)||null,status==="paid"?now:null,accountId,text(b.reference_id,100)||null,now)];
     if(status==="paid"){
       const journal=await buildJournal(env,{referenceType:"supply_cost",referenceId:id,description, currency,requestId,lines:[{accountId:"expense",side:"debit",amount},{accountId,side:"credit",amount}]});
@@ -555,8 +555,9 @@ async function adminAccounting(request,env,origin){
   if(path==="/admin/document"&&request.method==="POST"){
     const b=await readJson(request,1550000),title=text(b.title,160),type=text(b.document_type,40),dataUrl=text(b.data_url,1450000);
     if(!title||!type||!dataUrl.startsWith("data:image/")||dataUrl.length>1450000)return response({error:"Document image is missing or too large."},400,origin);
-    const mime=(dataUrl.match(/^data:([^;]+);base64,/)||[])[1]||"image/jpeg",id=crypto.randomUUID(),now=new Date().toISOString();
-    await env.DB.prepare("INSERT INTO documents(id,document_type,title,reference_type,reference_id,data_url,mime_type,size_bytes,notes,captured_offline,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)").bind(id,type,title,text(b.reference_type,40),text(b.reference_id,100),dataUrl,mime,Math.floor(dataUrl.length*0.75),text(b.notes,300),b.captured_offline?1:0,now).run();
+    const mime=(dataUrl.match(/^data:([^;]+);base64,/)||[])[1]||"image/jpeg",id=crypto.randomUUID(),now=new Date().toISOString(),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(requestId){const existing=await env.DB.prepare("SELECT id FROM documents WHERE request_id=?1").bind(requestId).first();if(existing)return response({ok:true,id:existing.id,replayed:true},200,origin);}
+    await env.DB.prepare("INSERT INTO documents(id,request_id,document_type,title,reference_type,reference_id,data_url,mime_type,size_bytes,notes,captured_offline,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)").bind(id,requestId,type,title,text(b.reference_type,40),text(b.reference_id,100),dataUrl,mime,Math.floor(dataUrl.length*0.75),text(b.notes,300),b.captured_offline?1:0,now).run();
     return response({ok:true,id},202,origin);
   }
 
