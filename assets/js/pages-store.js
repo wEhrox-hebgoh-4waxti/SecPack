@@ -15,10 +15,9 @@ function render(){
     const row=document.createElement("div");row.className="cart-row";
     const strong=document.createElement("strong");strong.textContent=translate(productNames[item.id]);
     const controls=document.createElement("span");controls.className="qty";
-    const minus=document.createElement("button");minus.type="button";minus.dataset.qtyChange="-1";minus.dataset.itemId=item.id;minus.title=translate("dynamic.decrease");minus.setAttribute("aria-label",translate("dynamic.decrease"));minus.textContent="−";
-    const qty=document.createElement("span");qty.textContent=String(item.qty);
-    const plus=document.createElement("button");plus.type="button";plus.dataset.qtyChange="1";plus.dataset.itemId=item.id;plus.title=translate("dynamic.increase");plus.setAttribute("aria-label",translate("dynamic.increase"));plus.textContent="+";
-    controls.append(minus,qty,plus);row.append(strong,controls);rows.appendChild(row);
+    const qtyLabel=document.createElement("label");qtyLabel.className="sr-only";qtyLabel.textContent=translate("dynamic.quantity");
+    const qty=document.createElement("input");qty.type="number";qty.min="1";qty.max="100000";qty.step="1";qty.value=String(item.qty);qty.className="qty-input";qty.dataset.qtyInput=item.id;qty.setAttribute("aria-label",translate("dynamic.quantity"));
+    qtyLabel.appendChild(qty);controls.appendChild(qtyLabel);row.append(strong,controls);rows.appendChild(row);
   });
 }
 function toggleCart(){document.getElementById("orderPanel")?.classList.toggle("open");render()}
@@ -38,7 +37,7 @@ async function prepareOrder(){
   }
   box.append(strong,p1,p2);status.replaceChildren(box);
 }
-document.addEventListener("click",(event)=>{
+document.addEventListener("change",(event)=>{\n  const qty=event.target.closest("[data-qty-input]");\n  if(!qty)return;\n  const item=items.find(i=>i.id===qty.dataset.qtyInput);\n  const value=Number(qty.value);\n  if(!item)return;\n  if(!Number.isInteger(value)||value<1||value>100000){qty.value=String(item.qty);return;}\n  item.qty=value;render();\n});\ndocument.addEventListener("click",(event)=>{
   const add=event.target.closest("[data-add-cart]");if(add)addToCart(add.dataset.addCart);
   const action=event.target.closest("[data-sec-action]")?.dataset.secAction;if(action==="cart-toggle")toggleCart();if(action==="prepare-order")prepareOrder();
   const qty=event.target.closest("[data-qty-change]");if(qty)changeQty(qty.dataset.itemId,Number(qty.dataset.qtyChange));
