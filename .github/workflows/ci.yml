@@ -22,4 +22,5 @@ jobs:
       - run: node --check assets/js/admin.js
       - run: node --check assets/js/accounting.js
       - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npm run test:db
       - run: npx wrangler deploy --dry-run
