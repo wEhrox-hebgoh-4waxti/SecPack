@@ -100,28 +100,39 @@ async function ensureColumn(env,table,column,definition){
   const rows=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];
   if(!rows.some(x=>x.name===column))await env.DB.prepare("ALTER TABLE "+table+" ADD COLUMN "+column+" "+definition).run();
 }
+async function resolveAccount(env,accountId,currency){
+  const raw=text(accountId,60);
+  const exact=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(raw).first();
+  if(exact)return exact;
+  const symbolic=["cash","bank","receivables","payable","inventory","expense","income","cogs"];
+  if(symbolic.includes(raw)){
+    const candidate=raw+":"+currency;
+    const scoped=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(candidate).first();
+    if(scoped)return scoped;
+    if(currency==="USD")return await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(raw).first();
+  }
+  return null;
+}
 async function buildJournal(env,{referenceType,referenceId,description,currency,lines,requestId=null,extraAccounts=[]}){
   if(!Array.isArray(lines)||lines.length<2)return null;
-  const normalized=lines.map(x=>({accountId:text(x.accountId,60),side:x.side,amount:Number(x.amount)}));
+  const normalized=[];
+  for(const x of lines){
+    const resolved=text(x.accountId,60);
+    const account=extraAccounts.find(a=>a.id===resolved)||await resolveAccount(env,resolved,currency);
+    if(!account||!account.active||account.currency!==currency)return null;
+    normalized.push({accountId:account.id,side:x.side,amount:Number(x.amount),account});
+  }
   if(normalized.some(x=>!x.accountId||!["debit","credit"].includes(x.side)||!Number.isSafeInteger(x.amount)||x.amount<=0))return null;
   const debit=normalized.filter(x=>x.side==="debit").reduce((s,x)=>s+x.amount,0);
   const credit=normalized.filter(x=>x.side==="credit").reduce((s,x)=>s+x.amount,0);
   if(!Number.isSafeInteger(debit)||debit!==credit)return null;
-  const ids=[...new Set(normalized.map(x=>x.accountId))],rows=[];
-  for(const id of ids){
-    const extra=extraAccounts.find(a=>a.id===id);
-    if(extra){if(!extra.active||extra.currency!==currency)return null;rows.push(extra);continue;}
-    const a=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(id).first();
-    if(!a||!a.active||a.currency!==currency)return null;
-    rows.push(a);
-  }
-  const txId=crypto.randomUUID(),now=new Date().toISOString(),stm=[
+  const rows=normalized.map(x=>x.account);  const txId=crypto.randomUUID(),now=new Date().toISOString(),stm=[
     env.DB.prepare("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)").bind(txId,text(referenceType,40),text(referenceId,100),text(description,300),currency,debit,requestId||null,now)
   ];
   for(const x of normalized){
     const lineId=crypto.randomUUID();
     stm.push(env.DB.prepare("INSERT INTO journal_lines(id,transaction_id,account_id,side,amount_minor,currency,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7)").bind(lineId,txId,x.accountId,x.side,x.amount,currency,now));
-    const row=rows.find(a=>a.id===x.accountId), normal=["asset","expense"].includes(row.account_type)?"debit":"credit",delta=x.side===normal?x.amount:-x.amount;
+    const row=x.account, normal=["cash","bank","receivable","inventory","expense","cogs"].includes(row.account_type)?"debit":"credit",delta=x.side===normal?x.amount:-x.amount;
     stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id=?3").bind(delta,now,x.accountId));
   }
   stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)").bind(txId,referenceType==="order"?referenceId:null,referenceType.toUpperCase(),minorToMoney(debit,currency),debit,currency,text(description,300),now));
