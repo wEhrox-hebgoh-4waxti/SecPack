@@ -76,16 +76,35 @@ async function readJson(request,max=MAX_BODY){
 async function ensureReady(env){return Boolean(env.DB&&env[KEY]);}
 
 let operationsSchemaPromise=null;
+async function auditStatement(env,{action,entityType,entityId,before=null,after=null,requestId=null,actor="admin"}){
+  return env.DB.prepare("INSERT INTO audit_log(id,actor,action,entity_type,entity_id,before_json,after_json,request_id,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)")
+    .bind(crypto.randomUUID(),actor,action,entityType,entityId||null,before?JSON.stringify(before):null,after?JSON.stringify(after):null,requestId||null,new Date().toISOString());
+}
+
 async function ensureOperationsSchema(env){
   if(!env.DB)return false;
   if(!operationsSchemaPromise){
     operationsSchemaPromise=env.DB.batch([
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS inquiries (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,form_type TEXT NOT NULL,name TEXT NOT NULL,company TEXT,email TEXT NOT NULL,phone TEXT,product TEXT,destination TEXT,payment TEXT,notes TEXT,message TEXT,items TEXT,created_at TEXT NOT NULL,visitor_details TEXT)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS rate_limits (bucket_key TEXT PRIMARY KEY,window_start INTEGER NOT NULL,count INTEGER NOT NULL)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rate_limits_window_start ON rate_limits(window_start)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY,name_en TEXT NOT NULL,name_fa TEXT NOT NULL,name_ar TEXT NOT NULL,unit TEXT NOT NULL DEFAULT 'unit',currency TEXT NOT NULL DEFAULT 'USD',unit_price REAL NOT NULL DEFAULT 0,unit_price_minor INTEGER NOT NULL DEFAULT 0,stock_qty INTEGER NOT NULL DEFAULT 0,reserved_qty INTEGER NOT NULL DEFAULT 0,sold_qty INTEGER NOT NULL DEFAULT 0,warehouse TEXT NOT NULL DEFAULT 'Gorgan',active INTEGER NOT NULL DEFAULT 1,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY,order_no TEXT NOT NULL UNIQUE,request_id TEXT UNIQUE,customer_name TEXT NOT NULL,company TEXT,email TEXT NOT NULL,phone TEXT,destination TEXT,payment_method TEXT,status TEXT NOT NULL DEFAULT 'pending',payment_status TEXT NOT NULL DEFAULT 'unpaid',currency TEXT NOT NULL,subtotal REAL NOT NULL DEFAULT 0,total REAL NOT NULL DEFAULT 0,subtotal_minor INTEGER NOT NULL DEFAULT 0,total_minor INTEGER NOT NULL DEFAULT 0,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS order_items (id TEXT PRIMARY KEY,order_id TEXT NOT NULL,product_id TEXT NOT NULL,product_name TEXT NOT NULL,unit TEXT NOT NULL,quantity INTEGER NOT NULL,unit_price REAL NOT NULL,line_total REAL NOT NULL,unit_price_minor INTEGER NOT NULL,line_total_minor INTEGER NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS inventory_ledger (id TEXT PRIMARY KEY,product_id TEXT NOT NULL,movement_type TEXT NOT NULL,quantity INTEGER NOT NULL,reference_id TEXT,note TEXT,warehouse TEXT NOT NULL DEFAULT 'Gorgan',created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS accounting_ledger (id TEXT PRIMARY KEY,order_id TEXT,entry_type TEXT NOT NULL,amount REAL NOT NULL DEFAULT 0,amount_minor INTEGER NOT NULL DEFAULT 0,currency TEXT NOT NULL,description TEXT,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS alerts (id TEXT PRIMARY KEY,type TEXT NOT NULL,reference_id TEXT,title TEXT NOT NULL,message TEXT NOT NULL,is_read INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY,name TEXT NOT NULL,account_type TEXT NOT NULL,currency TEXT NOT NULL DEFAULT 'USD',opening_balance_minor INTEGER NOT NULL DEFAULT 0,current_balance_minor INTEGER NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS financial_entries (id TEXT PRIMARY KEY,account_id TEXT NOT NULL,entry_type TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,direction TEXT NOT NULL,reference_type TEXT,reference_id TEXT,description TEXT,created_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_costs (id TEXT PRIMARY KEY,category TEXT NOT NULL,supplier TEXT,description TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'planned',due_date TEXT,paid_at TEXT,account_id TEXT,reference_id TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS documents (id TEXT PRIMARY KEY,document_type TEXT NOT NULL,title TEXT NOT NULL,reference_type TEXT,reference_id TEXT,data_url TEXT NOT NULL,mime_type TEXT NOT NULL,size_bytes INTEGER NOT NULL DEFAULT 0,notes TEXT,captured_offline INTEGER NOT NULL DEFAULT 0,share_token_hash TEXT,share_expires_at TEXT,created_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS audit_flags (id TEXT PRIMARY KEY,severity TEXT NOT NULL,category TEXT NOT NULL,reference_type TEXT,reference_id TEXT,title TEXT NOT NULL,message TEXT NOT NULL,suggested_action TEXT,is_resolved INTEGER NOT NULL DEFAULT 0,resolved_at TEXT,created_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS operational_settings (key TEXT PRIMARY KEY,value TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS audit_log (id TEXT PRIMARY KEY,actor TEXT NOT NULL,action TEXT NOT NULL,entity_type TEXT NOT NULL,entity_id TEXT,before_json TEXT,after_json TEXT,request_id TEXT,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type,entity_id,created_at)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at)"),
+      env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_request_id_unique ON orders(request_id) WHERE request_id IS NOT NULL"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_reserved_over_available BEFORE UPDATE OF reserved_qty ON products WHEN NEW.reserved_qty < 0 OR NEW.reserved_qty > NEW.stock_qty BEGIN SELECT RAISE(ABORT, 'INVALID_RESERVATION'); END"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_cases (id TEXT PRIMARY KEY,case_no TEXT NOT NULL UNIQUE,product_id TEXT,quantity INTEGER NOT NULL DEFAULT 0,supplier TEXT,currency TEXT NOT NULL DEFAULT 'USD',purchase_total_minor INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'open',expected_date TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_milestones (id TEXT PRIMARY KEY,case_id TEXT NOT NULL,milestone_type TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',due_date TEXT,completed_at TEXT,reference_id TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_accounts_type_currency ON accounts(account_type,currency)"),
@@ -142,7 +161,7 @@ async function createOrder(data,env,origin){
   const total=lines.reduce((s,x)=>s+x.line,0);
   const statements=[env.DB.prepare("INSERT INTO orders(id,order_no,request_id,customer_name,company,email,phone,destination,payment_method,status,payment_status,currency,subtotal,total,subtotal_minor,total_minor,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,'pending','unpaid',?10,?11,?11,?12,?12,?13,?14,?14)").bind(orderId,orderNo,data.requestId||null,data.name,data.company||null,data.email,data.phone||null,data.destination||null,data.payment||null,products[0]?.currency||"USD",minorToMoney(total,products[0]?.currency||"USD"),total,data.notes||null,now,now)];
   for(const x of lines){
-    stockStatementIndexes.push(statements.length); statements.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0").bind(x.qty,now,x.p.id));
+    stockStatementIndexes.push(statements.length); statements.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0 AND stock_qty>=?1").bind(x.qty,now,x.p.id,x.qty));
     statements.push(env.DB.prepare("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)").bind(crypto.randomUUID(),orderId,x.p.id,x.p.name_en,x.p.unit,x.qty,minorToMoney(x.p.unit_price_minor,x.p.currency),minorToMoney(x.line,x.p.currency),x.p.unit_price_minor,x.line));
     statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,now));
   }
@@ -152,10 +171,17 @@ async function createOrder(data,env,origin){
   const itemSummary=lines.map(x=>x.qty+" × "+x.p.name_en).join(", ");
   statements.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'NEW_ORDER',?2,'New online order',?3,?4)").bind(crypto.randomUUID(),orderId,orderNo+" · "+data.name+" · "+itemSummary+" · destination: "+(data.destination||"not provided")+" · total "+minorToMoney(total,products[0]?.currency||"USD")+" "+(products[0]?.currency||"USD"),now));
   try{
+    statements.push(await auditStatement(env,{action:"ORDER_CREATED",entityType:"order",entityId:orderId,after:{order_no:orderNo,total_minor:total,currency:products[0]?.currency||"USD",items:lines.map(x=>({product_id:x.p.id,quantity:x.qty}))},requestId:data.requestId}));
     const results=await env.DB.batch(statements);
     if(stockStatementIndexes.some(i=>Number(results[i]?.meta?.changes||0)!==1))return response({error:"Insufficient stock for one or more products."},409,origin);
     return response({ok:true,orderId,orderNo,total:minorToMoney(total,products[0]?.currency||"USD"),currency:products[0]?.currency||"USD"},202,origin);
-  }catch(e){return response({error:String(e).toLowerCase().includes("insufficient_stock")||String(e).toLowerCase().includes("stock")?"Insufficient stock for one or more products.":"Order could not be created."},409,origin)}
+  }catch(e){
+    if(data.requestId){
+      const existing=await env.DB.prepare("SELECT id,order_no,total_minor,currency FROM orders WHERE request_id=?1").bind(data.requestId).first();
+      if(existing)return response({ok:true,orderId:existing.id,orderNo:existing.order_no,total:minorToMoney(existing.total_minor,existing.currency),currency:existing.currency},202,origin);
+    }
+    return response({error:String(e).toLowerCase().includes("insufficient_stock")||String(e).toLowerCase().includes("stock")?"Insufficient stock for one or more products.":"Order could not be created."},409,origin)
+  }
 }
 
 async function catalog(env){
@@ -177,8 +203,10 @@ async function adminProduct(request,env,origin){
   const p=await env.DB.prepare("SELECT id,stock_qty,reserved_qty FROM products WHERE id=?1").bind(id).first();if(!p)return response({error:"Product not found."},404,origin);
   if(stock<Number(p.reserved_qty||0))return response({error:"Stock cannot be lower than reserved quantity."},409,origin);
   const now=new Date().toISOString(),delta=stock-Number(p.stock_qty);
+  const before={stock_qty:Number(p.stock_qty||0),reserved_qty:Number(p.reserved_qty||0)};
   const stm=[env.DB.prepare("UPDATE products SET unit_price=?1,unit_price_minor=?2,currency=?3,active=?4,stock_qty=?5,updated_at=?6 WHERE id=?7").bind(minorToMoney(priceMinor,currency),priceMinor,currency,b.active===false?0:1,stock,now,id)];
   if(delta)stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,note,created_at) VALUES(?1,?2,?3,?4,?5,?6)").bind(crypto.randomUUID(),id,delta>0?"RESTOCK":"ADJUST",delta,id+" admin adjustment",now));
+  stm.push(await auditStatement(env,{action:"PRODUCT_UPDATED",entityType:"product",entityId:id,before,after:{currency,unit_price_minor:priceMinor,stock_qty:stock,active:b.active!==false}}));
   await env.DB.batch(stm);return response({ok:true},200,origin);
 }
 async function adminSale(request,env,origin){
@@ -191,12 +219,13 @@ async function adminSale(request,env,origin){
   const now=new Date().toISOString(),saleId=crypto.randomUUID(),total=qty*priceMinor;
   try{
     const r=await env.DB.batch([
-      env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(qty,now,id),
+      env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND stock_qty>=?1").bind(qty,now,id,qty),
       env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'SALE',?3,?4,?5,?6)").bind(crypto.randomUUID(),id,qty,saleId,"Manual / in-person sale",now),
       env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,'SALE',?2,?3,?4,?5,?6)").bind(saleId,minorToMoney(total,p.currency),total,p.currency,"In-person sale"+(text(b.customer,160)?" · Customer: "+text(b.customer,160):""),now),
       env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,'cash','SALE',?2,?3,'in','sale',?4,'In-person sale receipt',?5)").bind(crypto.randomUUID(),total,p.currency,saleId,now),
       env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id='cash' AND currency=?3").bind(total,now,p.currency),
-      env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'SALE',?2,'In-person sale recorded',?3,?4)").bind(crypto.randomUUID(),saleId,qty+" × "+p.name_en+" sold",now)
+      env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'SALE',?2,'In-person sale recorded',?3,?4)").bind(crypto.randomUUID(),saleId,qty+" × "+p.name_en+" sold",now),
+      await auditStatement(env,{action:"MANUAL_SALE",entityType:"sale",entityId:saleId,after:{product_id:id,quantity:qty,total_minor:total,currency:p.currency,customer:text(b.customer,160)||null}})
     ]);
 
     return response({ok:true,total:minorToMoney(total,p.currency),currency:p.currency},200,origin);
@@ -231,6 +260,7 @@ async function adminOrderStatus(request,env,origin){
   if(next==="paid")stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) SELECT ?1,'receivables','PAYMENT',total_minor,currency,'out','order',id,'Receivable settled by payment',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
   if(next==="paid")stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor-(SELECT total_minor FROM orders WHERE id=?1),updated_at=?2 WHERE id='receivables' AND currency=(SELECT currency FROM orders WHERE id=?1)").bind(orderId,now));
   stm.push(env.DB.prepare("UPDATE orders SET status=?1,payment_status=CASE WHEN ?1='paid' OR payment_status='paid' THEN 'paid' ELSE payment_status END,updated_at=?2 WHERE id=?3").bind(next,now,orderId));
+  stm.push(await auditStatement(env,{action:"ORDER_STATUS_CHANGED",entityType:"order",entityId:orderId,before:{status:order.status,payment_status:order.payment_status},after:{status:next,payment_status:next==="paid"||order.payment_status==="paid"?"paid":order.payment_status}}));
   stm.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'ORDER_STATUS',?2,'Order status updated',?3,?4)").bind(crypto.randomUUID(),orderId,order.order_no+" → "+next,now));
   await env.DB.batch(stm);return response({ok:true},200,origin);
 }
