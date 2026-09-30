@@ -98,9 +98,3 @@ INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_pri
 VALUES('adhesive','Water-Based Adhesives','چسب‌های پایه آب','لاصقات مائية','kg','USD',0,0,0,0,0,'Gorgan',0,datetime('now'));
 INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,active,updated_at)
 VALUES('packaging','Packaging Materials','مواد بسته‌بندی','مواد التغليف','unit','USD',0,0,0,0,0,'Gorgan',0,datetime('now'));
-CREATE TRIGGER IF NOT EXISTS trg_products_no_negative_stock
-BEFORE UPDATE OF stock_qty ON products
-WHEN NEW.stock_qty < 0
-BEGIN
-  SELECT RAISE(ABORT, 'INSUFFICIENT_STOCK');
-END;
