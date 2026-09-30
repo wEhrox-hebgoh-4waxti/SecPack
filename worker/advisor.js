@@ -119,7 +119,8 @@ async function createOrder(data,env,origin){
     statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,now));
   }
   statements.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,?2,'ORDER',?3,?4,?5,'Order recorded; payment pending',?6)").bind(crypto.randomUUID(),orderId,minorToMoney(total,products[0]?.currency||"USD"),total,products[0]?.currency||"USD",now));
-  statements.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'NEW_ORDER',?2,'New online order',?3,?4)").bind(crypto.randomUUID(),orderId,orderNo+" · "+data.name+" · total "+minorToMoney(total,products[0]?.currency||"USD")+" "+(products[0]?.currency||"USD"),now));
+  const itemSummary=lines.map(x=>x.qty+" × "+x.p.name_en).join(", ");
+  statements.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'NEW_ORDER',?2,'New online order',?3,?4)").bind(crypto.randomUUID(),orderId,orderNo+" · "+data.name+" · "+itemSummary+" · destination: "+(data.destination||"not provided")+" · total "+minorToMoney(total,products[0]?.currency||"USD")+" "+(products[0]?.currency||"USD"),now));
   try{
     const results=await env.DB.batch(statements);
     const stockResults=results.slice(1).filter((_,i)=>i%3===0);
