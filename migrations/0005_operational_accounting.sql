@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS documents (
   reference_type TEXT,
   reference_id TEXT,
   storage_key TEXT,
+  data_url TEXT,
   mime_type TEXT,
   size_bytes INTEGER,
   sha256 TEXT,
