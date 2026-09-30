@@ -66,6 +66,7 @@ function renderOrders(os){
     const dest=el("td",o.destination||"—"),total=el("td",money(o.total,o.currency)),pay=el("td",o.payment_status),statusTd=el("td"),sel=el("select");sel.dataset.status=o.id;
     ["pending","processing","paid","ready","fulfilled","cancelled"].forEach(s=>{const op=el("option",s);op.value=s;op.selected=o.status===s;sel.append(op);});statusTd.append(sel);
     const date=el("td",new Date(o.created_at).toLocaleString()),act=el("td"),b=el("button","ذخیره");b.className="btn";b.dataset.orderSave=o.id;act.append(b);
+    if(o.payment_status==="paid"){const rb=el("button","استرداد");rb.className="btn";rb.dataset.refund=o.id;act.append(rb);}
     tr.append(order,customer,dest,total,pay,statusTd,date,act);frag.append(tr);
   });$("orders").replaceChildren(frag);
 }
@@ -97,6 +98,13 @@ document.addEventListener("click",async e=>{
   if(save){const id=save.dataset.save;try{await api("/admin/product",{method:"POST",body:JSON.stringify({request_id:crypto.randomUUID(),id,currency:document.querySelector("[data-currency='"+id+"']").value,unit_price:document.querySelector("[data-price='"+id+"']").value,stock_qty:Number(document.querySelector("[data-stock='"+id+"']").value),active:document.querySelector("[data-active='"+id+"']").checked})});await load();}catch(x){alert(x.message);}}
   const rs=e.target.closest("[data-read]");
   if(rs){try{await api("/admin/alerts/read",{method:"POST",body:JSON.stringify({request_id:crypto.randomUUID(),id:rs.dataset.read})});await load();}catch(x){alert(x.message);}}
+  const rf=e.target.closest("[data-refund]");
+  if(rf){
+    const returnInventory=window.confirm("آیا کالای تحویل‌شده نیز به موجودی برگردد؟ لغو = فقط استرداد مالی.");
+    if(window.confirm("استرداد این سفارش قطعی است؟")){
+      try{await api("/admin/refund",{method:"POST",body:JSON.stringify({request_id:crypto.randomUUID(),order_id:rf.dataset.refund,return_inventory:returnInventory})});await load();}catch(x){alert(x.message);}
+    }
+  }
   const os=e.target.closest("[data-order-save]");
   if(os){const id=os.dataset.orderSave,status=document.querySelector("[data-status='"+id+"']").value;try{await api("/admin/order-status",{method:"POST",body:JSON.stringify({request_id:crypto.randomUUID(),order_id:id,status})});await load();}catch(x){alert(x.message);}}
 });
