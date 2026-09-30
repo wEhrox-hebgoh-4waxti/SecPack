@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS products (
   stock_qty INTEGER NOT NULL DEFAULT 0,
   reserved_qty INTEGER NOT NULL DEFAULT 0,
   sold_qty INTEGER NOT NULL DEFAULT 0,
+  warehouse TEXT NOT NULL DEFAULT 'Gorgan',
   active INTEGER NOT NULL DEFAULT 1,
   updated_at TEXT NOT NULL
 );
@@ -56,6 +57,7 @@ CREATE TABLE IF NOT EXISTS inventory_ledger (
   quantity INTEGER NOT NULL,
   reference_id TEXT,
   note TEXT,
+  warehouse TEXT NOT NULL DEFAULT 'Gorgan',
   created_at TEXT NOT NULL
 );
 
@@ -88,11 +90,11 @@ CREATE INDEX IF NOT EXISTS idx_inventory_product ON inventory_ledger(product_id,
 CREATE INDEX IF NOT EXISTS idx_accounting_created ON accounting_ledger(created_at);
 CREATE INDEX IF NOT EXISTS idx_alerts_unread ON alerts(is_read,created_at);
 
+INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at)
+VALUES('paper','A4 Copy Paper','کاغذ کپی A4','ورق نسخ A4','ream','USD',0,0,0,0,0,'Gorgan',1,datetime('now'));
 INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,active,updated_at)
-VALUES('paper','A4 Copy Paper','کاغذ کپی A4','ورق نسخ A4','ream','USD',0,0,0,0,0,1,datetime('now'));
+VALUES('film','Lamination Films','فیلم لمینیشن','أفلام التغليف','kg','USD',0,0,0,0,0,'Gorgan',0,datetime('now'));
 INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,active,updated_at)
-VALUES('film','Lamination Films','فیلم لمینیشن','أفلام التغليف','kg','USD',0,0,0,0,0,0,datetime('now'));
+VALUES('adhesive','Water-Based Adhesives','چسب‌های پایه آب','لاصقات مائية','kg','USD',0,0,0,0,0,'Gorgan',0,datetime('now'));
 INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,active,updated_at)
-VALUES('adhesive','Water-Based Adhesives','چسب‌های پایه آب','لاصقات مائية','kg','USD',0,0,0,0,0,0,datetime('now'));
-INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,active,updated_at)
-VALUES('packaging','Packaging Materials','مواد بسته‌بندی','مواد التغليف','unit','USD',0,0,0,0,0,0,datetime('now'));
+VALUES('packaging','Packaging Materials','مواد بسته‌بندی','مواد التغليف','unit','USD',0,0,0,0,0,'Gorgan',0,datetime('now'));
