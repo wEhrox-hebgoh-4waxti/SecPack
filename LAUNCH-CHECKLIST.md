@@ -12,7 +12,7 @@
 - [x] Duplicate request protection
 - [x] Rate limiting with hashed client identifiers
 - [x] Security headers
-- [x] D1 migration files (0001 + 0002 + 0003 + 0004 + 0005 + 0006)
+- [x] D1 migration files (0001–0007)
 - [x] Canonical root Wrangler configuration
 - [x] Removed obsolete Worker Wrangler configuration
 
@@ -21,9 +21,9 @@
 2. Put its real `database_id` in the canonical `wrangler.toml`.
 3. Configure the OpenAI API credential as a Cloudflare Secret.
 4. Configure a strong random `RATE_LIMIT_SALT` as a Cloudflare Secret (recommended; Worker safely falls back to the OpenAI secret until then).
-5. Apply all D1 migrations, including 0001–0005.
-7. Verify the Worker custom domain `api.secpackco.com`.
-8. Verify HTTPS and HSTS at the production domain.
+5. Apply all D1 migrations, including 0001–0007.
+6. Verify the Worker custom domain `api.secpackco.com`.
+7. Verify HTTPS and HSTS at the production domain.
 
 ## Functional QA
 - Contact form submits successfully.
