@@ -34,7 +34,10 @@ function renderProducts(ps){
   });
   $("products").replaceChildren(frag);
   const sf=document.createDocumentFragment();
-  ps.filter(p=>p.active).forEach(p=>{const o=el("option",p.name_fa+" — "+money(p.unit_price_minor?((["USD","EUR","GBP","AED","SAR","TRY"].includes(p.currency))?p.unit_price_minor/100:p.unit_price_minor:0,p.currency));o.value=p.id;sf.append(o);});
+  ps.filter(p=>p.active).forEach(p=>{
+    const amount=p.unit_price_minor?((["USD","EUR","GBP","AED","SAR","TRY"].includes(p.currency))?p.unit_price_minor/100:p.unit_price_minor):0;
+    const o=el("option",p.name_fa+" — "+money(amount,p.currency));o.value=p.id;sf.append(o);
+  });
   $("saleProduct").replaceChildren(sf);
   const rf=document.createDocumentFragment();
   ps.filter(p=>p.active).forEach(p=>{const o=el("option",p.name_fa);o.value=p.id;rf.append(o);});
