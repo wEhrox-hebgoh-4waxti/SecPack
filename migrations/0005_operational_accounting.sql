@@ -54,6 +54,8 @@ CREATE TABLE IF NOT EXISTS documents (
   reference_id TEXT,
   storage_key TEXT,
   data_url TEXT,
+  share_token_hash TEXT UNIQUE,
+  share_expires_at TEXT,
   mime_type TEXT,
   size_bytes INTEGER,
   sha256 TEXT,
