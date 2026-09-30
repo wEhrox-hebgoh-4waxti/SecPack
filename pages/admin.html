@@ -55,7 +55,84 @@
 <h2>سفارش‌های آنلاین</h2>
 <div class="admin-overflow"><table class="admin-table"><thead><tr><th>سفارش</th><th>مشتری</th><th>Destination</th><th>مبلغ</th><th>پرداخت</th><th>وضعیت</th><th>تاریخ</th><th></th></tr></thead><tbody id="orders"></tbody></table></div>
 </div>
+
+<div class="admin-card accounting-hub">
+<h2>دفتر هوشمند حسابداری و عملیات</h2>
+<p class="admin-note">خرید، هزینه‌های کارخانه/گمرک/حمل/انبار، حساب‌ها، اسناد و کنترل کاستی‌ها از یک مرکز.</p>
+<div class="admin-actions">
+<button class="btn" id="auditRun" type="button">🔎 کنترل کامل</button>
+<button class="btn" id="assistantRun" type="button">🤖 تحلیل حسابدار هوشمند</button>
+</div>
+<p id="accountingStatus" class="admin-note"></p>
+<div class="admin-grid">
+<div class="admin-card"><h3>حساب‌ها</h3><div id="accountingAccounts" class="account-list">—</div></div>
+<div class="admin-card"><h3>هزینه‌های زنجیره تأمین</h3><div id="accountingCosts" class="account-list">—</div></div>
+</div>
+<div class="admin-card"><h3>کاستی‌ها و هشدارها</h3><div id="auditFlags">—</div></div>
+<div class="admin-card"><h3>گزارش هوشمند</h3><div id="assistantOutput" class="assistant-output">برای تحلیل، دکمه «تحلیل حسابدار هوشمند» را بزنید.</div></div>
+
+<div class="admin-grid">
+<form id="accountForm" class="admin-form admin-card">
+<h3>افزودن حساب</h3>
+<input name="name" placeholder="نام حساب؛ مثال: بانک، صندوق، تأمین‌کننده" required>
+<select name="account_type"><option value="bank">بانک</option><option value="cash">صندوق</option><option value="payable">پرداختنی</option><option value="receivable">دریافتنی</option><option value="expense">هزینه</option><option value="income">درآمد</option><option value="inventory">موجودی</option><option value="other">سایر</option></select>
+<select name="currency"><option>USD</option><option>IRR</option><option>EUR</option><option>TRY</option><option>AED</option></select>
+<input name="opening_balance" inputmode="decimal" placeholder="مانده اولیه" value="0">
+<button class="btn primary" type="submit">ثبت حساب</button>
+</form>
+
+<form id="entryForm" class="admin-form admin-card">
+<h3>ثبت دریافت / پرداخت</h3>
+<input name="account_id" placeholder="شناسه حساب" required>
+<select name="direction"><option value="in">دریافت</option><option value="out">پرداخت</option></select>
+<select name="entry_type"><option value="income">درآمد</option><option value="expense">هزینه</option><option value="transfer">انتقال</option><option value="adjustment">اصلاح</option></select>
+<select name="currency"><option>USD</option><option>IRR</option><option>EUR</option><option>TRY</option><option>AED</option></select>
+<input name="amount" inputmode="decimal" placeholder="مبلغ" required>
+<input name="description" placeholder="شرح">
+<input name="reference_type" placeholder="نوع مرجع">
+<input name="reference_id" placeholder="شماره مرجع">
+<button class="btn primary" type="submit">ثبت سند مالی</button>
+</form>
+
+<form id="costForm" class="admin-form admin-card">
+<h3>خرید / هزینه زنجیره تأمین</h3>
+<select name="category"><option value="factory">خرید کارخانه</option><option value="customs">گمرک</option><option value="freight">حمل و نقل</option><option value="warehouse">انبارداری</option><option value="insurance">بیمه</option><option value="other">سایر</option></select>
+<input name="supplier" placeholder="تأمین‌کننده / طرف حساب">
+<input name="description" placeholder="شرح هزینه" required>
+<select name="currency"><option>USD</option><option>IRR</option><option>EUR</option><option>TRY</option><option>AED</option></select>
+<input name="amount" inputmode="decimal" placeholder="مبلغ" required>
+<input name="due_date" type="date">
+<input name="account_id" placeholder="شناسه حساب پرداخت (در صورت پرداخت)">
+<select name="status"><option value="planned">برنامه‌ریزی‌شده</option><option value="paid">پرداخت‌شده</option><option value="cancelled">لغوشده</option></select>
+<button class="btn primary" type="submit">ثبت هزینه</button>
+</form>
+
+<form id="receiptForm" class="admin-form admin-card">
+<h3>ورود کالا به انبار</h3>
+<select name="product_id" id="receiptProduct" required></select>
+<input name="quantity" type="number" min="1" step="1" placeholder="تعداد" required>
+<select name="currency"><option>USD</option><option>IRR</option><option>EUR</option><option>TRY</option><option>AED</option></select>
+<input name="unit_cost" inputmode="decimal" placeholder="بهای واحد" required>
+<input name="account_id" placeholder="شناسه حساب پرداخت">
+<input name="note" placeholder="شرح ورود کالا">
+<button class="btn primary" type="submit">ثبت ورود به انبار</button>
+</form>
+</div>
+
+<form id="documentForm" class="admin-form admin-card">
+<h3>تصویر اسناد</h3>
+<p class="admin-note">از دوربین موبایل یا فایل انتخاب کنید. تصویر فشرده می‌شود و در صورت قطع اینترنت ابتدا روی همین دستگاه در صف امن قرار می‌گیرد.</p>
+<input id="documentTitle" placeholder="عنوان سند" required>
+<select id="documentType"><option value="invoice">فاکتور</option><option value="payment">رسید پرداخت</option><option value="customs">سند گمرکی</option><option value="transport">حمل</option><option value="warehouse">انبار</option><option value="other">سایر</option></select>
+<input id="documentRefType" placeholder="نوع مرجع (اختیاری)">
+<input id="documentRefId" placeholder="شماره مرجع (اختیاری)">
+<input id="documentNotes" placeholder="یادداشت">
+<input id="documentFile" type="file" accept="image/*" capture="environment" required>
+<button class="btn primary" type="submit">📷 ثبت تصویر سند</button>
+</form>
+<div class="admin-card"><h3>اسناد اخیر</h3><div id="documentList" class="document-list">—</div></div>
+</div>
 </section>
 </main>
-<script src="../assets/js/admin.js"></script>
+<script src="../assets/js/admin.js"></script><script src="../assets/js/accounting.js"></script>
 </body></html>
