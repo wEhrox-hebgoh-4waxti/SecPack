@@ -24,10 +24,10 @@ async function accountingApi(path,payload,method="POST"){
   const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||"خطا");return d;
 }
 function a(id){return document.getElementById(id);}
-function amoney(v,c){const digits=["USD","EUR","GBP","AED","SAR","TRY"].includes(c)?2:0;return Number(v||0).toLocaleString("fa-IR",{maximumFractionDigits:digits})+" "+c;}
+function amoney(v,c){const digits=["USD","EUR","GBP","AED","SAR","TRY"].includes(c)?2:0;return Number(v||0).toLocaleString("fa-IR",{maximumFractionDigits:digits})+" "+c;} function fromMinor(v,c){return Number(v||0)/(["USD","EUR","GBP","AED","SAR","TRY"].includes(c)?100:1);}
 function renderAccounting(d){
   const sm=d.summary||[],inv=d.inventory||{},div=a("accountingSummary");
-  const moneyRows=sm.map(x=>"<div class=\"admin-card\"><h3>فروش / دریافت / هزینه · "+escapeHtml(x.currency)+"</h3><div>"+escapeHtml(amoney(x.sales_minor/100,x.currency))+" / "+escapeHtml(amoney(x.payments_minor/100,x.currency))+" / "+escapeHtml(amoney(x.expenses_minor/100,x.currency))+"</div></div>");
+  const moneyRows=sm.map(x=>"<div class=\"admin-card\"><h3>فروش / دریافت / هزینه · "+escapeHtml(x.currency)+"</h3><div>"+escapeHtml(amoney(fromMinor(x.sales_minor,x.currency),x.currency))+" / "+escapeHtml(amoney(fromMinor(x.payments_minor,x.currency),x.currency))+" / "+escapeHtml(amoney(fromMinor(x.expenses_minor,x.currency),x.currency))+"</div></div>");
   if(div)div.innerHTML=moneyRows.concat("<div class=\"admin-card\"><h3>موجودی / رزرو / فروش</h3><div class=\"stat\">"+Number(inv.qty||0)+" / "+Number(inv.reserved||0)+" / "+Number(inv.sold||0)+"</div></div>").join("");
   ["entryAccount","costAccount","receiptAccount"].forEach(id=>{const s=a(id);if(s){const keep=id==="costAccount"||id==="receiptAccount"?"<option value=\"\">حساب پرداخت را انتخاب کنید</option>":"";s.innerHTML=keep+d.accounts.map(x=>"<option value=\""+escapeHtml(x.id)+"\">"+escapeHtml(x.name)+" · "+escapeHtml(x.currency)+"</option>").join("");}});
   const box=a("accountingAccounts");box.replaceChildren(...d.accounts.map(x=>{const e=document.createElement("div");e.className="account-row";e.innerHTML="<b>"+escapeHtml(x.name)+"</b><span>"+amoney(Number(x.current_balance_minor)/(["USD","EUR","GBP","AED","SAR","TRY"].includes(x.currency)?100:1),x.currency)+"</span>";return e;}));
