@@ -85,7 +85,6 @@ async function handleForm(request,env,origin){
 }
 
 async function createOrder(data,env,origin){
-  const limited=await rateLimit(env,{}, "order", ORDER_LIMIT); // guarded by form-level limit
   let parsed;
   try{parsed=JSON.parse(data.items||"[]")}catch(_){return response({error:"Invalid order items."},400,origin)}
   if(!Array.isArray(parsed)||!parsed.length||parsed.length>20)return response({error:"Invalid order items."},400,origin);
@@ -99,15 +98,14 @@ async function createOrder(data,env,origin){
   const total=lines.reduce((s,x)=>s+x.line,0);
   const statements=[env.DB.prepare("INSERT INTO orders(id,order_no,customer_name,company,email,phone,destination,payment_method,status,payment_status,currency,subtotal,total,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,'pending','unpaid',?9,?10,?10,?11,?12,?12)").bind(orderId,orderNo,data.name,data.company||null,data.email,data.phone||null,data.destination||null,data.payment||null,products[0]?.currency||"USD",total,data.notes||null,now)];
   for(const x of lines){
-    statements.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price>0 AND stock_qty>=?1").bind(x.qty,now,x.p.id));
+    statements.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price>0").bind(x.qty,now,x.p.id));
     statements.push(env.DB.prepare("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)").bind(crypto.randomUUID(),orderId,x.p.id,x.p.name_en,x.p.unit,x.qty,x.p.unit_price,x.line));
     statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,now));
   }
   statements.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,currency,description,created_at) VALUES(?1,?2,'ORDER',?3,?4,'Order recorded; payment pending',?5)").bind(crypto.randomUUID(),orderId,total,products[0]?.currency||"USD",now));
   statements.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'NEW_ORDER',?2,'New online order',?3,?4)").bind(crypto.randomUUID(),orderId,orderNo+" · "+data.name+" · total "+total+" "+(products[0]?.currency||"USD"),now));
   try{
-    const results=await env.DB.batch(statements);
-    for(let i=0;i<lines.length;i++){const r=results[1+i*3];if(!r?.meta?.changes)throw new Error("stock")}
+    await env.DB.batch(statements);
     return response({ok:true,orderId,orderNo,total,currency:products[0]?.currency||"USD"},202,origin);
   }catch(e){return response({error:String(e).includes("stock")?"Insufficient stock for one or more products.":"Order could not be created."},409,origin)}
 }
@@ -141,14 +139,14 @@ async function adminSale(request,env,origin){
   const now=new Date().toISOString(),saleId=crypto.randomUUID(),total=qty*price;
   try{
     const r=await env.DB.batch([
-      env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3 AND stock_qty>=?1").bind(qty,now,id),
+      env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(qty,now,id),
       env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'SALE',?3,?4,?5,?6)").bind(crypto.randomUUID(),id,qty,saleId,"Manual / in-person sale",now),
       env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,currency,description,created_at) VALUES(?1,'SALE',?2,?3,?4,?5)").bind(saleId,total,p.currency,"In-person sale",now),
       env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'SALE',?2,'In-person sale recorded',?3,?4)").bind(crypto.randomUUID(),saleId,qty+" × "+p.name_en+" sold",now)
     ]);
-    if(!r[0]?.meta?.changes)return response({error:"Insufficient stock."},409,origin);
+
     return response({ok:true,total,currency:p.currency},200,origin);
-  }catch(_){return response({error:"Sale could not be recorded."},500,origin)}
+  }catch(e){return response({error:String(e).includes("INSUFFICIENT_STOCK")?"Insufficient stock.":"Sale could not be recorded."},String(e).includes("INSUFFICIENT_STOCK")?409:500,origin)}
 }
 async function adminOrderStatus(request,env,origin){
   if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
