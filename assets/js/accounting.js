@@ -26,13 +26,9 @@ async function accountingApi(path,payload,method="POST"){
 function a(id){return document.getElementById(id);}
 function amoney(v,c){const digits=["USD","EUR","GBP","AED","SAR","TRY"].includes(c)?2:0;return Number(v||0).toLocaleString("fa-IR",{maximumFractionDigits:digits})+" "+c;}
 function renderAccounting(d){
-  const sm=d.summary||{},inv=d.inventory||{},cur="USD",div=a("accountingSummary");
-  if(div)div.innerHTML=[
-    ["فروش ثبت‌شده",amoney(Number(sm.sales_minor||0)/100,cur)],
-    ["دریافت ثبت‌شده",amoney(Number(sm.payments_minor||0)/100,cur)],
-    ["هزینه ثبت‌شده",amoney(Number(sm.expenses_minor||0)/100,cur)],
-    ["موجودی / رزرو / فروش",Number(inv.qty||0)+" / "+Number(inv.reserved||0)+" / "+Number(inv.sold||0)]
-  ].map(x=>"<div class=\"admin-card\"><h3>"+escapeHtml(x[0])+"</h3><div class=\"stat\">"+escapeHtml(x[1])+"</div></div>").join("");
+  const sm=d.summary||[],inv=d.inventory||{},div=a("accountingSummary");
+  const moneyRows=sm.map(x=>"<div class=\"admin-card\"><h3>فروش / دریافت / هزینه · "+escapeHtml(x.currency)+"</h3><div>"+escapeHtml(amoney(x.sales_minor/100,x.currency))+" / "+escapeHtml(amoney(x.payments_minor/100,x.currency))+" / "+escapeHtml(amoney(x.expenses_minor/100,x.currency))+"</div></div>");
+  if(div)div.innerHTML=moneyRows.concat("<div class=\"admin-card\"><h3>موجودی / رزرو / فروش</h3><div class=\"stat\">"+Number(inv.qty||0)+" / "+Number(inv.reserved||0)+" / "+Number(inv.sold||0)+"</div></div>").join("");
   ["entryAccount","costAccount","receiptAccount"].forEach(id=>{const s=a(id);if(s){const keep=id==="costAccount"||id==="receiptAccount"?"<option value=\"\">حساب پرداخت را انتخاب کنید</option>":"";s.innerHTML=keep+d.accounts.map(x=>"<option value=\""+escapeHtml(x.id)+"\">"+escapeHtml(x.name)+" · "+escapeHtml(x.currency)+"</option>").join("");}});
   const box=a("accountingAccounts");box.replaceChildren(...d.accounts.map(x=>{const e=document.createElement("div");e.className="account-row";e.innerHTML="<b>"+escapeHtml(x.name)+"</b><span>"+amoney(Number(x.current_balance_minor)/(["USD","EUR","GBP","AED","SAR","TRY"].includes(x.currency)?100:1),x.currency)+"</span>";return e;}));
   a("accountingCosts").replaceChildren(...d.costs.slice(0,20).map(x=>{const e=document.createElement("div");e.className="account-row";e.innerHTML="<span>"+escapeHtml(x.category)+" · "+escapeHtml(x.description)+"</span><b>"+amoney(Number(x.amount_minor)/(["USD","EUR","GBP","AED","SAR","TRY"].includes(x.currency)?100:1),x.currency)+"</b>";return e;}));
