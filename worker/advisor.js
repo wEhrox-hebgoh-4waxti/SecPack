@@ -122,6 +122,18 @@ async function handleForm(request, env, origin) {
 
   if (!name || !email || !validEmail(email)) return response({ error: "Please provide a valid name and email address." }, 400, origin);
   if (type === "order" && !product && !items) return response({ error: "Order details are required." }, 400, origin);
+  if (type === "order") {
+    if (items.length > 4000) return response({ error: "Order details are too large." }, 413, origin);
+    try {
+      const parsed = JSON.parse(items);
+      if (!Array.isArray(parsed) || !parsed.length || parsed.length > 20) throw new Error("invalid");
+      for (const item of parsed) {
+        if (!item || !["paper", "film", "adhesive", "packaging"].includes(item.id) || !Number.isInteger(item.qty) || item.qty < 1 || item.qty > 100000) throw new Error("invalid");
+      }
+    } catch (_) {
+      return response({ error: "Invalid order items." }, 400, origin);
+    }
+  }
 
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
@@ -137,7 +149,7 @@ async function handleForm(request, env, origin) {
       "VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)"
     ).bind(id, requestId || null, type, name, company, email, phone, product, destination, payment, notes, message, items, now, visitorDetails).run();
 
-    return response({ ok: true }, 202, origin);
+    return response({ ok: true, orderId: type === "order" ? id : undefined }, 202, origin);
   } catch (_) {
     return response({ error: "The submission could not be saved." }, 500, origin);
   }
@@ -220,6 +232,10 @@ export default {
   },
 
   async fetch(request, env) {
+    const url = new URL(request.url);
+    if (url.pathname === "/health" && request.method === "GET") {
+      return response({ ok: true, service: "secpack-api", ready: await ensureReady(env) }, 200, null);
+    }
     const origin = request.headers.get("Origin");
     if (!origin || !ORIGINS.has(origin)) return response({ error: "Origin not allowed." }, 403, origin);
     if (request.method === "OPTIONS") return response({}, 204, origin);
