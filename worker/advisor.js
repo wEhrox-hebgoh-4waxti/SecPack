@@ -97,7 +97,7 @@ async function ensureReady(env){return Boolean(env.DB&&env[KEY]);}
 
 let operationsSchemaPromise=null;
 async function ensureColumn(env,table,column,definition){
-  const allowed=new Set(["inquiries","products","orders","order_items","inventory_ledger","accounting_ledger","financial_entries","supply_costs","documents","supply_cases","supply_milestones"]);
+  const allowed=new Set(["inquiries","products","orders","order_items","inventory_ledger","accounting_ledger","financial_entries","supply_costs","documents","supply_cases","supply_milestones","accounts"]);
   if(!allowed.has(table))throw new Error("invalid_table");
   const rows=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];
   if(!rows.some(x=>x.name===column))await env.DB.prepare("ALTER TABLE "+table+" ADD COLUMN "+column+" "+definition).run();
@@ -170,7 +170,7 @@ async function ensureOperationsSchema(env){
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_line_update BEFORE UPDATE ON journal_lines BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_line_delete BEFORE DELETE ON journal_lines BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS alerts (id TEXT PRIMARY KEY,type TEXT NOT NULL,reference_id TEXT,title TEXT NOT NULL,message TEXT NOT NULL,is_read INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY,name TEXT NOT NULL,account_type TEXT NOT NULL,currency TEXT NOT NULL DEFAULT 'USD',opening_balance_minor INTEGER NOT NULL DEFAULT 0,current_balance_minor INTEGER NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,name TEXT NOT NULL,account_type TEXT NOT NULL,currency TEXT NOT NULL DEFAULT 'USD',opening_balance_minor INTEGER NOT NULL DEFAULT 0,current_balance_minor INTEGER NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS financial_entries (id TEXT PRIMARY KEY,account_id TEXT NOT NULL,entry_type TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,direction TEXT NOT NULL,reference_type TEXT,reference_id TEXT,description TEXT,created_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_costs (id TEXT PRIMARY KEY,category TEXT NOT NULL,supplier TEXT,description TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'planned',due_date TEXT,paid_at TEXT,account_id TEXT,reference_id TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS documents (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,document_type TEXT NOT NULL,title TEXT NOT NULL,reference_type TEXT,reference_id TEXT,data_url TEXT NOT NULL,mime_type TEXT NOT NULL,size_bytes INTEGER NOT NULL DEFAULT 0,notes TEXT,captured_offline INTEGER NOT NULL DEFAULT 0,share_token_hash TEXT,share_expires_at TEXT,created_at TEXT NOT NULL)"),
@@ -220,6 +220,7 @@ async function ensureOperationsSchema(env){
       await ensureColumn(env,"documents","request_id","TEXT");
       await ensureColumn(env,"supply_cases","request_id","TEXT");
       await ensureColumn(env,"supply_milestones","request_id","TEXT");
+      await ensureColumn(env,"accounts","request_id","TEXT");
       await ensureColumn(env,"accounting_ledger","amount_minor","INTEGER NOT NULL DEFAULT 0");
       await env.DB.batch([
         env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_request_id_unique ON inventory_ledger(request_id) WHERE request_id IS NOT NULL"),
@@ -227,7 +228,8 @@ async function ensureOperationsSchema(env){
         env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_cost_request_id_unique ON supply_costs(request_id) WHERE request_id IS NOT NULL"),
         env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_documents_request_id_unique ON documents(request_id) WHERE request_id IS NOT NULL"),
         env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_cases_request_id_unique ON supply_cases(request_id) WHERE request_id IS NOT NULL"),
-        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_milestones_request_id_unique ON supply_milestones(request_id) WHERE request_id IS NOT NULL")
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_milestones_request_id_unique ON supply_milestones(request_id) WHERE request_id IS NOT NULL"),
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_request_id_unique ON accounts(request_id) WHERE request_id IS NOT NULL")
       ]);
       await env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES ('cogs','بهای تمام‌شده','cogs','USD',0,0,1,datetime('now'),datetime('now'))");
       for(const cur of ["IRR","EUR","TRY","AED","GBP","SAR"]){
@@ -485,17 +487,19 @@ async function adminAccounting(request,env,origin){
     return response(await accountingSnapshot(env),200,origin);
   }
   if(path==="/admin/account"&&request.method==="POST"){
-    const b=await readJson(request),id=text(b.id,50)||crypto.randomUUID(),name=text(b.name,120),type=text(b.account_type,30),currency=text(b.currency,8)||"USD",offsetId=text(b.offset_account_id,60);
+    const b=await readJson(request),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null,id=text(b.id,50)||crypto.randomUUID(),name=text(b.name,120),type=text(b.account_type,30),currency=text(b.currency,8)||"USD",offsetId=text(b.offset_account_id,60);
+    if(requestId){const prior=await env.DB.prepare("SELECT id FROM accounts WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,replayed:true},200,origin);}
+    const existing=await env.DB.prepare("SELECT id FROM accounts WHERE id=?1").bind(id).first();if(existing)return response({error:"Account already exists; ledger accounts are immutable in structure."},409,origin);
     if(!name||!["cash","bank","receivable","payable","inventory","expense","income","other"].includes(type))return response({error:"Invalid account."},400,origin);
     const now=new Date().toISOString(),opening=moneyToMinor(b.opening_balance,currency);if(opening===null)return response({error:"Invalid opening balance."},400,origin);
     if(opening>0&&!offsetId)return response({error:"An opening balance requires an offset account."},400,origin);
     if(offsetId===id)return response({error:"Opening balance requires a different offset account."},400,origin);
     const normal=["cash","bank","receivable","inventory","expense","cogs"].includes(type)?"debit":"credit";
-    const statements=[env.DB.prepare("INSERT INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,0,1,?6,?6) ON CONFLICT(id) DO UPDATE SET name=excluded.name,account_type=excluded.account_type,currency=excluded.currency,updated_at=excluded.updated_at").bind(id,name,type,currency,opening,now)];
+    const statements=[env.DB.prepare("INSERT INTO accounts(id,request_id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,0,1,?7,?7) ON CONFLICT(id) DO UPDATE SET name=excluded.name,account_type=excluded.account_type,currency=excluded.currency,updated_at=excluded.updated_at") .bind(id,requestId,name,type,currency,opening,now)];
     if(opening>0){
       const offset=await env.DB.prepare("SELECT id,name,account_type,currency,active FROM accounts WHERE id=?1").bind(offsetId).first();
       if(!offset||!offset.active||offset.currency!==currency)return response({error:"Invalid opening balance offset account."},400,origin);
-      const journal=await buildJournal(env,{referenceType:"opening_balance",referenceId:id,description:"Opening balance · "+name,currency,lines:normal==="debit"?[{accountId:id,side:"debit",amount:opening},{accountId:offsetId,side:"credit",amount:opening}]:[{accountId:id,side:"credit",amount:opening},{accountId:offsetId,side:"debit",amount:opening}],extraAccounts:[{id,name,account_type:type,currency,active:1}]});
+      const journal=await buildJournal(env,{referenceType:"opening_balance",referenceId:id,description:"Opening balance · "+name,currency,requestId:requestId?requestId+":opening":null,lines:normal==="debit"?[{accountId:id,side:"debit",amount:opening},{accountId:offsetId,side:"credit",amount:opening}]:[{accountId:id,side:"credit",amount:opening},{accountId:offsetId,side:"debit",amount:opening}],extraAccounts:[{id,name,account_type:type,currency,active:1}]});
       if(!journal)return response({error:"Unable to create opening balance journal."},409,origin);
       statements.push(...journal.statements);
     }
