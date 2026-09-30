@@ -59,7 +59,7 @@ function renderAccounting(d){
     const ip=document.createElement("div");ip.className="stat";ip.textContent=Number(inv.qty||0)+" / "+Number(inv.reserved||0)+" / "+Number(inv.sold||0);
     invCard.append(ih,ip);frag.append(invCard);div.replaceChildren(frag);
   }
-  ["entryAccount","costAccount","receiptAccount"].forEach(id=>{
+  ["entryAccount","costAccount","receiptAccount","accountOffset"].forEach(id=>{
     const s=a(id);if(!s)return;s.replaceChildren();
     if(id==="costAccount"||id==="receiptAccount"){const z=document.createElement("option");z.value="";z.textContent="حساب پرداخت را انتخاب کنید";s.append(z);}
     (d.accounts||[]).forEach(x=>{const o=document.createElement("option");o.value=x.id;o.textContent=x.name+" · "+x.currency;s.append(o);});
