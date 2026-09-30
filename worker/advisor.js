@@ -503,7 +503,7 @@ async function adminAccounting(request,env,origin){
       if(!journal)return response({error:"Unable to create opening balance journal."},409,origin);
       statements.push(...journal.statements);
     }
-    try{await env.DB.batch(statements);return response({ok:true,id},200,origin);}catch(_){return response({error:"Account could not be saved."},409,origin)}
+    try{await env.DB.batch([...statements,await auditStatement(env,{action:"ACCOUNT_CREATED",entityType:"account",entityId:id,after:{name,type,currency,opening_minor:opening},requestId})]);return response({ok:true,id},200,origin);}catch(_){return response({error:"Account could not be saved."},409,origin)}
   }
   if(path==="/admin/accounting/entry"&&request.method==="POST"){
     const b=await readJson(request),accountId=text(b.account_id,60),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency),direction=text(b.direction,3),type=text(b.entry_type,30)||"adjustment",offsetId=text(b.offset_account_id,60);
