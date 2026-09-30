@@ -100,7 +100,7 @@ async function ensureColumn(env,table,column,definition){
   const rows=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];
   if(!rows.some(x=>x.name===column))await env.DB.prepare("ALTER TABLE "+table+" ADD COLUMN "+column+" "+definition).run();
 }
-async function buildJournal(env,{referenceType,referenceId,description,currency,lines,requestId=null}){
+async function buildJournal(env,{referenceType,referenceId,description,currency,lines,requestId=null,extraAccounts=[]}){
   if(!Array.isArray(lines)||lines.length<2)return null;
   const normalized=lines.map(x=>({accountId:text(x.accountId,60),side:x.side,amount:Number(x.amount)}));
   if(normalized.some(x=>!x.accountId||!["debit","credit"].includes(x.side)||!Number.isSafeInteger(x.amount)||x.amount<=0))return null;
@@ -108,7 +108,13 @@ async function buildJournal(env,{referenceType,referenceId,description,currency,
   const credit=normalized.filter(x=>x.side==="credit").reduce((s,x)=>s+x.amount,0);
   if(!Number.isSafeInteger(debit)||debit!==credit)return null;
   const ids=[...new Set(normalized.map(x=>x.accountId))],rows=[];
-  for(const id of ids){const a=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(id).first();if(!a||!a.active||a.currency!==currency)return null;rows.push(a);}
+  for(const id of ids){
+    const extra=extraAccounts.find(a=>a.id===id);
+    if(extra){if(!extra.active||extra.currency!==currency)return null;rows.push(extra);continue;}
+    const a=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(id).first();
+    if(!a||!a.active||a.currency!==currency)return null;
+    rows.push(a);
+  }
   const txId=crypto.randomUUID(),now=new Date().toISOString(),stm=[
     env.DB.prepare("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)").bind(txId,text(referenceType,40),text(referenceId,100),text(description,300),currency,debit,requestId||null,now)
   ];
@@ -256,9 +262,9 @@ async function createOrder(data,env,origin){
     statements.push(env.DB.prepare("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)").bind(crypto.randomUUID(),orderId,x.p.id,x.p.name_en,x.p.unit,x.qty,minorToMoney(x.p.unit_price_minor,x.p.currency),minorToMoney(x.line,x.p.currency),x.p.unit_price_minor,x.line));
     statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,now));
   }
-  statements.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,?2,'ORDER',?3,?4,?5,'Order recorded; payment pending',?6)").bind(crypto.randomUUID(),orderId,minorToMoney(total,products[0]?.currency||"USD"),total,products[0]?.currency||"USD",now));
-  statements.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,'receivables','ORDER',?2,?3,'in','order',?4,'Customer receivable created',?5)").bind(crypto.randomUUID(),total,products[0]?.currency||"USD",orderId,now));
-  statements.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id='receivables' AND currency=?3").bind(total,now,products[0]?.currency||"USD"));
+  const orderJournal=await buildJournal(env,{referenceType:"order_sale",referenceId:orderId,description:"Sale recognized · "+orderNo,currency:products[0]?.currency||"USD",requestId:data.requestId?"order:"+data.requestId:null,lines:[{accountId:"receivables",side:"debit",amount:total},{accountId:"income",side:"credit",amount:total}]});
+  if(!orderJournal)return response({error:"Accounting accounts are not configured for this order currency."},409,origin);
+  statements.push(...orderJournal.statements);
   const itemSummary=lines.map(x=>x.qty+" × "+x.p.name_en).join(", ");
   statements.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'NEW_ORDER',?2,'New online order',?3,?4)").bind(crypto.randomUUID(),orderId,orderNo+" · "+data.name+" · "+itemSummary+" · destination: "+(data.destination||"not provided")+" · total "+minorToMoney(total,products[0]?.currency||"USD")+" "+(products[0]?.currency||"USD"),now));
   try{
@@ -347,10 +353,18 @@ async function adminOrderStatus(request,env,origin){
     }
   }
   if(next==="paid"){
-    const saleJournal=await buildJournal(env,{referenceType:"order_sale",referenceId:orderId,description:"Sale recognized · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":sale":null,lines:[{accountId:"receivables",side:"debit",amount:Number(order.total_minor)},{accountId:"income",side:"credit",amount:Number(order.total_minor)}]});
-    const paymentJournal=await buildJournal(env,{referenceType:"order_payment",referenceId:orderId,description:"Customer payment received · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":payment":null,lines:[{accountId:"bank",side:"debit",amount:Number(order.total_minor)},{accountId:"receivables",side:"credit",amount:Number(order.total_minor)}]});
-    if(!saleJournal||!paymentJournal)return response({error:"Accounting accounts are not configured for this order currency."},409,origin);
-    stm.push(...saleJournal.statements,...paymentJournal.statements);
+    const existingSale=await env.DB.prepare("SELECT id FROM journal_transactions WHERE reference_type='order_sale' AND reference_id=?1 LIMIT 1").bind(orderId).first();
+    if(!existingSale){
+      const saleJournal=await buildJournal(env,{referenceType:"order_sale",referenceId:orderId,description:"Sale recognized · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":sale":null,lines:[{accountId:"receivables",side:"debit",amount:Number(order.total_minor)},{accountId:"income",side:"credit",amount:Number(order.total_minor)}]});
+      if(!saleJournal)return response({error:"Accounting accounts are not configured for this order currency."},409,origin);
+      stm.push(...saleJournal.statements);
+    }
+    const existingPayment=await env.DB.prepare("SELECT id FROM journal_transactions WHERE reference_type='order_payment' AND reference_id=?1 LIMIT 1").bind(orderId).first();
+    if(!existingPayment){
+      const paymentJournal=await buildJournal(env,{referenceType:"order_payment",referenceId:orderId,description:"Customer payment received · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":payment":null,lines:[{accountId:"bank",side:"debit",amount:Number(order.total_minor)},{accountId:"receivables",side:"credit",amount:Number(order.total_minor)}]});
+      if(!paymentJournal)return response({error:"Accounting accounts are not configured for this order currency."},409,origin);
+      stm.push(...paymentJournal.statements);
+    }
   }
   stm.push(env.DB.prepare("UPDATE orders SET status=?1,payment_status=CASE WHEN ?1='paid' OR payment_status='paid' THEN 'paid' ELSE payment_status END,updated_at=?2 WHERE id=?3").bind(next,now,orderId));
   stm.push(await auditStatement(env,{action:"ORDER_STATUS_CHANGED",entityType:"order",entityId:orderId,before:{status:order.status,payment_status:order.payment_status},after:{status:next,payment_status:next==="paid"?"paid":order.payment_status},requestId}));
@@ -371,7 +385,7 @@ async function accountingSnapshot(env){
   const entries=(await env.DB.prepare("SELECT id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at FROM financial_entries ORDER BY created_at DESC LIMIT 100").all()).results;
   const docs=(await env.DB.prepare("SELECT id,document_type,title,reference_type,reference_id,mime_type,size_bytes,notes,captured_offline,created_at FROM documents ORDER BY created_at DESC LIMIT 50").all()).results;
   const flags=(await env.DB.prepare("SELECT * FROM audit_flags WHERE is_resolved=0 ORDER BY CASE severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END,created_at DESC LIMIT 80").all()).results;
-  const summary=(await env.DB.prepare("SELECT currency,COALESCE(SUM(CASE WHEN entry_type='SALE' THEN amount_minor ELSE 0 END),0) sales_minor,COALESCE(SUM(CASE WHEN entry_type='PAYMENT' THEN amount_minor ELSE 0 END),0) payments_minor,COALESCE(SUM(CASE WHEN entry_type='EXPENSE' THEN amount_minor ELSE 0 END),0) expenses_minor FROM accounting_ledger GROUP BY currency").all()).results;
+  const summary=(await env.DB.prepare("SELECT jt.currency,COALESCE(SUM(CASE WHEN a.account_type='income' AND jl.side='credit' THEN jl.amount_minor ELSE 0 END),0) sales_minor,COALESCE(SUM(CASE WHEN a.account_type IN ('cash','bank') AND jl.side='debit' AND jt.reference_type IN ('order_payment','manual_sale') THEN jl.amount_minor ELSE 0 END),0) payments_minor,COALESCE(SUM(CASE WHEN a.account_type='expense' AND jl.side='debit' THEN jl.amount_minor ELSE 0 END),0) expenses_minor FROM journal_transactions jt JOIN journal_lines jl ON jl.transaction_id=jt.id JOIN accounts a ON a.id=jl.account_id GROUP BY jt.currency").all()).results;
   const inventory=(await env.DB.prepare("SELECT COALESCE(SUM(stock_qty),0) qty,COALESCE(SUM(reserved_qty),0) reserved,COALESCE(SUM(sold_qty),0) sold FROM products WHERE active=1").first())||{};
   return {accounts,costs,entries,docs,flags,summary,inventory};
 }
@@ -420,11 +434,21 @@ async function adminAccounting(request,env,origin){
     return response(await accountingSnapshot(env),200,origin);
   }
   if(path==="/admin/account"&&request.method==="POST"){
-    const b=await readJson(request),id=text(b.id,50)||crypto.randomUUID(),name=text(b.name,120),type=text(b.account_type,30),currency=text(b.currency,8)||"USD";
+    const b=await readJson(request),id=text(b.id,50)||crypto.randomUUID(),name=text(b.name,120),type=text(b.account_type,30),currency=text(b.currency,8)||"USD",offsetId=text(b.offset_account_id,60);
     if(!name||!["cash","bank","receivable","payable","inventory","expense","income","other"].includes(type))return response({error:"Invalid account."},400,origin);
     const now=new Date().toISOString(),opening=moneyToMinor(b.opening_balance,currency);if(opening===null)return response({error:"Invalid opening balance."},400,origin);
-    await env.DB.prepare("INSERT INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?5,1,?6,?6) ON CONFLICT(id) DO UPDATE SET name=excluded.name,account_type=excluded.account_type,currency=excluded.currency,updated_at=excluded.updated_at").bind(id,name,type,currency,opening,now).run();
-    return response({ok:true,id},200,origin);
+    if(opening>0&&!offsetId)return response({error:"An opening balance requires an offset account."},400,origin);
+    if(offsetId===id)return response({error:"Opening balance requires a different offset account."},400,origin);
+    const normal=["cash","bank","receivable","inventory","expense"].includes(type)?"debit":"credit";
+    const statements=[env.DB.prepare("INSERT INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,0,1,?6,?6) ON CONFLICT(id) DO UPDATE SET name=excluded.name,account_type=excluded.account_type,currency=excluded.currency,updated_at=excluded.updated_at").bind(id,name,type,currency,opening,now)];
+    if(opening>0){
+      const offset=await env.DB.prepare("SELECT id,name,account_type,currency,active FROM accounts WHERE id=?1").bind(offsetId).first();
+      if(!offset||!offset.active||offset.currency!==currency)return response({error:"Invalid opening balance offset account."},400,origin);
+      const journal=await buildJournal(env,{referenceType:"opening_balance",referenceId:id,description:"Opening balance · "+name,currency,lines:normal==="debit"?[{accountId:id,side:"debit",amount:opening},{accountId:offsetId,side:"credit",amount:opening}]:[{accountId:id,side:"credit",amount:opening},{accountId:offsetId,side:"debit",amount:opening}],extraAccounts:[{id,name,account_type:type,currency,active:1}]});
+      if(!journal)return response({error:"Unable to create opening balance journal."},409,origin);
+      statements.push(...journal.statements);
+    }
+    try{await env.DB.batch(statements);return response({ok:true,id},200,origin);}catch(_){return response({error:"Account could not be saved."},409,origin)}
   }
   if(path==="/admin/accounting/entry"&&request.method==="POST"){
     const b=await readJson(request),accountId=text(b.account_id,60),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency),direction=text(b.direction,3),type=text(b.entry_type,30)||"adjustment",offsetId=text(b.offset_account_id,60);
