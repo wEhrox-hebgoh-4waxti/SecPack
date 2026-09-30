@@ -426,18 +426,18 @@ async function adminAccounting(request,env,origin){
     try{await env.DB.batch(journal.statements);return response({ok:true,id:journal.txId},200,origin)}catch(e){return response({error:"Accounting entry could not be posted."},500,origin)}
   }
   if(path==="/admin/supply-cost"&&request.method==="POST"){
-    const b=await readJson(request),category=text(b.category,40),description=text(b.description,240),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency);
+    const b=await readJson(request),category=text(b.category,40),description=text(b.description,240),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency),accountId=text(b.account_id,60)||"cash";
     if(!category||!description||amount===null||amount<=0)return response({error:"Invalid supply cost."},400,origin);
-    const id=crypto.randomUUID(),now=new Date().toISOString(),status=["planned","paid","cancelled"].includes(b.status)?b.status:"planned";
-    const accountId=text(b.account_id,60)||null;
+    const id=crypto.randomUUID(),now=new Date().toISOString(),status=["planned","paid","cancelled"].includes(b.status)?b.status:"planned",requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(requestId){const prior=await env.DB.prepare("SELECT id FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,replayed:true},200,origin);}
     const stm=[env.DB.prepare("INSERT INTO supply_costs(id,category,supplier,description,amount_minor,currency,status,due_date,paid_at,account_id,reference_id,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?12)").bind(id,category,text(b.supplier,160),description,amount,currency,status,text(b.due_date,30)||null,status==="paid"?now:null,accountId,text(b.reference_id,100)||null,now)];
-    if(status==="paid"&&accountId){
-      const acc=await env.DB.prepare("SELECT * FROM accounts WHERE id=?1").bind(accountId).first();if(!acc||acc.currency!==currency)return response({error:"Invalid payment account."},409,origin);
-      stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,?2,'EXPENSE',?3,?4,'out','supply_cost',?5,?6,?7)").bind(crypto.randomUUID(),accountId,amount,currency,id,description,now));
-      stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor-?1,updated_at=?2 WHERE id=?3").bind(amount,now,accountId));
-      stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,'EXPENSE',?2,?3,?4,?5,?6)").bind(crypto.randomUUID(),minorToMoney(amount,currency),amount,currency,description,now));
+    if(status==="paid"){
+      const journal=await buildJournal(env,{referenceType:"supply_cost",referenceId:id,description, currency,requestId,lines:[{accountId:"expense",side:"debit",amount},{accountId,side:"credit",amount}]});
+      if(!journal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
+      stm.push(...journal.statements);
     }
-    await env.DB.batch(stm);return response({ok:true,id},200,origin);
+    stm.push(await auditStatement(env,{action:"SUPPLY_COST_CREATED",entityType:"supply_cost",entityId:id,after:{category,amount_minor:amount,currency,status,account_id:accountId},requestId}));
+    try{await env.DB.batch(stm);return response({ok:true,id},200,origin)}catch(_){return response({error:"Supply cost could not be recorded."},500,origin)}
   }
   if(path==="/admin/stock-receipt"&&request.method==="POST"){
     const b=await readJson(request),productId=text(b.product_id,50),qty=Number(b.quantity),currency=text(b.currency,8)||"USD",unitCost=moneyToMinor(b.unit_cost,currency),accountId=text(b.account_id,60)||"cash";
