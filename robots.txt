@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 
 Sitemap: https://secpackco.com/sitemap.xml
+
+Disallow: /pages/admin.html
