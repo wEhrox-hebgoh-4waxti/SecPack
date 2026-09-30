@@ -97,7 +97,7 @@ async function ensureReady(env){return Boolean(env.DB&&env[KEY]);}
 
 let operationsSchemaPromise=null;
 async function ensureColumn(env,table,column,definition){
-  const allowed=new Set(["inquiries","products","orders","order_items","inventory_ledger","accounting_ledger","financial_entries","supply_costs"]);
+  const allowed=new Set(["inquiries","products","orders","order_items","inventory_ledger","accounting_ledger","financial_entries","supply_costs","documents","supply_cases","supply_milestones"]);
   if(!allowed.has(table))throw new Error("invalid_table");
   const rows=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];
   if(!rows.some(x=>x.name===column))await env.DB.prepare("ALTER TABLE "+table+" ADD COLUMN "+column+" "+definition).run();
@@ -173,7 +173,7 @@ async function ensureOperationsSchema(env){
       env.DB.prepare("CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY,name TEXT NOT NULL,account_type TEXT NOT NULL,currency TEXT NOT NULL DEFAULT 'USD',opening_balance_minor INTEGER NOT NULL DEFAULT 0,current_balance_minor INTEGER NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS financial_entries (id TEXT PRIMARY KEY,account_id TEXT NOT NULL,entry_type TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,direction TEXT NOT NULL,reference_type TEXT,reference_id TEXT,description TEXT,created_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_costs (id TEXT PRIMARY KEY,category TEXT NOT NULL,supplier TEXT,description TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'planned',due_date TEXT,paid_at TEXT,account_id TEXT,reference_id TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS documents (id TEXT PRIMARY KEY,document_type TEXT NOT NULL,title TEXT NOT NULL,reference_type TEXT,reference_id TEXT,data_url TEXT NOT NULL,mime_type TEXT NOT NULL,size_bytes INTEGER NOT NULL DEFAULT 0,notes TEXT,captured_offline INTEGER NOT NULL DEFAULT 0,share_token_hash TEXT,share_expires_at TEXT,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS documents (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,document_type TEXT NOT NULL,title TEXT NOT NULL,reference_type TEXT,reference_id TEXT,data_url TEXT NOT NULL,mime_type TEXT NOT NULL,size_bytes INTEGER NOT NULL DEFAULT 0,notes TEXT,captured_offline INTEGER NOT NULL DEFAULT 0,share_token_hash TEXT,share_expires_at TEXT,created_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS audit_flags (id TEXT PRIMARY KEY,severity TEXT NOT NULL,category TEXT NOT NULL,reference_type TEXT,reference_id TEXT,title TEXT NOT NULL,message TEXT NOT NULL,suggested_action TEXT,is_resolved INTEGER NOT NULL DEFAULT 0,resolved_at TEXT,created_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS operational_settings (key TEXT PRIMARY KEY,value TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS audit_log (id TEXT PRIMARY KEY,actor TEXT NOT NULL,action TEXT NOT NULL,entity_type TEXT NOT NULL,entity_id TEXT,before_json TEXT,after_json TEXT,request_id TEXT,created_at TEXT NOT NULL)"),
@@ -190,8 +190,8 @@ async function ensureOperationsSchema(env){
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_inventory_ledger_delete BEFORE DELETE ON inventory_ledger BEGIN SELECT RAISE(ABORT, 'INVENTORY_LEDGER_IMMUTABLE'); END"),
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_accounting_ledger_update BEFORE UPDATE ON accounting_ledger BEGIN SELECT RAISE(ABORT, 'ACCOUNTING_LEDGER_IMMUTABLE'); END"),
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_accounting_ledger_delete BEFORE DELETE ON accounting_ledger BEGIN SELECT RAISE(ABORT, 'ACCOUNTING_LEDGER_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_cases (id TEXT PRIMARY KEY,case_no TEXT NOT NULL UNIQUE,product_id TEXT,quantity INTEGER NOT NULL DEFAULT 0,supplier TEXT,currency TEXT NOT NULL DEFAULT 'USD',purchase_total_minor INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'open',expected_date TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_milestones (id TEXT PRIMARY KEY,case_id TEXT NOT NULL,milestone_type TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',due_date TEXT,completed_at TEXT,reference_id TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_cases (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,case_no TEXT NOT NULL UNIQUE,product_id TEXT,quantity INTEGER NOT NULL DEFAULT 0,supplier TEXT,currency TEXT NOT NULL DEFAULT 'USD',purchase_total_minor INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'open',expected_date TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_milestones (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,case_id TEXT NOT NULL,milestone_type TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',due_date TEXT,completed_at TEXT,reference_id TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_accounts_type_currency ON accounts(account_type,currency)"),
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_financial_entries_account_created ON financial_entries(account_id,created_at)"),
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_supply_costs_status_due ON supply_costs(status,due_date)"),
@@ -216,11 +216,17 @@ async function ensureOperationsSchema(env){
       await ensureColumn(env,"inventory_ledger","request_id","TEXT");
       await ensureColumn(env,"financial_entries","request_id","TEXT");
       await ensureColumn(env,"supply_costs","request_id","TEXT");
+      await ensureColumn(env,"documents","request_id","TEXT");
+      await ensureColumn(env,"supply_cases","request_id","TEXT");
+      await ensureColumn(env,"supply_milestones","request_id","TEXT");
       await ensureColumn(env,"accounting_ledger","amount_minor","INTEGER NOT NULL DEFAULT 0");
       await env.DB.batch([
         env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_request_id_unique ON inventory_ledger(request_id) WHERE request_id IS NOT NULL"),
         env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_financial_request_id_unique ON financial_entries(request_id) WHERE request_id IS NOT NULL"),
-        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_cost_request_id_unique ON supply_costs(request_id) WHERE request_id IS NOT NULL")
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_cost_request_id_unique ON supply_costs(request_id) WHERE request_id IS NOT NULL"),
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_documents_request_id_unique ON documents(request_id) WHERE request_id IS NOT NULL"),
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_cases_request_id_unique ON supply_cases(request_id) WHERE request_id IS NOT NULL"),
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_milestones_request_id_unique ON supply_milestones(request_id) WHERE request_id IS NOT NULL")
       ]);
       await env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES ('cogs','بهای تمام‌شده','cogs','USD',0,0,1,datetime('now'),datetime('now'))");
       for(const cur of ["IRR","EUR","TRY","AED","GBP","SAR"]){
