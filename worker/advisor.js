@@ -365,7 +365,7 @@ async function adminOrderStatus(request,env,origin){
     let cogsTotal=0;
     for(const x of items){
       const p=await env.DB.prepare("SELECT unit_cost_minor,currency FROM products WHERE id=?1").bind(x.product_id).first();
-      if(!p||Number(p.currency)!==Number(p.currency)||p.currency!==order.currency||Number(p.unit_cost_minor||0)<=0)return response({error:"Inventory cost is not configured for one or more products."},409,origin);
+      if(!p||p.currency!==order.currency||Number(p.unit_cost_minor||0)<=0)return response({error:"Inventory cost is not configured for one or more products."},409,origin);
       const lineCost=safeMultiply(Number(x.quantity),Number(p.unit_cost_minor));if(lineCost===null)return response({error:"Inventory cost is outside the supported accounting range."},409,origin);
       cogsTotal+=lineCost;
       stm.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
