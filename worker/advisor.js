@@ -362,10 +362,18 @@ async function adminOrderStatus(request,env,origin){
     }
   }
   if(next==="fulfilled"){
+    let cogsTotal=0;
     for(const x of items){
+      const p=await env.DB.prepare("SELECT unit_cost_minor,currency FROM products WHERE id=?1").bind(x.product_id).first();
+      if(!p||Number(p.currency)!==Number(p.currency)||p.currency!==order.currency||Number(p.unit_cost_minor||0)<=0)return response({error:"Inventory cost is not configured for one or more products."},409,origin);
+      const lineCost=safeMultiply(Number(x.quantity),Number(p.unit_cost_minor));if(lineCost===null)return response({error:"Inventory cost is outside the supported accounting range."},409,origin);
+      cogsTotal+=lineCost;
       stm.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
       stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'FULFILL',?3,?4,'Order fulfilled',?5,?6)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,now));
     }
+    const cogsJournal=await buildJournal(env,{referenceType:"order_cogs",referenceId:orderId,description:"COGS · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"cogs",side:"debit",amount:cogsTotal},{accountId:"inventory",side:"credit",amount:cogsTotal}]});
+    if(!cogsJournal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
+    stm.push(...cogsJournal.statements);
   }
   if(next==="paid"){
     const existingSale=await env.DB.prepare("SELECT id FROM journal_transactions WHERE reference_type='order_sale' AND reference_id=?1 LIMIT 1").bind(orderId).first();
