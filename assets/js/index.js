@@ -48,3 +48,6 @@ document.addEventListener("keydown",(event)=>{if(event.key==="Escape")closeVisit
   applyAdvisorHomeLanguage();
   new MutationObserver(applyAdvisorHomeLanguage).observe(document.documentElement,{attributes:true,attributeFilter:["lang"]});
 })();
+
+
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/service-worker.js",{scope:"/"}).catch(()=>{}));}
