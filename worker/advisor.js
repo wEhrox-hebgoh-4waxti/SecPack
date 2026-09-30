@@ -367,7 +367,7 @@ async function handleAdvisor(request,env,origin){
 }
 
 export default {
-  async scheduled(_controller,env){if(!env.DB)return;try{await env.DB.prepare("DELETE FROM rate_limits WHERE window_start < ?1").bind(Date.now()-2*WINDOW_MS).run()}catch(_){}},
+  async scheduled(_controller,env){if(!env.DB)return;try{await env.DB.prepare("DELETE FROM rate_limits WHERE window_start < ?1").bind(Date.now()-2*WINDOW_MS).run();await runAudit(env);}catch(_){}},
   async fetch(request,env){
     const url=new URL(request.url);
 
