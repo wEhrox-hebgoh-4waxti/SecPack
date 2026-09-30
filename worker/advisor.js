@@ -151,7 +151,7 @@ async function ensureOperationsSchema(env){
       env.DB.prepare("CREATE TABLE IF NOT EXISTS inquiries (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,form_type TEXT NOT NULL,name TEXT NOT NULL,company TEXT,email TEXT NOT NULL,phone TEXT,product TEXT,destination TEXT,payment TEXT,notes TEXT,message TEXT,items TEXT,created_at TEXT NOT NULL,visitor_details TEXT)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS rate_limits (bucket_key TEXT PRIMARY KEY,window_start INTEGER NOT NULL,count INTEGER NOT NULL)"),
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rate_limits_window_start ON rate_limits(window_start)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY,name_en TEXT NOT NULL,name_fa TEXT NOT NULL,name_ar TEXT NOT NULL,unit TEXT NOT NULL DEFAULT 'unit',currency TEXT NOT NULL DEFAULT 'USD',unit_price REAL NOT NULL DEFAULT 0,unit_price_minor INTEGER NOT NULL DEFAULT 0,stock_qty INTEGER NOT NULL DEFAULT 0,reserved_qty INTEGER NOT NULL DEFAULT 0,sold_qty INTEGER NOT NULL DEFAULT 0,warehouse TEXT NOT NULL DEFAULT 'Gorgan',active INTEGER NOT NULL DEFAULT 1,updated_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY,name_en TEXT NOT NULL,name_fa TEXT NOT NULL,name_ar TEXT NOT NULL,unit TEXT NOT NULL DEFAULT 'unit',currency TEXT NOT NULL DEFAULT 'USD',unit_price REAL NOT NULL DEFAULT 0,unit_price_minor INTEGER NOT NULL DEFAULT 0,unit_cost_minor INTEGER NOT NULL DEFAULT 0,stock_qty INTEGER NOT NULL DEFAULT 0,reserved_qty INTEGER NOT NULL DEFAULT 0,sold_qty INTEGER NOT NULL DEFAULT 0,warehouse TEXT NOT NULL DEFAULT 'Gorgan',active INTEGER NOT NULL DEFAULT 1,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY,order_no TEXT NOT NULL UNIQUE,request_id TEXT UNIQUE,customer_name TEXT NOT NULL,company TEXT,email TEXT NOT NULL,phone TEXT,destination TEXT,payment_method TEXT,status TEXT NOT NULL DEFAULT 'pending',payment_status TEXT NOT NULL DEFAULT 'unpaid',currency TEXT NOT NULL,subtotal REAL NOT NULL DEFAULT 0,total REAL NOT NULL DEFAULT 0,subtotal_minor INTEGER NOT NULL DEFAULT 0,total_minor INTEGER NOT NULL DEFAULT 0,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS order_items (id TEXT PRIMARY KEY,order_id TEXT NOT NULL,product_id TEXT NOT NULL,product_name TEXT NOT NULL,unit TEXT NOT NULL,quantity INTEGER NOT NULL,unit_price REAL NOT NULL,line_total REAL NOT NULL,unit_price_minor INTEGER NOT NULL,line_total_minor INTEGER NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS inventory_ledger (id TEXT PRIMARY KEY,product_id TEXT NOT NULL,movement_type TEXT NOT NULL,quantity INTEGER NOT NULL,reference_id TEXT,note TEXT,warehouse TEXT NOT NULL DEFAULT 'Gorgan',created_at TEXT NOT NULL)"),
@@ -203,6 +203,7 @@ async function ensureOperationsSchema(env){
     ]).then(async()=>{
       await ensureColumn(env,"inquiries","visitor_details","TEXT");
       await ensureColumn(env,"products","unit_price_minor","INTEGER NOT NULL DEFAULT 0");
+      await ensureColumn(env,"products","unit_cost_minor","INTEGER NOT NULL DEFAULT 0");
       await ensureColumn(env,"products","warehouse","TEXT NOT NULL DEFAULT 'Gorgan'");
       await ensureColumn(env,"orders","request_id","TEXT");
       await ensureColumn(env,"orders","subtotal_minor","INTEGER NOT NULL DEFAULT 0");
@@ -219,6 +220,18 @@ async function ensureOperationsSchema(env){
         env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_financial_request_id_unique ON financial_entries(request_id) WHERE request_id IS NOT NULL"),
         env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_cost_request_id_unique ON supply_costs(request_id) WHERE request_id IS NOT NULL")
       ]);
+      await env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES ('cogs','بهای تمام‌شده','cogs','USD',0,0,1,datetime('now'),datetime('now'))");
+      for(const cur of ["IRR","EUR","TRY","AED","GBP","SAR"]){
+        await env.DB.batch([
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'cash',?3,0,0,1,datetime('now'),datetime('now'))").bind("cash:"+cur,"صندوق "+cur,cur),
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'bank',?3,0,0,1,datetime('now'),datetime('now'))").bind("bank:"+cur,"بانک "+cur,cur),
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'receivable',?3,0,0,1,datetime('now'),datetime('now'))").bind("receivables:"+cur,"دریافتنی "+cur,cur),
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'inventory',?3,0,0,1,datetime('now'),datetime('now'))").bind("inventory:"+cur,"موجودی "+cur,cur),
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'expense',?3,0,0,1,datetime('now'),datetime('now'))").bind("expense:"+cur,"هزینه "+cur,cur),
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'income',?3,0,0,1,datetime('now'),datetime('now'))").bind("income:"+cur,"درآمد "+cur,cur),
+          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'cogs',?3,0,0,1,datetime('now'),datetime('now'))").bind("cogs:"+cur,"بهای تمام‌شده "+cur,cur)
+        ]);
+      }
       await env.DB.batch([
         env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('paper','A4 Copy Paper','کاغذ کپی A4','ورق نسخ A4','ream','USD',0,0,0,0,0,'Gorgan',1,datetime('now'))"),
         env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('film','Lamination Films','فیلم لمینیشن','أفلام التغليف','kg','USD',0,0,0,0,0,'Gorgan',0,datetime('now'))"),
