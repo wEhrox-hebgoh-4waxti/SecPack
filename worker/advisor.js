@@ -198,7 +198,12 @@ async function adminOrderStatus(request,env,origin){
 }
 
 
-async function accountingSnapshot(env){
+
+function randomToken(){
+  const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes)).replace(/\\+/g,"-").replace(/\\//g,"_").replace(/=+$/,"");
+}
+\nasync function accountingSnapshot(env){
   const accounts=(await env.DB.prepare("SELECT id,name,account_type,currency,current_balance_minor,active,updated_at FROM accounts WHERE active=1 ORDER BY name").all()).results;
   const costs=(await env.DB.prepare("SELECT id,category,supplier,description,amount_minor,currency,status,due_date,paid_at,account_id,created_at FROM supply_costs ORDER BY created_at DESC LIMIT 80").all()).results;
   const entries=(await env.DB.prepare("SELECT id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at FROM financial_entries ORDER BY created_at DESC LIMIT 100").all()).results;
@@ -301,6 +306,14 @@ async function adminAccounting(request,env,origin){
     await env.DB.prepare("INSERT INTO documents(id,document_type,title,reference_type,reference_id,data_url,mime_type,size_bytes,notes,captured_offline,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)").bind(id,type,title,text(b.reference_type,40),text(b.reference_id,100),dataUrl,mime,Math.floor(dataUrl.length*0.75),text(b.notes,300),b.captured_offline?1:0,now).run();
     return response({ok:true,id},202,origin);
   }
+
+  if(path==="/admin/document/share"&&request.method==="POST"){
+    const b=await readJson(request),id=text(b.id,80);if(!id)return response({error:"Document id required."},400,origin);
+    const doc=await env.DB.prepare("SELECT id FROM documents WHERE id=?1").bind(id).first();if(!doc)return response({error:"Document not found."},404,origin);
+    const token=randomToken(),hash=await digest(token),expires=new Date(Date.now()+7*24*60*60*1000).toISOString();
+    await env.DB.prepare("UPDATE documents SET share_token_hash=?1,share_expires_at=?2 WHERE id=?3").bind(hash,expires,id).run();
+    return response({ok:true,url:"https://api.secpackco.com/document/share?token="+encodeURIComponent(token),expires_at:expires},200,origin);
+  }
   if(path==="/admin/document"&&request.method==="GET"){
     const id=text(new URL(request.url).searchParams.get("id"),80);if(!id)return response({error:"Document id required."},400,origin);
     const d=await env.DB.prepare("SELECT id,title,mime_type,data_url FROM documents WHERE id=?1").bind(id).first();if(!d)return response({error:"Document not found."},404,origin);
@@ -346,6 +359,15 @@ export default {
   async scheduled(_controller,env){if(!env.DB)return;try{await env.DB.prepare("DELETE FROM rate_limits WHERE window_start < ?1").bind(Date.now()-2*WINDOW_MS).run()}catch(_){}},
   async fetch(request,env){
     const url=new URL(request.url);
+
+    if(url.pathname==="/document/share"&&request.method==="GET"){
+      const token=url.searchParams.get("token")||"";if(token.length<30)return response({error:"Invalid link."},400,null);
+      const hash=await digest(token),doc=await env.DB.prepare("SELECT mime_type,data_url,share_expires_at FROM documents WHERE share_token_hash=?1").bind(hash).first();
+      if(!doc||!doc.share_expires_at||new Date(doc.share_expires_at).getTime()<Date.now())return response({error:"This document link has expired."},410,null);
+      const match=String(doc.data_url||"").match(/^data:([^;]+);base64,(.+)$/);if(!match)return response({error:"Document unavailable."},404,null);
+      const bin=Uint8Array.from(atob(match[2]),c=>c.charCodeAt(0));
+      return new Response(bin,{status:200,headers:{"Content-Type":match[1]||doc.mime_type||"image/jpeg","Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Content-Disposition":"inline"}});
+    }
     if(url.pathname==="/health"&&request.method==="GET"){try{const rows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('products','orders','order_items','inventory_ledger','accounting_ledger','alerts')").all()).results:[];const tables=new Set(rows.map(x=>x.name));return response({ok:true,service:"secpack-api",database:Boolean(env.DB),commerceSchema:tables.size===6,time:new Date().toISOString()},200,null)}catch(_){return response({ok:false,service:"secpack-api",database:Boolean(env.DB),commerceSchema:false},200,null)}}
     const origin=request.headers.get("Origin");
     if(!origin||!ORIGINS.has(origin))return response({error:"Origin not allowed."},403,origin);
