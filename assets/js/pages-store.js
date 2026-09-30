@@ -35,7 +35,16 @@ async function prepareOrder(){
   }
   box.append(strong,p1,p2);status.replaceChildren(box);
 }
-document.addEventListener("change",(event)=>{\n  const qty=event.target.closest("[data-qty-input]");\n  if(!qty)return;\n  const item=items.find(i=>i.id===qty.dataset.qtyInput);\n  const value=Number(qty.value);\n  if(!item)return;\n  if(!Number.isInteger(value)||value<1||value>100000){qty.value=String(item.qty);return;}\n  item.qty=value;render();\n});\ndocument.addEventListener("click",(event)=>{
+document.addEventListener("change",(event)=>{
+  const qty=event.target.closest("[data-qty-input]");
+  if(!qty)return;
+  const item=items.find(i=>i.id===qty.dataset.qtyInput);
+  const value=Number(qty.value);
+  if(!item)return;
+  if(!Number.isInteger(value)||value<1||value>100000){qty.value=String(item.qty);return;}
+  item.qty=value;render();
+});
+document.addEventListener("click",(event)=>{
   const add=event.target.closest("[data-add-cart]");if(add)addToCart(add.dataset.addCart);
   const action=event.target.closest("[data-sec-action]")?.dataset.secAction;if(action==="cart-toggle")toggleCart();if(action==="prepare-order")prepareOrder();
   const qty=event.target.closest("[data-qty-change]");if(qty)changeQty(qty.dataset.itemId,Number(qty.dataset.qtyChange));
