@@ -305,7 +305,7 @@ async function adminAccounting(request,env,origin){
     if(!productId||!Number.isInteger(qty)||qty<1||unitCost===null)return response({error:"Invalid stock receipt."},400,origin);
     const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1").bind(productId).first();if(!p)return response({error:"Product not found."},404,origin);
     const total=qty*unitCost,id=crypto.randomUUID(),now=new Date().toISOString(),accountId=text(b.account_id,60)||null;
-    const stm=[env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,updated_at=?2 WHERE id=?3").bind(qty,now,productId),env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,warehouse,created_at) VALUES(?1,?2,'RESTOCK',?3,?4,?5,'Gorgan',?6)").bind(crypto.randomUUID(),productId,qty,id,text(b.note,240)||"Stock receipt",now)];
+    const stm=[env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,updated_at=?2 WHERE id=?3").bind(qty,now,productId),env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RESTOCK',?3,?4,?5,?6)").bind(crypto.randomUUID(),productId,qty,id,(text(b.note,240)||"Stock receipt")+" · Warehouse: Gorgan",now)];
     if(accountId){
       const acc=await env.DB.prepare("SELECT * FROM accounts WHERE id=?1").bind(accountId).first();if(!acc||acc.currency!==currency)return response({error:"Invalid payment account."},409,origin);
       stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,?2,'PURCHASE',?3,?4,'out','stock_receipt',?5,?6,?7)").bind(crypto.randomUUID(),accountId,total,currency,id,"Stock purchase / receipt",now));
