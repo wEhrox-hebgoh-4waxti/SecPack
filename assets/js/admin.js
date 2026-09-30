@@ -36,6 +36,9 @@ function renderProducts(ps){
   const sf=document.createDocumentFragment();
   ps.filter(p=>p.active).forEach(p=>{const o=el("option",p.name_fa+" — "+money(p.unit_price_minor?((["USD","EUR","GBP","AED","SAR","TRY"].includes(p.currency))?p.unit_price_minor/100:p.unit_price_minor:0,p.currency));o.value=p.id;sf.append(o);});
   $("saleProduct").replaceChildren(sf);
+  const rf=document.createDocumentFragment();
+  ps.filter(p=>p.active).forEach(p=>{const o=el("option",p.name_fa);o.value=p.id;rf.append(o);});
+  $("receiptProduct")?.replaceChildren(rf);
 }
 function renderOrders(os){
   const frag=document.createDocumentFragment();
@@ -51,8 +54,8 @@ function renderOrders(os){
 async function load(){try{const d=await api("/admin/dashboard",{method:"GET"});renderStats(d);renderAlerts(d.alerts);renderProducts(d.products);renderOrders(d.orders);for(const a of d.alerts){if(!lastAlertIds.has(a.id)){lastAlertIds.add(a.id);startTitleAlarm("سفارش جدید SEC PACK");if("vibrate"in navigator)navigator.vibrate?.([250,100,250]);if("Notification"in window&&Notification.permission==="granted")new Notification("SEC PACK · "+a.title,{body:a.message});try{new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=").play().catch(()=>{});}catch(_){} }}}catch(e){$("loginStatus").textContent=e.message;logout();}}
 function stopTitleAlarm(){if(titleTimer)clearInterval(titleTimer);titleTimer=null;document.title=originalTitle;}
 function startTitleAlarm(message){stopTitleAlarm();let on=false;titleTimer=setInterval(()=>{on=!on;document.title=on?"🔔 "+message:originalTitle;},900);}
-function logout(){token="";if(timer)clearInterval(timer);stopTitleAlarm();$("dashboard").classList.add("hidden");$("login").classList.remove("hidden");$("adminToken").value="";}
-$("loginForm").addEventListener("submit",async e=>{e.preventDefault();token=$("adminToken").value.trim();try{await api("/admin/dashboard",{method:"GET"});$("login").classList.add("hidden");$("dashboard").classList.remove("hidden");await load();timer=setInterval(load,5000);}catch(e){$("loginStatus").textContent="کلید مدیریت نادرست است یا سرویس آماده نیست.";token="";}});
+function logout(){token="";window.SEC_PACK_ADMIN_TOKEN="";if(timer)clearInterval(timer);stopTitleAlarm();$("dashboard").classList.add("hidden");$("login").classList.remove("hidden");$("adminToken").value="";}
+$("loginForm").addEventListener("submit",async e=>{e.preventDefault();token=$("adminToken").value.trim();window.SEC_PACK_ADMIN_TOKEN=token;try{await api("/admin/dashboard",{method:"GET"});$("login").classList.add("hidden");$("dashboard").classList.remove("hidden");await load();timer=setInterval(load,5000);}catch(e){$("loginStatus").textContent="کلید مدیریت نادرست است یا سرویس آماده نیست.";token="";window.SEC_PACK_ADMIN_TOKEN="";}});
 $("logoutBtn").onclick=logout;$("refreshBtn").onclick=load;
 $("notifyBtn").onclick=async()=>{if("Notification"in window){const p=await Notification.requestPermission();$("notifyBtn").textContent=p==="granted"?"هشدارها فعال شد":"اجازه هشدار داده نشد";}};
 document.addEventListener("click",async e=>{
