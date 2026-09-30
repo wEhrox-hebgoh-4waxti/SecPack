@@ -19,12 +19,20 @@ run("UPDATE products SET reserved_qty=6 WHERE id='__integrity_test__';");
 run("UPDATE products SET stock_qty=4,reserved_qty=0,sold_qty=6 WHERE id='__integrity_test__';");
 run("UPDATE products SET stock_qty=9 WHERE id='__integrity_test__';");
 
-if (!run("UPDATE products SET stock_qty=5 WHERE id='__integrity_test__';", true) && !run("UPDATE products SET stock_qty=5 WHERE id='__integrity_test__';", true)) {
-  throw new Error("Expected stock-below-reservation guard did not fire.");
-}
-if (!run("UPDATE products SET sold_qty=-1 WHERE id='__integrity_test__';", true) && !run("UPDATE products SET sold_qty=-1 WHERE id='__integrity_test__';", true)) {
-  throw new Error("Expected negative-sold guard did not fire.");
-}
+const expectFailure = (sql, message) => {
+  try {
+    execFileSync("npx", ["wrangler", "d1", "execute", "DB", "--local", "--command", sql], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+  } catch (_) {
+    return;
+  }
+  throw new Error(message);
+};
+
+expectFailure("UPDATE products SET stock_qty=5 WHERE id='__integrity_test__';", "Expected stock-below-reservation guard did not fire.");
+expectFailure("UPDATE products SET sold_qty=-1 WHERE id='__integrity_test__';", "Expected negative-sold guard did not fire.");
 
 run("DELETE FROM products WHERE id='__integrity_test__';");
 console.log("D1 inventory integrity guards: PASS");
