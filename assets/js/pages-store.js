@@ -15,7 +15,7 @@ function render(){
     const row=document.createElement("div");row.className="cart-row";
     const strong=document.createElement("strong");strong.textContent=translate(productNames[item.id]);
     const controls=document.createElement("span");controls.className="qty";
-    const qty=document.createElement("input");qty.type="number";qty.min="1";qty.max="100000";qty.step="1";qty.value=String(item.qty);qty.className="qty-input";qty.dataset.qtyInput=item.id;qty.setAttribute("aria-label",translate("dynamic.quantity"));controls.appendChild(qty);row.append(strong,controls);rows.appendChild(row);
+    const qty=document.createElement("input");qty.type="number";qty.min="1";qty.max="100000";qty.step="1";qty.value=String(item.qty);qty.className="qty-input";qty.dataset.qtyInput=item.id;qty.setAttribute("aria-label",({en:"Quantity",fa:"تعداد",ar:"الكمية"}[document.documentElement.lang]||"Quantity"));controls.appendChild(qty);row.append(strong,controls);rows.appendChild(row);
   });
 }
 function toggleCart(){document.getElementById("orderPanel")?.classList.toggle("open");render()}
