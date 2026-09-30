@@ -197,8 +197,131 @@ async function adminOrderStatus(request,env,origin){
   await env.DB.batch(stm);return response({ok:true},200,origin);
 }
 
+
+async function accountingSnapshot(env){
+  const accounts=(await env.DB.prepare("SELECT id,name,account_type,currency,current_balance_minor,active,updated_at FROM accounts WHERE active=1 ORDER BY name").all()).results;
+  const costs=(await env.DB.prepare("SELECT id,category,supplier,description,amount_minor,currency,status,due_date,paid_at,account_id,created_at FROM supply_costs ORDER BY created_at DESC LIMIT 80").all()).results;
+  const entries=(await env.DB.prepare("SELECT id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at FROM financial_entries ORDER BY created_at DESC LIMIT 100").all()).results;
+  const docs=(await env.DB.prepare("SELECT id,document_type,title,reference_type,reference_id,mime_type,size_bytes,notes,captured_offline,created_at FROM documents ORDER BY created_at DESC LIMIT 50").all()).results;
+  const flags=(await env.DB.prepare("SELECT * FROM audit_flags WHERE is_resolved=0 ORDER BY CASE severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END,created_at DESC LIMIT 80").all()).results;
+  return {accounts,costs,entries,docs,flags};
+}
+
+async function runAudit(env){
+  const now=new Date().toISOString();
+  await env.DB.prepare("UPDATE audit_flags SET is_resolved=1,resolved_at=?1 WHERE is_resolved=0 AND category='AUTO'").bind(now).run();
+  const flags=[];
+  const add=(severity,category,ref,title,message,action)=>flags.push({
+    id:"AUTO:"+category+":"+String(ref||"ALL").slice(0,120),severity,category,reference_type:ref?"reference":"system",reference_id:ref||null,title,message,suggested_action:action
+  });
+  const products=(await env.DB.prepare("SELECT id,name_fa,stock_qty,reserved_qty,sold_qty FROM products WHERE active=1").all()).results;
+  const threshold=Number((await env.DB.prepare("SELECT value FROM operational_settings WHERE key='low_stock_threshold'").first())?.value||100);
+  for(const p of products){
+    if(Number(p.stock_qty)<0||Number(p.reserved_qty)<0) add("critical","inventory",p.id,"مغایرت موجودی","مقدار موجودی یا رزرو منفی است.","موجودی این کالا را فوری بررسی کنید.");
+    if(Number(p.reserved_qty)>Number(p.stock_qty)) add("high","inventory",p.id,"رزرو غیرعادی","رزرو از موجودی قابل ثبت بیشتر است.","سفارش‌های باز و موجودی را تطبیق دهید.");
+    if(Number(p.stock_qty)<=threshold) add("medium","low_stock",p.id,"موجودی کم","موجودی "+p.name_fa+" به "+p.stock_qty+" رسیده است.","برای تأمین مجدد یا افزایش نقطه سفارش تصمیم بگیرید.");
+  }
+  const pending=(await env.DB.prepare("SELECT id,order_no FROM orders WHERE status IN ('pending','processing','paid','ready') AND created_at < datetime('now','-1 day')").all()).results;
+  for(const o of pending)add("high","order",o.id,"سفارش باز قدیمی","سفارش "+o.order_no+" بیش از ۲۴ ساعت باز مانده است.","وضعیت پرداخت، آماده‌سازی یا تحویل را بررسی کنید.");
+  const paid=(await env.DB.prepare("SELECT id,order_no FROM orders WHERE payment_status='paid' AND status NOT IN ('fulfilled','cancelled') AND created_at < datetime('now','-1 day')").all()).results;
+  for(const o of paid)add("high","payment",o.id,"پرداخت بدون تحویل","سفارش "+o.order_no+" پرداخت شده اما هنوز تحویل نهایی نشده است.","آماده‌سازی و لجستیک را بررسی کنید.");
+  const missingSale=(await env.DB.prepare("SELECT o.id,o.order_no FROM orders o WHERE o.status='fulfilled' AND NOT EXISTS(SELECT 1 FROM accounting_ledger a WHERE a.order_id=o.id AND a.entry_type='SALE')").all()).results;
+  for(const o of missingSale)add("critical","accounting",o.id,"فروش بدون ثبت حسابداری","سفارش "+o.order_no+" تحویل شده ولی سند فروش ندارد.","ثبت حسابداری فروش را بررسی کنید.");
+  const missingPayment=(await env.DB.prepare("SELECT o.id,o.order_no FROM orders o WHERE o.payment_status='paid' AND NOT EXISTS(SELECT 1 FROM accounting_ledger a WHERE a.order_id=o.id AND a.entry_type='PAYMENT')").all()).results;
+  for(const o of missingPayment)add("critical","accounting",o.id,"دریافت بدون ثبت حسابداری","پرداخت سفارش "+o.order_no+" ثبت شده ولی سند دریافت ندارد.","ثبت دریافت را بررسی کنید.");
+  const due=(await env.DB.prepare("SELECT id,description,due_date,amount_minor,currency FROM supply_costs WHERE status='planned' AND due_date IS NOT NULL AND due_date < date('now')").all()).results;
+  for(const x of due)add("high","supply_cost",x.id,"هزینه سررسید گذشته","هزینه «"+x.description+"» از موعد پرداخت گذشته است.","پرداخت یا وضعیت آن را ثبت کنید.");
+  const negative=(await env.DB.prepare("SELECT id,name,current_balance_minor,currency FROM accounts WHERE active=1 AND account_type IN ('cash','bank') AND current_balance_minor<0").all()).results;
+  for(const a of negative)add("high","account",a.id,"مانده منفی حساب","مانده "+a.name+" منفی است.","ثبت‌ها و انتقال‌های مالی را تطبیق دهید.");
+  if(flags.length){
+    await env.DB.batch(flags.map(x=>env.DB.prepare("INSERT INTO audit_flags(id,severity,category,reference_type,reference_id,title,message,suggested_action,is_resolved,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,0,?9) ON CONFLICT(id) DO UPDATE SET severity=excluded.severity,title=excluded.title,message=excluded.message,suggested_action=excluded.suggested_action,is_resolved=0,resolved_at=NULL").bind(x.id,x.severity,"AUTO",x.reference_type,x.reference_id,x.title,x.message,x.suggested_action,now)));
+  }
+  return flags;
+}
+
+async function adminAccounting(request,env,origin){
+  if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
+  const path=new URL(request.url).pathname;
+  if(path==="/admin/accounting"&&request.method==="GET"){
+    await runAudit(env);
+    return response(await accountingSnapshot(env),200,origin);
+  }
+  if(path==="/admin/account"&&request.method==="POST"){
+    const b=await readJson(request),id=text(b.id,50)||crypto.randomUUID(),name=text(b.name,120),type=text(b.account_type,30),currency=text(b.currency,8)||"USD";
+    if(!name||!["cash","bank","receivable","payable","inventory","expense","income","other"].includes(type))return response({error:"Invalid account."},400,origin);
+    const now=new Date().toISOString(),opening=moneyToMinor(b.opening_balance,currency);if(opening===null)return response({error:"Invalid opening balance."},400,origin);
+    await env.DB.prepare("INSERT INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?5,1,?6,?6) ON CONFLICT(id) DO UPDATE SET name=excluded.name,account_type=excluded.account_type,currency=excluded.currency,updated_at=excluded.updated_at").bind(id,name,type,currency,opening,now).run();
+    return response({ok:true,id},200,origin);
+  }
+  if(path==="/admin/accounting/entry"&&request.method==="POST"){
+    const b=await readJson(request),accountId=text(b.account_id,60),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency),direction=text(b.direction,3),type=text(b.entry_type,30)||"adjustment";
+    if(!accountId||amount===null||amount<=0||!["in","out"].includes(direction))return response({error:"Invalid accounting entry."},400,origin);
+    const account=await env.DB.prepare("SELECT * FROM accounts WHERE id=?1 AND active=1").bind(accountId).first();if(!account)return response({error:"Account not found."},404,origin);
+    if(account.currency!==currency)return response({error:"Account currency does not match."},409,origin);
+    const id=crypto.randomUUID(),now=new Date().toISOString(),delta=direction==="in"?amount:-amount;
+    await env.DB.batch([
+      env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)").bind(id,accountId,type,amount,currency,direction,text(b.reference_type,40),text(b.reference_id,80),text(b.description,300),now),
+      env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id=?3").bind(delta,now,accountId),
+      env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7)").bind(id,type,minorToMoney(amount,currency),amount,currency,text(b.description,300),now)
+    ]);
+    return response({ok:true,id},200,origin);
+  }
+  if(path==="/admin/supply-cost"&&request.method==="POST"){
+    const b=await readJson(request),category=text(b.category,40),description=text(b.description,240),currency=text(b.currency,8)||"USD",amount=moneyToMinor(b.amount,currency);
+    if(!category||!description||amount===null||amount<=0)return response({error:"Invalid supply cost."},400,origin);
+    const id=crypto.randomUUID(),now=new Date().toISOString(),status=["planned","paid","cancelled"].includes(b.status)?b.status:"planned";
+    const accountId=text(b.account_id,60)||null;
+    const stm=[env.DB.prepare("INSERT INTO supply_costs(id,category,supplier,description,amount_minor,currency,status,due_date,paid_at,account_id,reference_id,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?12)").bind(id,category,text(b.supplier,160),description,amount,currency,status,text(b.due_date,30)||null,status==="paid"?now:null,accountId,text(b.reference_id,100)||null,now)];
+    if(status==="paid"&&accountId){
+      const acc=await env.DB.prepare("SELECT * FROM accounts WHERE id=?1").bind(accountId).first();if(!acc||acc.currency!==currency)return response({error:"Invalid payment account."},409,origin);
+      stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,?2,'EXPENSE',?3,?4,'out','supply_cost',?5,?6,?7)").bind(crypto.randomUUID(),accountId,amount,currency,id,description,now));
+      stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor-?1,updated_at=?2 WHERE id=?3").bind(amount,now,accountId));
+      stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,'EXPENSE',?2,?3,?4,?5,?6)").bind(crypto.randomUUID(),minorToMoney(amount,currency),amount,currency,description,now));
+    }
+    await env.DB.batch(stm);return response({ok:true,id},200,origin);
+  }
+  if(path==="/admin/stock-receipt"&&request.method==="POST"){
+    const b=await readJson(request),productId=text(b.product_id,50),qty=Number(b.quantity),currency=text(b.currency,8)||"USD",unitCost=moneyToMinor(b.unit_cost,currency);
+    if(!productId||!Number.isInteger(qty)||qty<1||unitCost===null)return response({error:"Invalid stock receipt."},400,origin);
+    const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1").bind(productId).first();if(!p)return response({error:"Product not found."},404,origin);
+    const total=qty*unitCost,id=crypto.randomUUID(),now=new Date().toISOString(),accountId=text(b.account_id,60)||null;
+    const stm=[env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,updated_at=?2 WHERE id=?3").bind(qty,now,productId),env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,warehouse,created_at) VALUES(?1,?2,'RESTOCK',?3,?4,?5,'Gorgan',?6)").bind(crypto.randomUUID(),productId,qty,id,text(b.note,240)||"Stock receipt",now)];
+    if(accountId){
+      const acc=await env.DB.prepare("SELECT * FROM accounts WHERE id=?1").bind(accountId).first();if(!acc||acc.currency!==currency)return response({error:"Invalid payment account."},409,origin);
+      stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,?2,'PURCHASE',?3,?4,'out','stock_receipt',?5,?6,?7)").bind(crypto.randomUUID(),accountId,total,currency,id,"Stock purchase / receipt",now));
+      stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor-?1,updated_at=?2 WHERE id=?3").bind(total,now,accountId));
+      stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,'PURCHASE',?2,?3,?4,'Stock purchase / receipt',?5)").bind(crypto.randomUUID(),minorToMoney(total,currency),total,currency,now));
+    }
+    await env.DB.batch(stm);return response({ok:true,id,total:minorToMoney(total,currency),currency},200,origin);
+  }
+  if(path==="/admin/document"&&request.method==="POST"){
+    const b=await readJson(request,1550000),title=text(b.title,160),type=text(b.document_type,40),dataUrl=text(b.data_url,1450000);
+    if(!title||!type||!dataUrl.startsWith("data:image/")||dataUrl.length>1450000)return response({error:"Document image is missing or too large."},400,origin);
+    const mime=(dataUrl.match(/^data:([^;]+);base64,/)||[])[1]||"image/jpeg",id=crypto.randomUUID(),now=new Date().toISOString();
+    await env.DB.prepare("INSERT INTO documents(id,document_type,title,reference_type,reference_id,data_url,mime_type,size_bytes,notes,captured_offline,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)").bind(id,type,title,text(b.reference_type,40),text(b.reference_id,100),dataUrl,mime,Math.floor(dataUrl.length*0.75),text(b.notes,300),b.captured_offline?1:0,now).run();
+    return response({ok:true,id},202,origin);
+  }
+  if(path==="/admin/document"&&request.method==="GET"){
+    const id=text(new URL(request.url).searchParams.get("id"),80);if(!id)return response({error:"Document id required."},400,origin);
+    const d=await env.DB.prepare("SELECT id,title,mime_type,data_url FROM documents WHERE id=?1").bind(id).first();if(!d)return response({error:"Document not found."},404,origin);
+    return response(d,200,origin);
+  }
+  if(path==="/admin/audit"&&request.method==="POST"){return response({flags:await runAudit(env)},200,origin);}
+  if(path==="/admin/accounting/assistant"&&request.method==="POST"){
+    const snapshot=await accountingSnapshot(env);
+    const prompt={accounts:snapshot.accounts.map(x=>({name:x.name,type:x.account_type,currency:x.currency,balance_minor:x.current_balance_minor})),costs:snapshot.costs.map(x=>({category:x.category,description:x.description,amount_minor:x.amount_minor,currency:x.currency,status:x.status,due_date:x.due_date})),flags:snapshot.flags.map(x=>({severity:x.severity,title:x.title,message:x.message}))};
+    try{
+      const upstream=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Authorization":"Bearer "+env[KEY],"Content-Type":"application/json"},body:JSON.stringify({model:env.OPENAI_MODEL||MODEL,input:[{role:"system",content:[{type:"input_text",text:"You are SEC PACK's internal accounting operations assistant. Analyze only the supplied aggregate operational data. Never invent transactions. Identify missing records, inconsistencies, overdue items and practical next actions. Return concise Persian unless asked otherwise."}]},{role:"user",content:[{type:"input_text",text:JSON.stringify(prompt)}]}],max_output_tokens:1400})});
+      if(!upstream.ok)return response({error:"Accounting assistant unavailable."},502,origin);
+      const out=await upstream.json();return response({answer:typeof out.output_text==="string"?out.output_text.trim():"No analysis returned."},200,origin);
+    }catch(_){return response({error:"Accounting assistant unavailable."},502,origin);}
+  }
+  return response({error:"Not found."},404,origin);
+}
+
 async function adminRequest(request,env,origin){
   const path=new URL(request.url).pathname;
+  if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/document"||path==="/admin/audit")return adminAccounting(request,env,origin);
   if(path==="/admin/dashboard"&&request.method==="GET"){if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);return response(await adminDashboard(env),200,origin)}
   if(path==="/admin/product"&&request.method==="POST")return adminProduct(request,env,origin);
   if(path==="/admin/sale"&&request.method==="POST")return adminSale(request,env,origin);
