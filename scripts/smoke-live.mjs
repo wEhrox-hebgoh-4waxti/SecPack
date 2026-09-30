@@ -9,10 +9,15 @@ const checks = [
 const fail = [];
 for (const [name, url] of checks) {
   try {
-    const r = await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(15000) });
+    const r = await fetch(url, {
+      redirect: "manual",
+      headers: url.includes("api.secpackco.com") ? { Origin: "https://secpackco.com" } : {},
+      signal: AbortSignal.timeout(15000)
+    });
     const body = await r.text();
     console.log(name, r.status, r.headers.get("content-type") || "", body.slice(0, 120).replace(/\s+/g, " "));
     if (r.status < 200 || r.status >= 400) fail.push(`${name}: HTTP ${r.status}`);
+    if (name === "health" && (!body.includes('"ok":true') || !body.includes('"commerceSchema":true'))) fail.push(`health: unhealthy response ${body}`);
   } catch (e) {
     fail.push(`${name}: ${e.message}`);
   }
