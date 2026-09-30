@@ -1,6 +1,6 @@
 # SEC PACK Professional Advisor — production architecture
 
-Status: production architecture prepared; deployment is gated only by the real Cloudflare D1 database binding and required Cloudflare secrets.
+Status: production configuration is committed in the repository. Live activation and end-to-end verification remain dependent on the Cloudflare Worker deployment and the already configured production resources.
 
 ## Trust boundaries
 
@@ -17,7 +17,7 @@ The browser never receives:
 
 Public forms submit to `https://api.secpackco.com/forms`. The Worker validates and stores submissions in D1. There is intentionally no public GET endpoint for inquiries.
 
-Stored fields are business-contact data only: name, company, email, phone, product, destination, payment preference, notes/message, order items and timestamps.
+Stored fields are business-contact data only: name, company, email, phone, product, destination, payment preference, notes/message, order items and timestamps, plus visitor-profile details when that form is used.
 
 ## Abuse controls
 
@@ -29,7 +29,7 @@ The API applies:
 - email validation;
 - duplicate request protection;
 - per-client hourly rate limits;
-- hashed client identifiers using a Cloudflare secret salt;
+- hashed client identifiers using a dedicated rate-limit secret when configured, with a safe fallback to the server-side OpenAI secret;
 - prepared SQL statements;
 - generic error responses.
 
@@ -43,8 +43,14 @@ Web search is opt-in from the public advisor UI. The model is configured server-
 
 The root `wrangler.toml` is the single canonical Worker configuration. The obsolete `worker/wrangler.toml` must not be used.
 
-D1 uses versioned migrations under `migrations/`. The production database ID must be supplied from the actual Cloudflare D1 database; it must never be invented.
+D1 uses versioned migrations under `migrations/`. The production binding is `DB`, database name `secpack-prod`, and the repository contains migrations 0001 and 0002.
+
+The deployment script applies unapplied remote D1 migrations before deploying the Worker. Cloudflare records applied migrations in D1 and rolls back a failed migration, so migrations remain versioned rather than being manually edited in production.
 
 ## Administrative access
 
 There is no public customer-data administration endpoint. Customer records are accessed through the protected Cloudflare/D1 administrative surface until a separately authenticated private SEC PACK admin application is introduced.
+
+## Verification boundary
+
+Repository-level configuration and security controls can be audited here. Live Cloudflare deployment state, live D1 migration state, live Worker secrets and real browser/network execution cannot be truthfully marked verified unless the corresponding production control plane or runtime is accessible.
