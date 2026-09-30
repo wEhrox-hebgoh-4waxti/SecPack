@@ -403,13 +403,14 @@ async function adminAccounting(request,env,origin){
 }
 
 async function adminRequest(request,env,origin){
+  if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
   const path=new URL(request.url).pathname;
   if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/document"||path==="/admin/audit")return adminAccounting(request,env,origin);
-  if(path==="/admin/dashboard"&&request.method==="GET"){if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);return response(await adminDashboard(env),200,origin)}
+  if(path==="/admin/dashboard"&&request.method==="GET")return response(await adminDashboard(env),200,origin);
   if(path==="/admin/product"&&request.method==="POST")return adminProduct(request,env,origin);
   if(path==="/admin/sale"&&request.method==="POST")return adminSale(request,env,origin);
   if(path==="/admin/order-status"&&request.method==="POST")return adminOrderStatus(request,env,origin);
-  if(path==="/admin/alerts/read"&&request.method==="POST"){if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);const b=await readJson(request);await env.DB.prepare("UPDATE alerts SET is_read=1 WHERE id=?1").bind(text(b.id,80)).run();return response({ok:true},200,origin)}
+  if(path==="/admin/alerts/read"&&request.method==="POST"){const b=await readJson(request);await env.DB.prepare("UPDATE alerts SET is_read=1 WHERE id=?1").bind(text(b.id,80)).run();return response({ok:true},200,origin)}
   return response({error:"Not found."},404,origin);
 }
 
