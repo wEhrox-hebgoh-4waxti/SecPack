@@ -496,7 +496,7 @@ async function adminAccounting(request,env,origin){
     const b=await readJson(request),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null,id=text(b.id,50)||crypto.randomUUID(),name=text(b.name,120),type=text(b.account_type,30),currency=text(b.currency,8)||"USD",offsetId=text(b.offset_account_id,60);
     if(requestId){const prior=await env.DB.prepare("SELECT id FROM accounts WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,replayed:true},200,origin);}
     const existing=await env.DB.prepare("SELECT id FROM accounts WHERE id=?1").bind(id).first();if(existing)return response({error:"Account already exists; ledger accounts are immutable in structure."},409,origin);
-    if(!name||!["cash","bank","receivable","payable","inventory","expense","income","other"].includes(type))return response({error:"Invalid account."},400,origin);
+    if(!name||!["cash","bank","receivable","payable","inventory","expense","income","cogs","other"].includes(type))return response({error:"Invalid account."},400,origin);
     const now=new Date().toISOString(),opening=moneyToMinor(b.opening_balance,currency);if(opening===null)return response({error:"Invalid opening balance."},400,origin);
     if(opening>0&&!offsetId)return response({error:"An opening balance requires an offset account."},400,origin);
     if(offsetId===id)return response({error:"Opening balance requires a different offset account."},400,origin);
