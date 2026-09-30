@@ -714,7 +714,17 @@ export default {
       const bin=Uint8Array.from(atob(match[2]),c=>c.charCodeAt(0));
       return new Response(bin,{status:200,headers:{"Content-Type":match[1]||doc.mime_type||"image/jpeg","Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Content-Disposition":"inline"}});
     }
-    if(url.pathname==="/health"&&request.method==="GET"){try{const required=["products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines"];const rows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results:[];const tables=new Set(rows.map(x=>x.name)),healthy=Boolean(env.DB)&&required.every(x=>tables.has(x));return response({ok:healthy,service:"secpack-api",database:Boolean(env.DB),commerceSchema:healthy,time:new Date().toISOString()},healthy?200:503,null)}catch(_){return response({ok:false,service:"secpack-api",database:Boolean(env.DB),commerceSchema:false},503,null)}}
+    if(url.pathname==="/health"&&request.method==="GET"){try{
+      const ready=await ensureOperationsSchema(env);
+      const required=["products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines"];
+      const rows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results:[];
+      const tables=new Set(rows.map(x=>x.name));
+      const requiredColumns={products:["unit_price_minor","unit_cost_minor","stock_qty","reserved_qty"],orders:["request_id","total_minor"],order_items:["unit_price_minor","line_total_minor","unit_cost_minor"],inventory_ledger:["request_id"],financial_entries:["request_id"],supply_costs:["request_id"],documents:["request_id"],supply_cases:["request_id"],supply_milestones:["request_id"],accounts:["request_id"]};
+      let columnsOk=true;
+      if(ready)for(const [table,cols] of Object.entries(requiredColumns)){const info=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];const have=new Set(info.map(x=>x.name));if(cols.some(x=>!have.has(x))){columnsOk=false;break;}}
+      const healthy=Boolean(env.DB)&&ready&&required.every(x=>tables.has(x))&&columnsOk;
+      return response({ok:healthy,service:"secpack-api",database:Boolean(env.DB),commerceSchema:healthy,time:new Date().toISOString()},healthy?200:503,null);
+    }catch(_){return response({ok:false,service:"secpack-api",database:Boolean(env.DB),commerceSchema:false},503,null)}}
     const needsOperations = url.pathname==="/catalog" || url.pathname==="/forms" || url.pathname==="/advisor" || url.pathname==="/" || url.pathname.startsWith("/admin/") || url.pathname==="/payment/webhook";
     if(needsOperations && env.DB && !await ensureOperationsSchema(env)) return response({error:"Database initialization is temporarily unavailable."},503,null);
     const origin=request.headers.get("Origin");
