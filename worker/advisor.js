@@ -201,7 +201,7 @@ async function adminOrderStatus(request,env,origin){
 
 function randomToken(){
   const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);
-  return btoa(String.fromCharCode(...bytes)).replace(/\\+/g,"-").replace(/\\//g,"_").replace(/=+$/,"");
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 }
 \nasync function accountingSnapshot(env){
   const accounts=(await env.DB.prepare("SELECT id,name,account_type,currency,current_balance_minor,active,updated_at FROM accounts WHERE active=1 ORDER BY name").all()).results;
