@@ -1,6 +1,6 @@
 const CACHE_NAME="secpack-shell-v1";
 const CORE=[
-  "/","/index.html","/style.css","/i18n.js","/form-config.js","/assets/js/index.js","/logo.jpg",
+  "/","/index.html","/site.webmanifest","/service-worker.js","/style.css","/i18n.js","/form-config.js","/assets/js/index.js","/logo.jpg",
   "/pages/products.html","/pages/store.html","/pages/company.html","/pages/contact.html","/pages/advisor.html",
   "/pages/a4-copy-paper.html","/pages/lamination-films.html","/pages/water-based-adhesives.html",
   "/pages/packaging-materials.html","/pages/manufacturers.html","/pages/market.html","/pages/documents.html",
