@@ -12,7 +12,7 @@
 - [x] Duplicate request protection
 - [x] Rate limiting with hashed client identifiers
 - [x] Security headers
-- [x] D1 migration files (0001 + 0002)
+- [x] D1 migration files (0001 + 0002 + 0003)
 - [x] Canonical root Wrangler configuration
 - [x] Removed obsolete Worker Wrangler configuration
 
@@ -21,14 +21,15 @@
 2. Put its real `database_id` in the canonical `wrangler.toml`.
 3. Configure the OpenAI API credential as a Cloudflare Secret.
 4. Configure a strong random `RATE_LIMIT_SALT` as a Cloudflare Secret (recommended; Worker safely falls back to the OpenAI secret until then).
-5. Apply all D1 migrations, including `migrations/0001_secure_inquiries.sql` and `migrations/0002_add_visitor_details.sql`.
+5. Apply all D1 migrations, including `migrations/0001_secure_inquiries.sql`, `migrations/0002_add_visitor_details.sql` and `migrations/0003_order_payment_lifecycle.sql`.
 6. Verify the Worker custom domain `api.secpackco.com`.
 7. Verify HTTPS and HSTS at the production domain.
 
 ## Functional QA
 - Contact form submits successfully.
 - Visitor registration submits successfully.
-- Order request submits successfully.
+- Order request submits successfully and receives a server-generated order reference.
+- Order/payment lifecycle fields are present for the future payment gateway; client-supplied prices are never trusted.
 - A normal browser cannot read D1 records.
 - Direct GET abuse does not expose records.
 - Invalid origin is rejected.
