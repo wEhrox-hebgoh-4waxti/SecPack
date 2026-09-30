@@ -1,2 +1,3 @@
-ALTER TABLE order_items ADD COLUMN unit_cost_minor INTEGER NOT NULL DEFAULT 0;
-CREATE INDEX IF NOT EXISTS idx_order_items_cost ON order_items(order_id,product_id);
+-- Compatibility marker for order cost basis.
+-- The runtime schema reconciler adds unit_cost_minor when it is absent, which
+-- keeps both fresh and previously self-healed databases deployable.
