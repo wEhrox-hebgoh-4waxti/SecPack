@@ -32,10 +32,35 @@ function renderAccounting(d){
   ["entryAccount","costAccount","receiptAccount"].forEach(id=>{const s=a(id);if(s){s.replaceChildren();if(id==="costAccount"||id==="receiptAccount"){const z=document.createElement("option");z.value="";z.textContent="حساب پرداخت را انتخاب کنید";s.append(z);}d.accounts.forEach(x=>{const o=document.createElement("option");o.value=x.id;o.textContent=x.name+" · "+x.currency;s.append(o);});}});
   const box=a("accountingAccounts");box.replaceChildren(...d.accounts.map(x=>{const e=document.createElement("div");e.className="account-row";e.innerHTML="<b>"+escapeHtml(x.name)+"</b><span>"+amoney(Number(x.current_balance_minor)/(["USD","EUR","GBP","AED","SAR","TRY"].includes(x.currency)?100:1),x.currency)+"</span>";return e;}));
   a("accountingCosts").replaceChildren(...d.costs.slice(0,20).map(x=>{const e=document.createElement("div");e.className="account-row";e.innerHTML="<span>"+escapeHtml(x.category)+" · "+escapeHtml(x.description)+"</span><b>"+amoney(Number(x.amount_minor)/(["USD","EUR","GBP","AED","SAR","TRY"].includes(x.currency)?100:1),x.currency)+"</b>";return e;}));
+  window.SEC_PACK_ADMIN_PRODUCTS=d.products||window.SEC_PACK_ADMIN_PRODUCTS||[];
   const flags=d.flags||[];a("auditFlags").replaceChildren(...(flags.length?flags.map(x=>{const e=document.createElement("div");e.className="audit-flag "+escapeHtml(x.severity);e.innerHTML="<b>"+escapeHtml(x.title)+"</b><p>"+escapeHtml(x.message)+"</p><small>"+escapeHtml(x.suggested_action||"")+"</small>";return e;}):[document.createTextNode("مغایرت یا کاستی باز شناسایی نشد.")]));
   a("documentList").replaceChildren(...d.docs.slice(0,15).map(x=>{const wrap=document.createElement("div");wrap.className="document-chip";const open=document.createElement("button");open.textContent=x.title+" · "+new Date(x.created_at).toLocaleDateString("fa-IR");open.onclick=async()=>{try{const q=await accountingApi("/admin/document?id="+encodeURIComponent(x.id),null,"GET");const w=window.open();if(w){const img=w.document.createElement("img");img.style.maxWidth="100%";img.style.height="auto";img.src=q.data_url;img.alt="document";w.document.body.append(img);}}catch(err){alert(err.message)}};const share=document.createElement("button");share.textContent="ارسال / اشتراک ۷ روزه";share.onclick=async()=>{try{const q=await accountingApi("/admin/document/share",{id:x.id});if(navigator.share){await navigator.share({title:"SEC PACK · "+x.title,text:"Secure document link (valid 7 days):",url:q.url});}else{await navigator.clipboard?.writeText(q.url);alert("لینک امن ۷ روزه کپی شد.");}}catch(err){if(err.name!=="AbortError")alert(err.message)}};wrap.append(open,share);return wrap;}));
 }
 function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+async function loadSupplyCases(){
+  try{
+    const d=await accountingApi("/admin/supply-cases",null,"GET"),box=a("supplyCases"),select=a("supplyProduct");
+    if(select&&window.SEC_PACK_ADMIN_PRODUCTS){select.replaceChildren(...window.SEC_PACK_ADMIN_PRODUCTS.map(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.name_fa;return o;}));}
+    if(!box)return;
+    const names={factory_order:"سفارش کارخانه",factory_payment:"پرداخت کارخانه",customs:"گمرک",transport:"حمل",warehouse_receipt:"ورود انبار گرگان",ready_for_delivery:"آماده تحویل"};
+    const frag=document.createDocumentFragment();
+    d.cases.forEach(c=>{
+      const card=document.createElement("div");card.className="quote";
+      const title=document.createElement("strong");title.textContent=c.case_no+" · "+(c.supplier||"بدون تأمین‌کننده");
+      const meta=document.createElement("p");meta.textContent="تعداد: "+c.quantity+" · ارزش خرید: "+fromMinor(c.purchase_total_minor,c.currency)+" "+c.currency+" · وضعیت: "+c.status;
+      card.append(title,meta);
+      d.milestones.filter(m=>m.case_id===c.id).forEach(m=>{
+        const row=document.createElement("div");row.className="account-row";
+        const label=document.createElement("span");label.textContent=names[m.milestone_type]||m.milestone_type;
+        const sel=document.createElement("select");["pending","in_progress","done","blocked"].forEach(s=>{const o=document.createElement("option");o.value=s;o.textContent=s;o.selected=m.status===s;sel.append(o);});
+        sel.onchange=async()=>{try{await accountingApi("/admin/supply-milestone",{id:m.id,status:sel.value});await loadSupplyCases();}catch(e){alert(e.message)}};
+        row.append(label,sel);card.append(row);
+      });
+      frag.append(card);
+    });
+    box.replaceChildren(frag);
+  }catch(e){const box=a("supplyCases");if(box)box.textContent=e.message;}
+}
 async function loadAccounting(){try{const d=await accountingApi("/admin/accounting",null,"GET");renderAccounting(d);return d}catch(e){const x=a("accountingStatus");if(x)x.textContent=e.message;}}
 async function saveAccountingForm(form,path){
   const payload=Object.fromEntries(new FormData(form).entries());
@@ -47,6 +72,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   a("entryForm")?.addEventListener("submit",e=>{e.preventDefault();saveAccountingForm(e.currentTarget,"/admin/accounting/entry");});
   a("costForm")?.addEventListener("submit",e=>{e.preventDefault();saveAccountingForm(e.currentTarget,"/admin/supply-cost");});
   a("receiptForm")?.addEventListener("submit",e=>{e.preventDefault();saveAccountingForm(e.currentTarget,"/admin/stock-receipt");});
+  a("supplyCaseForm")?.addEventListener("submit",async e=>{e.preventDefault();await saveAccountingForm(e.currentTarget,"/admin/supply-case");await loadSupplyCases();});
   a("auditRun")?.addEventListener("click",async()=>{try{await accountingApi("/admin/audit",{});await loadAccounting();}catch(e){alert(e.message);}});
   a("assistantRun")?.addEventListener("click",async()=>{const out=a("assistantOutput");out.textContent="در حال بررسی…";try{const d=await accountingApi("/admin/accounting/assistant",{});out.textContent=d.answer||"تحلیلی دریافت نشد.";}catch(e){out.textContent=e.message;}});
   a("documentForm")?.addEventListener("submit",async e=>{
@@ -59,5 +85,5 @@ document.addEventListener("DOMContentLoaded",()=>{
     };img.src=url;
   });
   window.addEventListener("online",async()=>{await drainQueue();await loadAccounting();});
-  loadAccounting();drainQueue();
+  loadAccounting().then(loadSupplyCases);drainQueue();
 });
