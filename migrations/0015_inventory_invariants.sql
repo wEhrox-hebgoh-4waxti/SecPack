@@ -1,6 +1,8 @@
 -- SEC PACK inventory invariant hardening
--- Prevent physical stock from falling below reservations and sold quantity from becoming negative.
-CREATE TRIGGER IF NOT EXISTS prevent_reserved_over_available
+-- Enforce the invariant on every physical-stock or reservation mutation.
+DROP TRIGGER IF EXISTS prevent_reserved_over_available;
+
+CREATE TRIGGER prevent_reserved_over_available
 BEFORE UPDATE OF reserved_qty,stock_qty ON products
 WHEN NEW.reserved_qty < 0 OR NEW.reserved_qty > NEW.stock_qty
 BEGIN
