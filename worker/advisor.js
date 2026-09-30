@@ -729,7 +729,11 @@ export default {
       const requiredColumns={products:["unit_price_minor","unit_cost_minor","stock_qty","reserved_qty"],orders:["request_id","total_minor"],order_items:["unit_price_minor","line_total_minor","unit_cost_minor"],inventory_ledger:["request_id"],financial_entries:["request_id"],supply_costs:["request_id"],documents:["request_id"],supply_cases:["request_id"],supply_milestones:["request_id"],accounts:["request_id"]};
       let columnsOk=true;
       if(ready)for(const [table,cols] of Object.entries(requiredColumns)){const info=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];const have=new Set(info.map(x=>x.name));if(cols.some(x=>!have.has(x))){columnsOk=false;break;}}
-      const healthy=Boolean(env.DB)&&ready&&required.every(x=>tables.has(x))&&columnsOk;
+      const requiredTriggers=["prevent_negative_stock","prevent_reserved_over_available","prevent_negative_sold","prevent_audit_update","prevent_audit_delete","prevent_financial_entry_update","prevent_financial_entry_delete","prevent_inventory_ledger_update","prevent_inventory_ledger_delete","prevent_accounting_ledger_update","prevent_accounting_ledger_delete","prevent_invalid_journal_line_insert"];
+      const triggerRows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='trigger'").all()).results||[]:[];
+      const triggers=new Set(triggerRows.map(x=>x.name));
+      const triggersOk=requiredTriggers.every(x=>triggers.has(x));
+      const healthy=Boolean(env.DB)&&ready&&required.every(x=>tables.has(x))&&columnsOk&&triggersOk;
       return response({ok:healthy,service:"secpack-api",database:Boolean(env.DB),commerceSchema:healthy,time:new Date().toISOString()},healthy?200:503,null);
     }catch(_){return response({ok:false,service:"secpack-api",database:Boolean(env.DB),commerceSchema:false},503,null)}}
     const needsOperations = url.pathname==="/catalog" || url.pathname==="/forms" || url.pathname==="/advisor" || url.pathname==="/" || url.pathname.startsWith("/admin/") || url.pathname==="/payment/webhook";
