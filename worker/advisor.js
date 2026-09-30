@@ -254,6 +254,8 @@ async function runAudit(env){
   if(flags.length){
     await env.DB.batch(flags.map(x=>env.DB.prepare("INSERT INTO audit_flags(id,severity,category,reference_type,reference_id,title,message,suggested_action,is_resolved,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,0,?9) ON CONFLICT(id) DO UPDATE SET severity=excluded.severity,title=excluded.title,message=excluded.message,suggested_action=excluded.suggested_action,is_resolved=0,resolved_at=NULL").bind(x.id,x.severity,"AUTO",x.reference_type,x.reference_id,x.title,x.message,x.suggested_action,now)));
   }
+  const overdue=(await env.DB.prepare("SELECT m.id,m.case_id,m.milestone_type,m.due_date,c.case_no FROM supply_milestones m JOIN supply_cases c ON c.id=m.case_id WHERE m.status NOT IN ('done') AND m.due_date IS NOT NULL AND m.due_date < datetime('now')").all()).results;
+  for(const m of overdue)add("high","supply_chain",m.id,"مرحله زنجیره تأمین عقب‌افتاده","مرحله "+m.milestone_type+" در پرونده "+m.case_no+" از موعد گذشته است.","مرحله را بررسی و وضعیت یا تاریخ آن را به‌روزرسانی کنید.");
   return flags;
 }
 
