@@ -15,11 +15,17 @@ async function queueItem(kind,payload){
 }
 async function drainQueue(){
   if(!navigator.onLine)return;
-  const d=await idb(),tx=d.transaction("queue","readwrite"),s=tx.objectStore("queue");
+  const d=await idb();
+  const readTx=d.transaction("queue","readonly"),s=readTx.objectStore("queue");
   const items=await new Promise((res,rej)=>{const r=s.getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
   for(const item of items){
-    try{await accountingApi(item.kind,item.payload);s.delete(item.id);}catch(e){
-      if(e.status>=400&&e.status<500&&e.status!==429)s.delete(item.id);
+    try{
+      await accountingApi(item.kind,item.payload);
+      const delTx=d.transaction("queue","readwrite");delTx.objectStore("queue").delete(item.id);
+    }catch(e){
+      if(e.status>=400&&e.status<500&&e.status!==429){
+        const delTx=d.transaction("queue","readwrite");delTx.objectStore("queue").delete(item.id);
+      }
     }
   }
 }
