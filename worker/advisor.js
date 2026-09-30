@@ -180,6 +180,7 @@ async function adminOrderStatus(request,env,origin){
   if(!orderId||!["pending","processing","paid","ready","fulfilled","cancelled"].includes(next))return response({error:"Invalid order status."},400,origin);
   const order=await env.DB.prepare("SELECT * FROM orders WHERE id=?1").bind(orderId).first();if(!order)return response({error:"Order not found."},404,origin);
   if(order.status==="fulfilled"||order.status==="cancelled")return response({error:"Closed orders cannot be changed."},409,origin);
+  if(next==="cancelled"&&order.payment_status==="paid")return response({error:"A paid order requires a refund/reversal workflow before cancellation."},409,origin);
   if(next==="fulfilled"&&order.payment_status!=="paid")return response({error:"Payment must be confirmed before fulfillment."},409,origin);
   if(next==="paid"&&order.payment_status==="paid")return response({ok:true},200,origin);
   const now=new Date().toISOString(),items=(await env.DB.prepare("SELECT * FROM order_items WHERE order_id=?1").bind(orderId).all()).results,stm=[];
