@@ -72,10 +72,12 @@ async function signSession(payload,env){
   return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 }
 async function verifySession(request,env){
-  const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\s*)sp_admin=([^;]+)/);if(!m||!env[ADMIN_KEY])return false;
+  const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\s*)__Host-sp_admin=([^;]+)/);if(!m||!env[ADMIN_KEY])return false;
   const parts=decodeURIComponent(m[1]).split(".");if(parts.length!==2)return false;
   const payload=parts[0],sig=parts[1],ts=Number(payload);if(!Number.isFinite(ts)||Date.now()-ts>8*60*60*1000||Date.now()<ts-60000)return false;
-  const expected=await signSession(payload,env);return expected===sig;
+  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(env[ADMIN_KEY]),{name:"HMAC",hash:"SHA-256"},false,["verify"]);
+  const bytes=Uint8Array.from(atob(sig.replace(/-/g,"+").replace(/_/g,"/")+"=="),c=>c.charCodeAt(0));
+  return crypto.subtle.verify("HMAC",key,bytes,new TextEncoder().encode(payload));
 }
 function authorized(request,env){
   const expected=env[ADMIN_KEY];if(!expected)return false;
@@ -86,7 +88,7 @@ function webhookAuthorized(request,env){
   const expected=env[WEBHOOK_KEY];if(!expected)return false;
   return (request.headers.get("Authorization")||"")==="Bearer "+expected;
 }
-function sessionCookie(value){return "sp_admin="+encodeURIComponent(value)+"; Max-Age=28800; Path=/; Secure; HttpOnly; SameSite=Strict";}
+function sessionCookie(value){return "__Host-sp_admin="+encodeURIComponent(value)+"; Max-Age=28800; Path=/; Secure; HttpOnly; SameSite=Strict";}
 async function readJson(request,max=MAX_BODY){
   const raw=await request.text();if(raw.length>max)throw new Error("too_large");
   try{return JSON.parse(raw)}catch(_){throw new Error("invalid")}
@@ -613,7 +615,7 @@ async function adminRequest(request,env,origin){
     h.set("Set-Cookie",sessionCookie(payload+"."+sig));return new Response(JSON.stringify({ok:true}),{status:200,headers:h});
   }
   if(path==="/admin/logout"&&request.method==="POST"){
-    const h=response({ok:true},200,origin).headers;h.set("Set-Cookie","sp_admin=; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=Strict");return new Response(JSON.stringify({ok:true}),{status:200,headers:h});
+    const h=response({ok:true},200,origin).headers;h.set("Set-Cookie","__Host-sp_admin=; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=Strict");return new Response(JSON.stringify({ok:true}),{status:200,headers:h});
   }
   if(!(await verifySession(request,env))){
     const limited=await rateLimit(env,request,"admin-auth",10);
