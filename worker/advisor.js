@@ -332,8 +332,12 @@ async function adminProduct(request,env,origin){
   if(!(await verifySession(request,env)))return response({error:"Unauthorized."},401,origin);
   const b=await readJson(request),id=text(b.id,40),currency=text(b.currency,8)||"USD",priceMinor=moneyToMinor(b.unit_price,currency),stock=Number(b.stock_qty);
   if(!id||priceMinor===null||!Number.isInteger(stock)||stock<0)return response({error:"Invalid product values."},400,origin);
-  const p=await env.DB.prepare("SELECT id,stock_qty,reserved_qty FROM products WHERE id=?1").bind(id).first();if(!p)return response({error:"Product not found."},404,origin);
+  const p=await env.DB.prepare("SELECT id,stock_qty,reserved_qty,sold_qty,unit_cost_minor,currency FROM products WHERE id=?1").bind(id).first();if(!p)return response({error:"Product not found."},404,origin);
   if(stock!==Number(p.stock_qty||0))return response({error:"Direct stock editing is disabled. Use Stock Receipt or a controlled adjustment workflow so inventory and accounting stay synchronized."},409,origin);
+  if(currency!==p.currency && (Number(p.stock_qty||0)>0||Number(p.reserved_qty||0)>0||Number(p.sold_qty||0)>0||Number(p.unit_cost_minor||0)>0))return response({error:"Currency cannot be changed after inventory or financial history exists. Create a new product code instead."},409,origin);
+  if(b.active===false && Number(p.reserved_qty||0)>0)return response({error:"A product with reserved stock cannot be deactivated."},409,origin);
+  const requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+  if(requestId){const prior=await env.DB.prepare("SELECT id FROM audit_log WHERE request_id=?1 AND action='PRODUCT_UPDATED' LIMIT 1").bind(requestId).first();if(prior)return response({ok:true,replayed:true},200,origin);}
   const now=new Date().toISOString();
   const before={stock_qty:Number(p.stock_qty||0),reserved_qty:Number(p.reserved_qty||0)};
   const stm=[env.DB.prepare("UPDATE products SET unit_price=?1,unit_price_minor=?2,currency=?3,active=?4,updated_at=?5 WHERE id=?6").bind(minorToMoney(priceMinor,currency),priceMinor,currency,b.active===false?0:1,now,id)];
