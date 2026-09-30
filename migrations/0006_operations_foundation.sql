@@ -106,7 +106,4 @@ INSERT OR IGNORE INTO accounts(id,name,account_type,currency,created_at,updated_
  ('inventory','موجودی کالا','inventory','USD',datetime('now'),datetime('now')),
  ('expense','هزینه‌ها','expense','USD',datetime('now'),datetime('now')),
  ('income','درآمد','income','USD',datetime('now'),datetime('now'));
-
--- Warehouse is an operational attribute of each stock movement.
-ALTER TABLE inventory_ledger ADD COLUMN warehouse TEXT;
-CREATE INDEX IF NOT EXISTS idx_inventory_warehouse_created ON inventory_ledger(warehouse,created_at);
+ 
