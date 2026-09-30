@@ -12,7 +12,7 @@
 - [x] Duplicate request protection
 - [x] Rate limiting with hashed client identifiers
 - [x] Security headers
-- [x] D1 migration files (0001 + 0002 + 0003 + 0004 + 0005)
+- [x] D1 migration files (0001 + 0002 + 0003 + 0004 + 0005 + 0006)
 - [x] Canonical root Wrangler configuration
 - [x] Removed obsolete Worker Wrangler configuration
 
