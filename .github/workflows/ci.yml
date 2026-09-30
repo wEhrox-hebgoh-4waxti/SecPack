@@ -14,5 +14,5 @@ jobs:
       - run: node --check worker/advisor.js
       - run: node --check assets/js/admin.js
       - run: node --check assets/js/accounting.js
-      - run: npm ci
+      - run: npm install --ignore-scripts --no-audit --no-fund
       - run: npx wrangler deploy --dry-run
