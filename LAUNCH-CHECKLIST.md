@@ -12,7 +12,7 @@
 - [x] Duplicate request protection
 - [x] Rate limiting with hashed client identifiers
 - [x] Security headers
-- [x] D1 migration files (0001 + 0002 + 0003)
+- [x] D1 migration files (0001 + 0002 + 0003 + 0004 + 0005)
 - [x] Canonical root Wrangler configuration
 - [x] Removed obsolete Worker Wrangler configuration
 
@@ -21,7 +21,7 @@
 2. Put its real `database_id` in the canonical `wrangler.toml`.
 3. Configure the OpenAI API credential as a Cloudflare Secret.
 4. Configure a strong random `RATE_LIMIT_SALT` as a Cloudflare Secret (recommended; Worker safely falls back to the OpenAI secret until then).
-5. Apply all D1 migrations, including `migrations/0001_secure_inquiries.sql`, `migrations/0002_add_visitor_details.sql` and `migrations/0003_order_payment_lifecycle.sql`.
+5. Apply all D1 migrations, including 0001–0005.
 7. Verify the Worker custom domain `api.secpackco.com`.
 8. Verify HTTPS and HSTS at the production domain.
 
@@ -56,3 +56,19 @@
 - Monetary values are stored in integer minor units for accounting accuracy.
 - Before using the admin screen, configure a strong random Cloudflare Secret named `ADMIN_TOKEN`. Do not put it in GitHub or public files.
 - Actual automatic card/payment settlement still requires a payment provider/merchant account and its server-side credentials. The current order flow is production-safe for online order placement and stock reservation, but it deliberately does not pretend that payment has been completed.
+
+
+## Operational accounting
+- [x] User-editable server-side product prices
+- [x] Online order reservation and fulfillment lifecycle
+- [x] In-person sales linked to inventory and accounting
+- [x] Expandable chart of accounts
+- [x] Manual financial entries and supplier/supply-chain costs
+- [x] Factory purchase, customs, freight and warehouse cost categories
+- [x] Stock receipt workflow
+- [x] Operational audit flags for low stock, overdue orders, missing accounting records and negative cash/bank
+- [x] AI accounting operations review using aggregate data only
+- [x] Private document image capture with size-limited D1 storage
+- [x] Offline queue for sales/financial entries/document captures; automatic sync when connectivity returns
+- [x] Installable/offline website shell
+- [ ] Payment gateway and server-side settlement webhook — intentionally pending
