@@ -10,7 +10,7 @@ function idb(){
   });
 }
 async function queueItem(kind,payload){
-  const d=await idb(),tx=d.transaction("queue","readwrite");tx.objectStore("queue").put({id:crypto.randomUUID(),kind,payload,created_at:new Date().toISOString()});return tx.complete;
+  const d=await idb(),tx=d.transaction("queue","readwrite");tx.objectStore("queue").put({id:crypto.randomUUID(),kind,payload,created_at:new Date().toISOString()});return new Promise((resolve,reject)=>{tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error);});
 }
 async function drainQueue(){
   if(!navigator.onLine||!accountingToken())return;
