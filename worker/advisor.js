@@ -554,6 +554,40 @@ async function adminAccounting(request,env,origin){
     }
   }
 
+  if(path==="/admin/refund"&&request.method==="POST"){
+    const b=await readJson(request),orderId=text(b.order_id,80),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(!orderId)return response({error:"Order id is required."},400,origin);
+    if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+    const order=await env.DB.prepare("SELECT * FROM orders WHERE id=?1").bind(orderId).first();if(!order)return response({error:"Order not found."},404,origin);
+    if(order.payment_status!=="paid")return response({error:"Only paid orders can be refunded."},409,origin);
+    const existing=await env.DB.prepare("SELECT id FROM journal_transactions WHERE reference_type='order_refund_payment' AND reference_id=?1 LIMIT 1").bind(orderId).first();if(existing)return response({error:"This order has already been refunded."},409,origin);
+    const returnInventory=b.return_inventory===true,now=new Date().toISOString(),stm=[];
+    const saleReverse=await buildJournal(env,{referenceType:"order_refund_sale",referenceId:orderId,description:"Refund revenue · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":sale":null,lines:[{accountId:"income",side:"debit",amount:Number(order.total_minor)},{accountId:"receivables",side:"credit",amount:Number(order.total_minor)}]});
+    const paymentReverse=await buildJournal(env,{referenceType:"order_refund_payment",referenceId:orderId,description:"Refund customer payment · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":payment":null,lines:[{accountId:"receivables",side:"debit",amount:Number(order.total_minor)},{accountId:"bank",side:"credit",amount:Number(order.total_minor)}]});
+    if(!saleReverse||!paymentReverse)return response({error:"Refund accounts are not configured for this currency."},409,origin);
+    stm.push(...saleReverse.statements,...paymentReverse.statements);
+    if(order.status==="fulfilled"&&returnInventory){
+      const items=(await env.DB.prepare("SELECT product_id,quantity,unit_cost_minor FROM order_items WHERE order_id=?1").bind(orderId).all()).results;
+      let totalCost=0;
+      for(const x of items){
+        const cost=safeMultiply(Number(x.quantity),Number(x.unit_cost_minor||0));if(cost===null||cost<=0)return response({error:"Exact refund cost basis is unavailable for this fulfilled order."},409,origin);
+        totalCost+=cost;
+        stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,sold_qty=sold_qty-?1,updated_at=?2 WHERE id=?3 AND sold_qty>=?1").bind(x.quantity,now,x.product_id));
+        stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RETURN',?3,?4,'Refund / inventory returned',?5,?6)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,now));
+      }
+      const cogsReverse=await buildJournal(env,{referenceType:"order_refund_cogs",referenceId:orderId,description:"Reverse COGS · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"inventory",side:"debit",amount:totalCost},{accountId:"cogs",side:"credit",amount:totalCost}]});
+      if(!cogsReverse)return response({error:"Refund COGS accounts are not configured."},409,origin);
+      stm.push(...cogsReverse.statements);
+    }
+    stm.push(env.DB.prepare("UPDATE orders SET status='cancelled',payment_status='refunded',updated_at=?1 WHERE id=?2").bind(now,orderId));
+    stm.push(await auditStatement(env,{action:"ORDER_REFUNDED",entityType:"order",entityId:orderId,before:{status:order.status,payment_status:order.payment_status},after:{status:"cancelled",payment_status:"refunded",return_inventory:returnInventory},requestId}));
+    try{await env.DB.batch(stm);return response({ok:true,orderId,refunded:minorToMoney(order.total_minor,order.currency),currency:order.currency},200,origin)}
+    catch(e){
+      if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first().catch(()=>null);if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+      return response({error:"Refund could not be completed."},500,origin);
+    }
+  }
+
   if(path==="/admin/document"&&request.method==="POST"){
     const b=await readJson(request,1550000),title=text(b.title,160),type=text(b.document_type,40),dataUrl=text(b.data_url,1450000);
     if(!title||!type||!dataUrl.startsWith("data:image/")||dataUrl.length>1450000)return response({error:"Document image is missing or too large."},400,origin);
