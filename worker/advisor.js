@@ -466,7 +466,7 @@ async function runAudit(env){
 }
 
 async function adminAccounting(request,env,origin){
-  if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
+  if(!(await verifySession(request,env)))return response({error:"Unauthorized."},401,origin);
   const path=new URL(request.url).pathname;
   if(path==="/admin/accounting"&&request.method==="GET"){
     await runAudit(env);
@@ -494,7 +494,9 @@ async function adminAccounting(request,env,origin){
     if(!accountId||amount===null||amount<=0||!["in","out"].includes(direction))return response({error:"Invalid accounting entry."},400,origin);
     const counterpart=offsetId||(direction==="in"?"income":"expense");
     if(counterpart===accountId)return response({error:"A journal needs two different accounts."},400,origin);
-    const journal=await buildJournal(env,{referenceType:type,referenceId:text(b.reference_id,100)||crypto.randomUUID(),description:text(b.description,300)||type,currency,lines:direction==="in"?[{accountId,side:"debit",amount},{accountId:counterpart,side:"credit",amount}]:[{accountId,side:"credit",amount},{accountId:counterpart,side:"debit",amount}],requestId:text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null});
+    const requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
+    const journal=await buildJournal(env,{referenceType:type,referenceId:text(b.reference_id,100)||crypto.randomUUID(),description:text(b.description,300)||type,currency,lines:direction==="in"?[{accountId,side:"debit",amount},{accountId:counterpart,side:"credit",amount}]:[{accountId,side:"credit",amount},{accountId:counterpart,side:"debit",amount}],requestId});
     if(!journal)return response({error:"Unable to create a balanced journal for these accounts."},409,origin);
     try{await env.DB.batch(journal.statements);return response({ok:true,id:journal.txId},200,origin)}
     catch(e){
