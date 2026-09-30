@@ -119,6 +119,8 @@ async function createOrder(data,env,origin){
     statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,now));
   }
   statements.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,?2,'ORDER',?3,?4,?5,'Order recorded; payment pending',?6)").bind(crypto.randomUUID(),orderId,minorToMoney(total,products[0]?.currency||"USD"),total,products[0]?.currency||"USD",now));
+  statements.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,'receivables','ORDER',?2,?3,'in','order',?4,'Customer receivable created',?5)").bind(crypto.randomUUID(),total,products[0]?.currency||"USD",orderId,now));
+  statements.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id='receivables' AND currency=?3").bind(total,now,products[0]?.currency||"USD"));
   const itemSummary=lines.map(x=>x.qty+" × "+x.p.name_en).join(", ");
   statements.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'NEW_ORDER',?2,'New online order',?3,?4)").bind(crypto.randomUUID(),orderId,orderNo+" · "+data.name+" · "+itemSummary+" · destination: "+(data.destination||"not provided")+" · total "+minorToMoney(total,products[0]?.currency||"USD")+" "+(products[0]?.currency||"USD"),now));
   try{
@@ -165,6 +167,8 @@ async function adminSale(request,env,origin){
       env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3 AND stock_qty>=?1").bind(qty,now,id),
       env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'SALE',?3,?4,?5,?6)").bind(crypto.randomUUID(),id,qty,saleId,"Manual / in-person sale",now),
       env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,'SALE',?2,?3,?4,?5,?6)").bind(saleId,minorToMoney(total,p.currency),total,p.currency,"In-person sale"+(text(b.customer,160)?" · Customer: "+text(b.customer,160):""),now),
+      env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) VALUES(?1,'cash','SALE',?2,?3,'in','sale',?4,'In-person sale receipt',?5)").bind(crypto.randomUUID(),total,p.currency,saleId,now),
+      env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id='cash' AND currency=?3").bind(total,now,p.currency),
       env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'SALE',?2,'In-person sale recorded',?3,?4)").bind(crypto.randomUUID(),saleId,qty+" × "+p.name_en+" sold",now)
     ]);
 
@@ -180,6 +184,8 @@ async function adminOrderStatus(request,env,origin){
   if(next==="fulfilled"&&order.payment_status!=="paid")return response({error:"Payment must be confirmed before fulfillment."},409,origin);
   if(next==="paid"&&order.payment_status==="paid")return response({ok:true},200,origin);
   const now=new Date().toISOString(),items=(await env.DB.prepare("SELECT * FROM order_items WHERE order_id=?1").bind(orderId).all()).results,stm=[];
+  if(next==="cancelled"&&order.payment_status!=="paid")stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) SELECT ?1,'receivables','CANCEL',total_minor,currency,'out','order',id,'Cancelled customer receivable',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
+  if(next==="cancelled"&&order.payment_status!=="paid")stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor-(SELECT total_minor FROM orders WHERE id=?1),updated_at=?2 WHERE id='receivables' AND currency=(SELECT currency FROM orders WHERE id=?1)").bind(orderId,now));
   if(next==="cancelled"){
     for(const x of items)stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,reserved_qty=MAX(0,reserved_qty-?1),updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
     for(const x of items)stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RELEASE',?3,?4,'Order cancelled',?5)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,now));
@@ -192,6 +198,10 @@ async function adminOrderStatus(request,env,origin){
     stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) SELECT ?1,id,'SALE',total,total_minor,currency,'Order fulfilled',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
   }
   if(next==="paid")stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) SELECT ?1,id,'PAYMENT',total,total_minor,currency,'Payment confirmed',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
+  if(next==="paid")stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) SELECT ?1,'bank','PAYMENT',total_minor,currency,'in','order',id,'Customer payment received',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
+  if(next==="paid")stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+(SELECT total_minor FROM orders WHERE id=?1),updated_at=?2 WHERE id='bank' AND currency=(SELECT currency FROM orders WHERE id=?1)").bind(orderId,now));
+  if(next==="paid")stm.push(env.DB.prepare("INSERT INTO financial_entries(id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at) SELECT ?1,'receivables','PAYMENT',total_minor,currency,'out','order',id,'Receivable settled by payment',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
+  if(next==="paid")stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor-(SELECT total_minor FROM orders WHERE id=?1),updated_at=?2 WHERE id='receivables' AND currency=(SELECT currency FROM orders WHERE id=?1)").bind(orderId,now));
   stm.push(env.DB.prepare("UPDATE orders SET status=?1,payment_status=CASE WHEN ?1='paid' OR payment_status='paid' THEN 'paid' ELSE payment_status END,updated_at=?2 WHERE id=?3").bind(next,now,orderId));
   stm.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'ORDER_STATUS',?2,'Order status updated',?3,?4)").bind(crypto.randomUUID(),orderId,order.order_no+" → "+next,now));
   await env.DB.batch(stm);return response({ok:true},200,origin);
