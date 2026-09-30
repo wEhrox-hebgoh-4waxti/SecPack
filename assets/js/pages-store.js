@@ -32,6 +32,12 @@ async function prepareOrder(){
   const strong=document.createElement("strong");strong.textContent=t()( "dynamic.orderPrepared");
   const p1=document.createElement("p");p1.textContent=t()( "dynamic.orderDraft");
   const p2=document.createElement("p");p2.className="form-status";if(result.ok)p2.classList.add("success");p2.textContent=t()(result.ok?"dynamic.formSent":(result.configured?"dynamic.formError":"dynamic.formNotConfigured"));
+  if(result.ok && result.result?.orderId){
+    const ref=document.createElement("p");
+    ref.className="order-reference";
+    ref.textContent=(t()("dynamic.orderReference")||"Order reference")+": "+result.result.orderId;
+    box.appendChild(ref);
+  }
   box.append(strong,p1,p2);status.replaceChildren(box);
 }
 document.addEventListener("click",(event)=>{
