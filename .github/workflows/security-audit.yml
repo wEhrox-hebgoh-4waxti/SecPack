@@ -112,7 +112,9 @@ jobs:
           for f in .github/workflows/*.yml .github/workflows/*.yaml; do
             [ -f "$f" ] || continue
             grep -q '^permissions:' "$f" || { echo "Missing top-level permissions in $f"; exit 1; }
-            grep -q 'persist-credentials: false' "$f" || { echo "Checkout credential persistence is not explicitly disabled in $f"; exit 1; }
+            if grep -q 'actions/checkout@' "$f"; then
+              grep -q 'persist-credentials: false' "$f" || { echo "Checkout credential persistence is not explicitly disabled in $f"; exit 1; }
+            fi
           done
 
       - name: Validate security.txt
