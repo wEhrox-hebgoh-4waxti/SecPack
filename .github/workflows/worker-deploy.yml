@@ -14,31 +14,57 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: secpack-production-worker
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           persist-credentials: false
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+
       - name: Install
-        run: npm install --ignore-scripts
-      - name: Syntax check
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Validate Worker syntax
         run: node --check worker/advisor.js
+
+      - name: Validate Cloudflare credentials
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN GitHub Actions secret is not configured."
+            exit 1
+          fi
+
+      - name: Validate Wrangler configuration
+        run: npx wrangler@4.145.0 deploy --dry-run --outdir=/tmp/secpack-worker-dryrun
+
       - name: Apply D1 migrations
-        run: npx wrangler d1 migrations apply DB --remote
+        run: npx wrangler@4.145.0 d1 migrations apply DB --remote
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Deploy Worker
-        run: npx wrangler deploy
+        run: npx wrangler@4.145.0 deploy --config wrangler.toml
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Verify live production
         run: node scripts/smoke-live.mjs
