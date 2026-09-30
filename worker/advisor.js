@@ -597,7 +597,7 @@ async function adminAccounting(request,env,origin){
     const now=new Date().toISOString();
     const m=await env.DB.prepare("SELECT * FROM supply_milestones WHERE id=?1").bind(id).first();if(!m)return response({error:"Milestone not found."},404,origin);
     await env.DB.batch([
-      env.DB.prepare("UPDATE supply_milestones SET status=?1,completed_at=?2,reference_id=?3,notes=?4,request_id=COALESCE(request_id,?6),updated_at=?7 WHERE id=?8").bind(status,status==="done"?now:null,text(b.reference_id,100)||null,text(b.notes,500)||null,requestId,now,id),
+      env.DB.prepare("UPDATE supply_milestones SET status=?1,completed_at=?2,reference_id=?3,notes=?4,undefined").bind(status,status==="done"?now:null,text(b.reference_id,100)||null,text(b.notes,500)||null,requestId,now,id),
       env.DB.prepare("UPDATE supply_cases SET status=CASE WHEN ?1='done' AND ?2='ready_for_delivery' THEN 'ready_for_delivery' WHEN ?1='blocked' THEN 'blocked' ELSE status END,updated_at=?3 WHERE id=?4").bind(status,m.milestone_type,now,m.case_id)
     ]);
     return response({ok:true},200,origin);
