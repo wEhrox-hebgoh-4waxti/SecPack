@@ -54,3 +54,13 @@ There is no public customer-data administration endpoint. Customer records are a
 ## Verification boundary
 
 Repository-level configuration and security controls can be audited here. Live Cloudflare deployment state, live D1 migration state, live Worker secrets and real browser/network execution cannot be truthfully marked verified unless the corresponding production control plane or runtime is accessible.
+
+
+## Commerce operations
+The same Worker and D1 database also provide the operational commerce layer:
+- public catalog reads current active price and available stock;
+- online orders reserve stock immediately and create order, inventory and accounting records in one D1 batch;
+- operations can update price and physical stock counts from the private dashboard;
+- in-person sales use the same inventory and accounting ledger;
+- order status controls payment confirmation, preparation, fulfillment and cancellation;
+- new orders create unread operational alerts for the management dashboard.
