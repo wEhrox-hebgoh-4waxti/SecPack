@@ -653,6 +653,7 @@ async function adminAccounting(request,env,origin){
   }
   if(path==="/admin/audit"&&request.method==="POST"){return response({flags:await runAudit(env)},200,origin);}
   if(path==="/admin/accounting/assistant"&&request.method==="POST"){
+    const limited=await rateLimit(env,request,"accounting-assistant",12);if(!limited.allowed)return response({error:"Too many accounting analysis requests. Please try again later."},limited.reason==="storage"?503:429,origin);
     const snapshot=await accountingSnapshot(env);
     const prompt={accounts:snapshot.accounts.map(x=>({name:x.name,type:x.account_type,currency:x.currency,balance_minor:x.current_balance_minor})),costs:snapshot.costs.map(x=>({category:x.category,description:x.description,amount_minor:x.amount_minor,currency:x.currency,status:x.status,due_date:x.due_date})),flags:snapshot.flags.map(x=>({severity:x.severity,title:x.title,message:x.message}))};
     try{
