@@ -133,7 +133,7 @@ async function adminDashboard(env){
   const rawOrders=(await env.DB.prepare("SELECT id,order_no,customer_name,company,email,phone,destination,status,payment_status,currency,total,total_minor,created_at,updated_at FROM orders ORDER BY created_at DESC LIMIT 50").all()).results;
   const orders=rawOrders.map(o=>({...o,total:Number(o.total_minor||0)?minorToMoney(o.total_minor,o.currency):o.total}));
   const alerts=(await env.DB.prepare("SELECT * FROM alerts WHERE is_read=0 ORDER BY created_at DESC LIMIT 30").all()).results;
-  const totals=(await env.DB.prepare("SELECT currency,COALESCE(SUM(CASE WHEN entry_type IN ('SALE','PAYMENT') THEN amount_minor ELSE 0 END),0) AS revenue_minor,COALESCE(SUM(CASE WHEN entry_type='SALE' THEN amount_minor ELSE 0 END),0) AS sales_minor FROM accounting_ledger GROUP BY currency").all()).results;
+  const totals=(await env.DB.prepare("SELECT currency,COALESCE(SUM(CASE WHEN entry_type='PAYMENT' THEN amount_minor ELSE 0 END),0) AS payments_minor,COALESCE(SUM(CASE WHEN entry_type='SALE' THEN amount_minor ELSE 0 END),0) AS sales_minor FROM accounting_ledger GROUP BY currency").all()).results;
   return{products,orders,alerts,totals};
 }
 async function adminProduct(request,env,origin){
