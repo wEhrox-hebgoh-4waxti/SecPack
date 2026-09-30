@@ -127,7 +127,7 @@ async function createOrder(data,env,origin){
     const results=await env.DB.batch(statements);
     if(stockStatementIndexes.some(i=>Number(results[i]?.meta?.changes||0)!==1))return response({error:"Insufficient stock for one or more products."},409,origin);
     return response({ok:true,orderId,orderNo,total:minorToMoney(total,products[0]?.currency||"USD"),currency:products[0]?.currency||"USD"},202,origin);
-  }catch(e){return response({error:String(e).includes("stock")?"Insufficient stock for one or more products.":"Order could not be created."},409,origin)}
+  }catch(e){return response({error:String(e).toLowerCase().includes("insufficient_stock")||String(e).toLowerCase().includes("stock")?"Insufficient stock for one or more products.":"Order could not be created."},409,origin)}
 }
 
 async function catalog(env){
