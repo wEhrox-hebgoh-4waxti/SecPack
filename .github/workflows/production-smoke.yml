@@ -30,7 +30,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error --location --max-time 20 https://api.secpackco.com/health > /tmp/health.json
+          curl --fail --silent --show-error --location --max-time 20 https://api.secpackco.com/health -H "Origin: https://secpackco.com" > /tmp/health.json
           grep -q '"ok":true' /tmp/health.json
           grep -q '"service":"secpack-api"' /tmp/health.json
 
