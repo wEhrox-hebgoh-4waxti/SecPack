@@ -466,6 +466,10 @@ async function adminRequest(request,env,origin){
   const path=new URL(request.url).pathname;
   if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/document"||path==="/admin/audit")return adminAccounting(request,env,origin);
   if(path==="/admin/dashboard"&&request.method==="GET")return response(await adminDashboard(env),200,origin);
+  if(path==="/admin/audit-log"&&request.method==="GET"){
+    const rows=(await env.DB.prepare("SELECT id,actor,action,entity_type,entity_id,before_json,after_json,request_id,created_at FROM audit_log ORDER BY created_at DESC LIMIT 100").all()).results;
+    return response({entries:rows},200,origin);
+  }
   if(path==="/admin/product"&&request.method==="POST")return adminProduct(request,env,origin);
   if(path==="/admin/sale"&&request.method==="POST")return adminSale(request,env,origin);
   if(path==="/admin/order-status"&&request.method==="POST")return adminOrderStatus(request,env,origin);
