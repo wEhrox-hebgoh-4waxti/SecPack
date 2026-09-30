@@ -95,7 +95,7 @@ async function ensureReady(env){return Boolean(env.DB&&env[KEY]);}
 
 let operationsSchemaPromise=null;
 async function ensureColumn(env,table,column,definition){
-  const allowed=new Set(["inquiries","products","orders","order_items","inventory_ledger","accounting_ledger"]);
+  const allowed=new Set(["inquiries","products","orders","order_items","inventory_ledger","accounting_ledger","financial_entries","supply_costs"]);
   if(!allowed.has(table))throw new Error("invalid_table");
   const rows=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];
   if(!rows.some(x=>x.name===column))await env.DB.prepare("ALTER TABLE "+table+" ADD COLUMN "+column+" "+definition).run();
@@ -190,7 +190,15 @@ async function ensureOperationsSchema(env){
       await ensureColumn(env,"order_items","unit_price_minor","INTEGER NOT NULL DEFAULT 0");
       await ensureColumn(env,"order_items","line_total_minor","INTEGER NOT NULL DEFAULT 0");
       await ensureColumn(env,"inventory_ledger","warehouse","TEXT NOT NULL DEFAULT 'Gorgan'");
+      await ensureColumn(env,"inventory_ledger","request_id","TEXT");
+      await ensureColumn(env,"financial_entries","request_id","TEXT");
+      await ensureColumn(env,"supply_costs","request_id","TEXT");
       await ensureColumn(env,"accounting_ledger","amount_minor","INTEGER NOT NULL DEFAULT 0");
+      await env.DB.batch([
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_request_id_unique ON inventory_ledger(request_id) WHERE request_id IS NOT NULL"),
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_financial_request_id_unique ON financial_entries(request_id) WHERE request_id IS NOT NULL"),
+        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_cost_request_id_unique ON supply_costs(request_id) WHERE request_id IS NOT NULL")
+      ]);
       await env.DB.batch([
         env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('paper','A4 Copy Paper','کاغذ کپی A4','ورق نسخ A4','ream','USD',0,0,0,0,0,'Gorgan',1,datetime('now'))"),
         env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('film','Lamination Films','فیلم لمینیشن','أفلام التغليف','kg','USD',0,0,0,0,0,'Gorgan',0,datetime('now'))"),
