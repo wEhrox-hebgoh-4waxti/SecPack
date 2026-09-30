@@ -579,23 +579,25 @@ async function adminAccounting(request,env,origin){
     return response({cases,milestones},200,origin);
   }
   if(path==="/admin/supply-case"&&request.method==="POST"){
-    const b=await readJson(request),id=crypto.randomUUID(),now=new Date().toISOString();
+    const b=await readJson(request),id=crypto.randomUUID(),now=new Date().toISOString(),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(requestId){const existing=await env.DB.prepare("SELECT id,case_no FROM supply_cases WHERE request_id=?1").bind(requestId).first();if(existing)return response({ok:true,id:existing.id,caseNo:existing.case_no,replayed:true},200,origin);}
     const productId=text(b.product_id,50)||null,caseNo=text(b.case_no,60)||("SC-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+id.slice(0,6).toUpperCase());
     const qty=Number(b.quantity)||0,currency=text(b.currency,8)||"USD",total=moneyToMinor(b.purchase_total,currency);
     if(qty<0||!Number.isInteger(qty)||total===null||total<0)return response({error:"Invalid supply case."},400,origin);
     const types=["factory_order","factory_payment","customs","transport","warehouse_receipt","ready_for_delivery"];
-    const stm=[env.DB.prepare("INSERT INTO supply_cases(id,case_no,product_id,quantity,supplier,currency,purchase_total_minor,status,expected_date,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,'open',?8,?9,?10,?10)").bind(id,caseNo,productId,qty,text(b.supplier,160),currency,total,text(b.expected_date,30)||null,text(b.notes,500)||null,now)];
+    const stm=[env.DB.prepare("INSERT INTO supply_cases(id,request_id,case_no,product_id,quantity,supplier,currency,purchase_total_minor,status,expected_date,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,'open',?9,?10,?11,?11)").bind(id,requestId,caseNo,productId,qty,text(b.supplier,160),currency,total,text(b.expected_date,30)||null,text(b.notes,500)||null,now)];
     for(const type of types)stm.push(env.DB.prepare("INSERT INTO supply_milestones(id,case_id,milestone_type,status,created_at,updated_at) VALUES(?1,?2,?3,'pending',?4,?4)").bind(crypto.randomUUID(),id,type,now));
     await env.DB.batch(stm);
     return response({ok:true,id,caseNo},200,origin);
   }
   if(path==="/admin/supply-milestone"&&request.method==="POST"){
-    const b=await readJson(request),id=text(b.id,80),status=text(b.status,20);
+    const b=await readJson(request),id=text(b.id,80),status=text(b.status,20),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(requestId){const existing=await env.DB.prepare("SELECT id FROM supply_milestones WHERE request_id=?1").bind(requestId).first();if(existing)return response({ok:true,id:existing.id,replayed:true},200,origin);}
     if(!id||!["pending","in_progress","done","blocked"].includes(status))return response({error:"Invalid milestone."},400,origin);
     const now=new Date().toISOString();
     const m=await env.DB.prepare("SELECT * FROM supply_milestones WHERE id=?1").bind(id).first();if(!m)return response({error:"Milestone not found."},404,origin);
     await env.DB.batch([
-      env.DB.prepare("UPDATE supply_milestones SET status=?1,completed_at=?2,reference_id=?3,notes=?4,updated_at=?5 WHERE id=?6").bind(status,status==="done"?now:null,text(b.reference_id,100)||null,text(b.notes,500)||null,now,id),
+      env.DB.prepare("UPDATE supply_milestones SET status=?1,completed_at=?2,reference_id=?3,notes=?4,request_id=COALESCE(request_id,?6),updated_at=?7 WHERE id=?8").bind(status,status==="done"?now:null,text(b.reference_id,100)||null,text(b.notes,500)||null,requestId,now,id),
       env.DB.prepare("UPDATE supply_cases SET status=CASE WHEN ?1='done' AND ?2='ready_for_delivery' THEN 'ready_for_delivery' WHEN ?1='blocked' THEN 'blocked' ELSE status END,updated_at=?3 WHERE id=?4").bind(status,m.milestone_type,now,m.case_id)
     ]);
     return response({ok:true},200,origin);
