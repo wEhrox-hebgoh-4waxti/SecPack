@@ -190,9 +190,10 @@ async function createOrder(data,env,origin){
   }
   const map=new Map(products.map(p=>[p.id,p])),stockStatementIndexes=[],orderId=crypto.randomUUID(),orderNo="SP-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+orderId.slice(0,6).toUpperCase(),now=new Date().toISOString();
   if(new Set(products.map(p=>p.currency)).size!==1)return response({error:"Selected products must use the same currency."},409,origin);
-  const lines=clean.map(x=>{const p=map.get(x.id);return{p,qty:x.qty,line:x.qty*Number(p.unit_price_minor)}});
-  const total=lines.reduce((s,x)=>safeMultiply(1,s+x.line)??-1,0);
-  if(total<0||!Number.isSafeInteger(total))return response({error:"Order value is outside the supported accounting range."},400,origin);
+  const lines=clean.map(x=>{const p=map.get(x.id),line=safeMultiply(x.qty,Number(p.unit_price_minor));return{p,qty:x.qty,line}});
+  if(lines.some(x=>x.line===null))return response({error:"Order value is outside the supported accounting range."},400,origin);
+  const total=lines.reduce((s,x)=>s+x.line,0);
+  if(!Number.isSafeInteger(total)||total<0)return response({error:"Order value is outside the supported accounting range."},400,origin);
   const statements=[env.DB.prepare("INSERT INTO orders(id,order_no,request_id,customer_name,company,email,phone,destination,payment_method,status,payment_status,currency,subtotal,total,subtotal_minor,total_minor,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,'pending','unpaid',?10,?11,?11,?12,?12,?13,?14,?14)").bind(orderId,orderNo,data.requestId||null,data.name,data.company||null,data.email,data.phone||null,data.destination||null,data.payment||null,products[0]?.currency||"USD",minorToMoney(total,products[0]?.currency||"USD"),total,data.notes||null,now,now)];
   for(const x of lines){
     stockStatementIndexes.push(statements.length); statements.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0").bind(x.qty,now,x.p.id));
