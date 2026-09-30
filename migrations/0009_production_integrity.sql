@@ -1,8 +1,4 @@
--- Production integrity hardening.
-CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_request_id_unique ON inventory_ledger(request_id) WHERE request_id IS NOT NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS idx_financial_request_id_unique ON financial_entries(request_id) WHERE request_id IS NOT NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_cost_request_id_unique ON supply_costs(request_id) WHERE request_id IS NOT NULL;
-
+-- Production integrity hardening for append-only ledgers.
 CREATE TRIGGER IF NOT EXISTS prevent_financial_entry_update
 BEFORE UPDATE ON financial_entries
 BEGIN SELECT RAISE(ABORT,'FINANCIAL_LEDGER_IMMUTABLE'); END;
