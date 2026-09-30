@@ -34,7 +34,7 @@ jobs:
           node-version: 22
 
       - name: Install
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: npm install --ignore-scripts --no-audit --no-fund
 
       - name: Validate Worker syntax
         run: node --check worker/advisor.js
