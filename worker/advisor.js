@@ -455,6 +455,10 @@ async function runAudit(env){
   for(const o of pending)add("high","order",o.id,"سفارش باز قدیمی","سفارش "+o.order_no+" بیش از ۲۴ ساعت باز مانده است.","وضعیت پرداخت، آماده‌سازی یا تحویل را بررسی کنید.");
   const paid=(await env.DB.prepare("SELECT id,order_no FROM orders WHERE payment_status='paid' AND status NOT IN ('fulfilled','cancelled') AND created_at < datetime('now','-1 day')").all()).results;
   for(const o of paid)add("high","payment",o.id,"پرداخت بدون تحویل","سفارش "+o.order_no+" پرداخت شده اما هنوز تحویل نهایی نشده است.","آماده‌سازی و لجستیک را بررسی کنید.");
+  const unbalanced=(await env.DB.prepare("SELECT jt.id,jt.reference_type,jt.reference_id,jt.currency,jt.total_minor,COALESCE(SUM(CASE WHEN jl.side='debit' THEN jl.amount_minor ELSE 0 END),0) debits,COALESCE(SUM(CASE WHEN jl.side='credit' THEN jl.amount_minor ELSE 0 END),0) credits FROM journal_transactions jt LEFT JOIN journal_lines jl ON jl.transaction_id=jt.id GROUP BY jt.id HAVING debits<>credits OR debits<>jt.total_minor").all()).results;
+  for(const j of unbalanced)add("critical","accounting",j.id,"سند حسابداری نامتوازن","سند "+(j.reference_type||"نامشخص")+" از نظر بدهکار/بستانکار نامتوازن است.","سند را مسدود و قبل از هر اصلاحی Audit و دفتر کل را بررسی کنید.");
+  const orphanLines=(await env.DB.prepare("SELECT jl.id FROM journal_lines jl LEFT JOIN journal_transactions jt ON jt.id=jl.transaction_id WHERE jt.id IS NULL LIMIT 20").all()).results;
+  for(const j of orphanLines)add("critical","accounting",j.id,"خط حسابداری یتیم","خط Journal بدون سند اصلی وجود دارد.","دیتابیس و migration integrity را بررسی کنید.");
   const missingSale=(await env.DB.prepare("SELECT o.id,o.order_no FROM orders o WHERE o.status IN ('paid','ready','fulfilled') AND NOT EXISTS(SELECT 1 FROM journal_transactions j WHERE j.reference_type='order_sale' AND j.reference_id=o.id)").all()).results;
   for(const o of missingSale)add("critical","accounting",o.id,"فروش بدون ثبت حسابداری","سفارش "+o.order_no+" تحویل شده ولی سند فروش ندارد.","ثبت حسابداری فروش را بررسی کنید.");
   const missingPayment=(await env.DB.prepare("SELECT o.id,o.order_no FROM orders o WHERE o.payment_status='paid' AND NOT EXISTS(SELECT 1 FROM journal_transactions j WHERE j.reference_type='order_payment' AND j.reference_id=o.id)").all()).results;
@@ -668,7 +672,7 @@ async function adminRequest(request,env,origin){
     const limited=await rateLimit(env,request,"admin-auth",10);
     return response({error:"Unauthorized."},limited.allowed?401:429,origin);
   }
-  if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/document"||path==="/admin/audit")return adminAccounting(request,env,origin);
+  if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/refund"||path==="/admin/document"||path==="/admin/audit")return adminAccounting(request,env,origin);
   if(path==="/admin/dashboard"&&request.method==="GET")return response(await adminDashboard(env),200,origin);
   if(path==="/admin/audit-log"&&request.method==="GET"){
     const rows=(await env.DB.prepare("SELECT id,actor,action,entity_type,entity_id,before_json,after_json,request_id,created_at FROM audit_log ORDER BY created_at DESC LIMIT 100").all()).results;
