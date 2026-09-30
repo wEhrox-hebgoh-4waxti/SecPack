@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.secpackco.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+<title>SEC PACK | مدیریت فروش</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+.admin-shell{max-width:1180px;margin:auto;padding:24px}.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.admin-card{background:#fff;border:1px solid #dce3ea;border-radius:16px;padding:16px;box-shadow:0 8px 25px rgba(7,19,33,.06)}.admin-card h3{margin:0 0 10px}.admin-table{width:100%;border-collapse:collapse}.admin-table th,.admin-table td{padding:9px;border-bottom:1px solid #e5eaf0;text-align:right;vertical-align:middle}.admin-table input,.admin-table select,.admin-form input,.admin-form select{width:100%;padding:10px;border:1px solid #ccd5df;border-radius:9px}.admin-form{display:grid;gap:10px}.admin-actions{display:flex;gap:8px;flex-wrap:wrap}.admin-actions button{cursor:pointer}.danger{border-color:#b42318!important;color:#b42318}.alert-item{padding:10px;border:1px solid #f0c36d;border-radius:10px;margin:8px 0}.hidden{display:none}.admin-login{max-width:480px;margin:12vh auto}.admin-note{font-size:.9rem;opacity:.75}.stat{font-size:1.6rem;font-weight:800}.floating-admin{position:fixed;left:16px;bottom:16px;border-radius:50%;width:52px;height:52px;border:0;background:#071321;color:#fff;font-size:22px;z-index:20}
+</style>
+</head>
+<body>
+<main class="admin-shell">
+<section id="login" class="admin-card admin-login">
+<h1>مدیریت SEC PACK</h1>
+<p>مدیریت قیمت، موجودی، سفارش‌ها، فروش حضوری و حسابداری عملیاتی.</p>
+<form id="loginForm" class="admin-form">
+<label>کلید مدیریت<input id="adminToken" type="password" autocomplete="off" required></label>
+<button class="btn primary" type="submit">ورود امن</button>
+<p id="loginStatus" class="admin-note"></p>
+</form>
+</section>
+
+<section id="dashboard" class="hidden">
+<div class="page-hero">
+<span class="eyebrow">SEC PACK · OPERATIONS</span>
+<h1>مرکز مدیریت فروش و انبار</h1>
+<p>هر سفارش آنلاین یا فروش حضوری، موجودی، فروش و ثبت مالی را در یک جریان به‌روزرسانی می‌کند.</p>
+<div class="admin-actions"><button class="btn" id="notifyBtn">فعال‌سازی هشدار مرورگر</button><button class="btn" id="refreshBtn">به‌روزرسانی</button><button class="btn" id="logoutBtn">خروج</button></div>
+</div>
+
+<div class="admin-grid" id="stats"></div>
+
+<div class="admin-card"><h2>هشدارهای جدید</h2><div id="alerts">—</div></div>
+
+<div class="admin-card">
+<h2>قیمت و موجودی</h2>
+<p class="admin-note">قیمت را خودتان تغییر می‌دهید. برای USD/EUR و ارزهای مشابه دو رقم اعشار و برای IRR/IRT عدد کامل وارد کنید.</p>
+<div style="overflow:auto"><table class="admin-table"><thead><tr><th>محصول</th><th>ارز</th><th>قیمت واحد</th><th>موجودی قابل فروش</th><th>رزرو</th><th>فروخته‌شده</th><th>فعال</th><th></th></tr></thead><tbody id="products"></tbody></table></div>
+</div>
+
+<div class="admin-card">
+<h2>فروش حضوری</h2>
+<form id="saleForm" class="admin-form">
+<select id="saleProduct" required></select>
+<input id="saleQty" type="number" min="1" step="1" placeholder="تعداد" required>
+<input id="salePrice" inputmode="decimal" placeholder="قیمت واحد؛ خالی = قیمت فعلی">
+<input id="saleCustomer" placeholder="نام مشتری (اختیاری)">
+<button class="btn primary" type="submit">ثبت فروش حضوری</button>
+<p id="saleStatus" class="admin-note"></p>
+</form>
+</div>
+
+<div class="admin-card">
+<h2>سفارش‌های آنلاین</h2>
+<div style="overflow:auto"><table class="admin-table"><thead><tr><th>سفارش</th><th>مشتری</th><th>مبلغ</th><th>پرداخت</th><th>وضعیت</th><th>تاریخ</th><th></th></tr></thead><tbody id="orders"></tbody></table></div>
+</div>
+</section>
+</main>
+<script src="../assets/js/admin.js"></script>
+</body></html>
