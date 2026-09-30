@@ -181,7 +181,8 @@ async function ensureOperationsSchema(env){
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at)"),
       env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_request_id_unique ON orders(request_id) WHERE request_id IS NOT NULL"),
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_negative_stock BEFORE UPDATE OF stock_qty ON products WHEN NEW.stock_qty < 0 BEGIN SELECT RAISE(ABORT, 'INSUFFICIENT_STOCK'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_reserved_over_available BEFORE UPDATE OF reserved_qty ON products WHEN NEW.reserved_qty < 0 OR NEW.reserved_qty > NEW.stock_qty BEGIN SELECT RAISE(ABORT, 'INVALID_RESERVATION'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_reserved_over_available BEFORE UPDATE OF reserved_qty,stock_qty ON products WHEN NEW.reserved_qty < 0 OR NEW.reserved_qty > NEW.stock_qty BEGIN SELECT RAISE(ABORT, 'INVALID_RESERVATION'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_negative_sold BEFORE UPDATE OF sold_qty ON products WHEN NEW.sold_qty < 0 BEGIN SELECT RAISE(ABORT, 'INVALID_SOLD_QTY'); END"),
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_audit_update BEFORE UPDATE ON audit_log BEGIN SELECT RAISE(ABORT, 'AUDIT_IMMUTABLE'); END"),
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_audit_delete BEFORE DELETE ON audit_log BEGIN SELECT RAISE(ABORT, 'AUDIT_IMMUTABLE'); END"),
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_financial_entry_update BEFORE UPDATE ON financial_entries BEGIN SELECT RAISE(ABORT, 'FINANCIAL_LEDGER_IMMUTABLE'); END"),
@@ -454,8 +455,8 @@ async function runAudit(env){
   const products=(await env.DB.prepare("SELECT id,name_fa,stock_qty,reserved_qty,sold_qty FROM products WHERE active=1").all()).results;
   const threshold=Number((await env.DB.prepare("SELECT value FROM operational_settings WHERE key='low_stock_threshold'").first())?.value||100);
   for(const p of products){
-    if(Number(p.stock_qty)<0||Number(p.reserved_qty)<0) add("critical","inventory",p.id,"مغایرت موجودی","مقدار موجودی یا رزرو منفی است.","موجودی این کالا را فوری بررسی کنید.");
-    if(Number(p.reserved_qty)>Number(p.stock_qty)) add("high","inventory",p.id,"رزرو غیرعادی","رزرو از موجودی قابل ثبت بیشتر است.","سفارش‌های باز و موجودی را تطبیق دهید.");
+    if(Number(p.stock_qty)<0||Number(p.reserved_qty)<0||Number(p.sold_qty)<0) add("critical","inventory",p.id,"مغایرت موجودی","مقدار موجودی، رزرو یا فروش منفی است.","موجودی این کالا را فوری بررسی کنید.");
+    if(Number(p.reserved_qty)>Number(p.stock_qty)) add("critical","inventory",p.id,"رزرو غیرعادی","رزرو از موجودی فیزیکی بیشتر است.","سفارش‌های باز و موجودی را فوراً تطبیق دهید.");
     if(Number(p.stock_qty)<=threshold) add("medium","low_stock",p.id,"موجودی کم","موجودی "+p.name_fa+" به "+p.stock_qty+" رسیده است.","برای تأمین مجدد یا افزایش نقطه سفارش تصمیم بگیرید.");
   }
   const pending=(await env.DB.prepare("SELECT id,order_no FROM orders WHERE status IN ('pending','processing','paid','ready') AND created_at < datetime('now','-1 day')").all()).results;
@@ -519,7 +520,7 @@ async function adminAccounting(request,env,origin){
     if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
     const journal=await buildJournal(env,{referenceType:type,referenceId:text(b.reference_id,100)||crypto.randomUUID(),description:text(b.description,300)||type,currency,lines:direction==="in"?[{accountId,side:"debit",amount},{accountId:counterpart,side:"credit",amount}]:[{accountId,side:"credit",amount},{accountId:counterpart,side:"debit",amount}],requestId});
     if(!journal)return response({error:"Unable to create a balanced journal for these accounts."},409,origin);
-    try{await env.DB.batch(journal.statements);return response({ok:true,id:journal.txId},200,origin)}
+    try{await env.DB.batch([...journal.statements,await auditStatement(env,{action:"ACCOUNTING_ENTRY_POSTED",entityType:"journal",entityId:journal.txId,after:{entry_type:type,amount_minor:amount,currency,direction,account_id:accountId,offset_account_id:counterpart},requestId})]);return response({ok:true,id:journal.txId},200,origin)}
     catch(e){
       if(requestId){const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first().catch(()=>null);if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);}
       return response({error:"Accounting entry could not be posted."},500,origin);
@@ -585,7 +586,7 @@ async function adminAccounting(request,env,origin){
       for(const x of items){
         const cost=safeMultiply(Number(x.quantity),Number(x.unit_cost_minor||0));if(cost===null||cost<=0)return response({error:"Exact refund cost basis is unavailable for this fulfilled order."},409,origin);
         totalCost+=cost;
-        stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,sold_qty=sold_qty-?1,updated_at=?2 WHERE id=?3 AND sold_qty>=?1").bind(x.quantity,now,x.product_id));
+        stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,sold_qty=sold_qty-?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
         stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RETURN',?3,?4,'Refund / inventory returned',?5,?6)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,now));
       }
       const cogsReverse=await buildJournal(env,{referenceType:"order_refund_cogs",referenceId:orderId,description:"Reverse COGS · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"inventory",side:"debit",amount:totalCost},{accountId:"cogs",side:"credit",amount:totalCost}]});
