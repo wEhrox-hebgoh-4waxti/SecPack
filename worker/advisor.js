@@ -309,11 +309,10 @@ async function adminProduct(request,env,origin){
   const b=await readJson(request),id=text(b.id,40),currency=text(b.currency,8)||"USD",priceMinor=moneyToMinor(b.unit_price,currency),stock=Number(b.stock_qty);
   if(!id||priceMinor===null||!Number.isInteger(stock)||stock<0)return response({error:"Invalid product values."},400,origin);
   const p=await env.DB.prepare("SELECT id,stock_qty,reserved_qty FROM products WHERE id=?1").bind(id).first();if(!p)return response({error:"Product not found."},404,origin);
-  if(stock<Number(p.reserved_qty||0))return response({error:"Stock cannot be lower than reserved quantity."},409,origin);
-  const now=new Date().toISOString(),delta=stock-Number(p.stock_qty);
+  if(stock!==Number(p.stock_qty||0))return response({error:"Direct stock editing is disabled. Use Stock Receipt or a controlled adjustment workflow so inventory and accounting stay synchronized."},409,origin);
+  const now=new Date().toISOString();
   const before={stock_qty:Number(p.stock_qty||0),reserved_qty:Number(p.reserved_qty||0)};
-  const stm=[env.DB.prepare("UPDATE products SET unit_price=?1,unit_price_minor=?2,currency=?3,active=?4,stock_qty=?5,updated_at=?6 WHERE id=?7").bind(minorToMoney(priceMinor,currency),priceMinor,currency,b.active===false?0:1,stock,now,id)];
-  if(delta)stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,note,created_at) VALUES(?1,?2,?3,?4,?5,?6)").bind(crypto.randomUUID(),id,delta>0?"RESTOCK":"ADJUST",delta,id+" admin adjustment",now));
+  const stm=[env.DB.prepare("UPDATE products SET unit_price=?1,unit_price_minor=?2,currency=?3,active=?4,updated_at=?5 WHERE id=?6").bind(minorToMoney(priceMinor,currency),priceMinor,currency,b.active===false?0:1,now,id)];
   stm.push(await auditStatement(env,{action:"PRODUCT_UPDATED",entityType:"product",entityId:id,before,after:{currency,unit_price_minor:priceMinor,stock_qty:stock,active:b.active!==false}}));
   await env.DB.batch(stm);return response({ok:true},200,origin);
 }
