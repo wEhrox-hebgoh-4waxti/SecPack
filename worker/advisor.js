@@ -108,13 +108,13 @@ async function createOrder(data,env,origin){
     const existing=await env.DB.prepare("SELECT id,order_no,total,total_minor,currency FROM orders WHERE request_id=?1").bind(data.requestId).first();
     if(existing)return response({ok:true,orderId:existing.id,orderNo:existing.order_no,total:minorToMoney(existing.total_minor,existing.currency),currency:existing.currency},202,origin);
   }
-  const map=new Map(products.map(p=>[p.id,p])),orderId=crypto.randomUUID(),orderNo="SP-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+orderId.slice(0,6).toUpperCase(),now=new Date().toISOString();
+  const map=new Map(products.map(p=>[p.id,p])),stockStatementIndexes=[],orderId=crypto.randomUUID(),orderNo="SP-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+orderId.slice(0,6).toUpperCase(),now=new Date().toISOString();
   if(new Set(products.map(p=>p.currency)).size!==1)return response({error:"Selected products must use the same currency."},409,origin);
   const lines=clean.map(x=>{const p=map.get(x.id);return{p,qty:x.qty,line:x.qty*Number(p.unit_price_minor)}});
   const total=lines.reduce((s,x)=>s+x.line,0);
   const statements=[env.DB.prepare("INSERT INTO orders(id,order_no,request_id,customer_name,company,email,phone,destination,payment_method,status,payment_status,currency,subtotal,total,subtotal_minor,total_minor,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,'pending','unpaid',?10,?11,?11,?12,?12,?13,?14,?14)").bind(orderId,orderNo,data.requestId||null,data.name,data.company||null,data.email,data.phone||null,data.destination||null,data.payment||null,products[0]?.currency||"USD",minorToMoney(total,products[0]?.currency||"USD"),total,data.notes||null,now,now)];
   for(const x of lines){
-    statements.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0 AND stock_qty>=?1").bind(x.qty,now,x.p.id));
+    stockStatementIndexes.push(statements.length); statements.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0 AND stock_qty>=?1").bind(x.qty,now,x.p.id));
     statements.push(env.DB.prepare("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)").bind(crypto.randomUUID(),orderId,x.p.id,x.p.name_en,x.p.unit,x.qty,minorToMoney(x.p.unit_price_minor,x.p.currency),minorToMoney(x.line,x.p.currency),x.p.unit_price_minor,x.line));
     statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,now));
   }
@@ -125,8 +125,7 @@ async function createOrder(data,env,origin){
   statements.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'NEW_ORDER',?2,'New online order',?3,?4)").bind(crypto.randomUUID(),orderId,orderNo+" · "+data.name+" · "+itemSummary+" · destination: "+(data.destination||"not provided")+" · total "+minorToMoney(total,products[0]?.currency||"USD")+" "+(products[0]?.currency||"USD"),now));
   try{
     const results=await env.DB.batch(statements);
-    const stockResults=results.slice(1).filter((_,i)=>i%3===0);
-    if(stockResults.some(r=>Number(r?.meta?.changes||0)!==1))return response({error:"Insufficient stock for one or more products."},409,origin);
+    if(stockStatementIndexes.some(i=>Number(results[i]?.meta?.changes||0)!==1))return response({error:"Insufficient stock for one or more products."},409,origin);
     return response({ok:true,orderId,orderNo,total:minorToMoney(total,products[0]?.currency||"USD"),currency:products[0]?.currency||"USD"},202,origin);
   }catch(e){return response({error:String(e).includes("stock")?"Insufficient stock for one or more products.":"Order could not be created."},409,origin)}
 }
