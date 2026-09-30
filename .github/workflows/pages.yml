@@ -37,7 +37,7 @@ jobs:
           set -euo pipefail
           rm -rf site
           mkdir -p site
-          cp index.html style.css i18n.js form-config.js logo.jpg site/
+          cp index.html style.css i18n.js form-config.js logo.jpg service-worker.js site/
           cp robots.txt sitemap.xml site/
           [ -f site.webmanifest ] && cp site.webmanifest site/ || true
           [ -f CNAME ] && cp CNAME site/ || true
