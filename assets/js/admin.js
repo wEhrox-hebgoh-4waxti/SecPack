@@ -40,7 +40,7 @@ function renderProducts(ps){
     const tr=el("tr"),name=el("td"),nameB=el("b",p.name_fa),nameSmall=el("small",p.name_en);name.append(nameB,el("br"),nameSmall);
     const tdCur=el("td"),cur=el("input");cur.dataset.currency=p.id;cur.value=p.currency;tdCur.append(cur);
     const tdPrice=el("td"),price=el("input");price.dataset.price=p.id;price.inputMode="decimal";price.value=p.unit_price_minor?((["USD","EUR","GBP","AED","SAR","TRY"].includes(p.currency))?p.unit_price_minor/100:p.unit_price_minor):"";tdPrice.append(price);
-    const tdStock=el("td"),stock=el("input");stock.dataset.stock=p.id;stock.type="number";stock.min="0";stock.step="1";stock.value=p.stock_qty;tdStock.append(stock);
+    const tdStock=el("td"),stock=el("input");stock.dataset.stock=p.id;stock.type="number";stock.min="0";stock.step="1";stock.value=p.stock_qty;stock.disabled=true;stock.title="برای حفظ یکپارچگی، موجودی فقط از مسیر رسید انبار/فروش تغییر می‌کند";tdStock.append(stock);
     const reserved=el("td",p.reserved_qty),sold=el("td",p.sold_qty);
     const tdActive=el("td"),active=el("input");active.dataset.active=p.id;active.type="checkbox";active.checked=Boolean(p.active);tdActive.append(active);
     const tdSave=el("td"),save=el("button","ذخیره");save.className="btn";save.dataset.save=p.id;tdSave.append(save);
