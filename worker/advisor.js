@@ -37,6 +37,17 @@ function response(data,status,origin){
 }
 function text(v,max){return typeof v==="string"?v.trim().slice(0,max):"";}
 function validEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);}
+function currencyDigits(currency){return ["USD","EUR","GBP","AED","SAR","TRY"].includes(currency)?2:0;}
+function moneyToMinor(value,currency){
+  const raw=String(value??"").trim().replace(",","");
+  if(!/^\d+(?:\.\d{1,4})?$/.test(raw))return null;
+  const digits=currencyDigits(currency),parts=raw.split("."),whole=parts[0],frac=(parts[1]||"").padEnd(digits,"0").slice(0,digits);
+  if(parts[1]&&parts[1].length>digits)return null;
+  const n=Number(whole)*(10**digits)+Number(frac||0);
+  return Number.isSafeInteger(n)&&n>=0?n:null;
+}
+function minorToMoney(minor,currency){const d=currencyDigits(currency);return d?Number(minor||0)/(10**d):Number(minor||0);}
+
 async function digest(v){const b=new TextEncoder().encode(v);const h=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,"0")).join("");}
 async function clientKey(request,env){const ip=request.headers.get("CF-Connecting-IP")||"unknown";const salt=env[RATE_SALT]||env[KEY];return salt?digest(salt+"|"+ip):null;}
 async function rateLimit(env,request,bucket,limit){
@@ -92,60 +103,60 @@ async function createOrder(data,env,origin){
   if(clean.some(x=>!["paper","film","adhesive","packaging"].includes(x.id)||!Number.isInteger(x.qty)||x.qty<1||x.qty>100000))return response({error:"Invalid order items."},400,origin);
   if(!data.name||!validEmail(data.email))return response({error:"Please provide a valid name and email address."},400,origin);
   const ids=[...new Set(clean.map(x=>x.id))],products=[];
-  for(const id of ids){const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1 AND active=1").bind(id).first();if(!p||Number(p.unit_price)<=0)return response({error:"One or more selected products are currently unavailable."},409,origin);products.push(p)}
+  for(const id of ids){const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1 AND active=1").bind(id).first();if(!p||Number(p.unit_price_minor)<=0)return response({error:"One or more selected products are currently unavailable."},409,origin);products.push(p)}
   const map=new Map(products.map(p=>[p.id,p])),orderId=crypto.randomUUID(),orderNo="SP-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+orderId.slice(0,6).toUpperCase(),now=new Date().toISOString();
-  const lines=clean.map(x=>{const p=map.get(x.id);return{p,qty:x.qty,line:x.qty*Number(p.unit_price)}});
+  const lines=clean.map(x=>{const p=map.get(x.id);return{p,qty:x.qty,line:x.qty*Number(p.unit_price_minor)}});
   const total=lines.reduce((s,x)=>s+x.line,0);
-  const statements=[env.DB.prepare("INSERT INTO orders(id,order_no,customer_name,company,email,phone,destination,payment_method,status,payment_status,currency,subtotal,total,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,'pending','unpaid',?9,?10,?10,?11,?12,?12)").bind(orderId,orderNo,data.name,data.company||null,data.email,data.phone||null,data.destination||null,data.payment||null,products[0]?.currency||"USD",total,data.notes||null,now)];
+  const statements=[env.DB.prepare("INSERT INTO orders(id,order_no,customer_name,company,email,phone,destination,payment_method,status,payment_status,currency,subtotal,total,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,'pending','unpaid',?9,?10,?10,?11,?12,?12)").bind(orderId,orderNo,data.name,data.company||null,data.email,data.phone||null,data.destination||null,data.payment||null,products[0]?.currency||"USD",total,total,data.notes||null,now)];
   for(const x of lines){
     statements.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price>0").bind(x.qty,now,x.p.id));
-    statements.push(env.DB.prepare("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)").bind(crypto.randomUUID(),orderId,x.p.id,x.p.name_en,x.p.unit,x.qty,x.p.unit_price,x.line));
+    statements.push(env.DB.prepare("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)").bind(crypto.randomUUID(),orderId,x.p.id,x.p.name_en,x.p.unit,x.qty,minorToMoney(x.p.unit_price_minor,x.p.currency),minorToMoney(x.line,x.p.currency),x.p.unit_price_minor,x.line));
     statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,now));
   }
   statements.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,currency,description,created_at) VALUES(?1,?2,'ORDER',?3,?4,'Order recorded; payment pending',?5)").bind(crypto.randomUUID(),orderId,total,products[0]?.currency||"USD",now));
   statements.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'NEW_ORDER',?2,'New online order',?3,?4)").bind(crypto.randomUUID(),orderId,orderNo+" · "+data.name+" · total "+total+" "+(products[0]?.currency||"USD"),now));
   try{
     await env.DB.batch(statements);
-    return response({ok:true,orderId,orderNo,total,currency:products[0]?.currency||"USD"},202,origin);
+    return response({ok:true,orderId,orderNo,total:minorToMoney(total,products[0]?.currency||"USD"),currency:products[0]?.currency||"USD"},202,origin);
   }catch(e){return response({error:String(e).includes("stock")?"Insufficient stock for one or more products.":"Order could not be created."},409,origin)}
 }
 
 async function catalog(env){
-  const rows=await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price,stock_qty,active FROM products WHERE active=1 AND unit_price>0 ORDER BY id").all();
-  return rows.results.map(p=>({...p,available_qty:Number(p.stock_qty),unit_price:Number(p.unit_price)}));
+  const rows=await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price_minor,stock_qty,active FROM products WHERE active=1 AND unit_price_minor>0 ORDER BY id").all();
+  return rows.results.map(p=>({...p,available_qty:Number(p.stock_qty),unit_price:minorToMoney(p.unit_price_minor,p.currency),unit_price_minor:Number(p.unit_price_minor)}));
 }
 async function adminDashboard(env){
   const products=(await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price,stock_qty,reserved_qty,sold_qty,active,updated_at FROM products ORDER BY id").all()).results;
   const orders=(await env.DB.prepare("SELECT id,order_no,customer_name,company,email,phone,destination,status,payment_status,currency,total,created_at,updated_at FROM orders ORDER BY created_at DESC LIMIT 50").all()).results;
   const alerts=(await env.DB.prepare("SELECT * FROM alerts WHERE is_read=0 ORDER BY created_at DESC LIMIT 30").all()).results;
-  const totals=await env.DB.prepare("SELECT COALESCE(SUM(CASE WHEN entry_type IN ('SALE','PAYMENT') THEN amount ELSE 0 END),0) AS revenue,COALESCE(SUM(CASE WHEN entry_type='SALE' THEN amount ELSE 0 END),0) AS sales FROM accounting_ledger").first();
+  const totals=await env.DB.prepare("SELECT COALESCE(SUM(CASE WHEN entry_type IN ('SALE','PAYMENT') THEN amount_minor ELSE 0 END),0) AS revenue_minor,COALESCE(SUM(CASE WHEN entry_type='SALE' THEN amount_minor ELSE 0 END),0) AS sales_minor FROM accounting_ledger").first();
   return{products,orders,alerts,totals};
 }
 async function adminProduct(request,env,origin){
   if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
-  const b=await readJson(request),id=text(b.id,40),price=Number(b.unit_price),stock=Number(b.stock_qty);
-  if(!id||!Number.isInteger(price)||price<0||!Number.isInteger(stock)||stock<0)return response({error:"Invalid product values."},400,origin);
+  const b=await readJson(request),id=text(b.id,40),currency=text(b.currency,8)||"USD",priceMinor=moneyToMinor(b.unit_price,currency),stock=Number(b.stock_qty);
+  if(!id||priceMinor===null||!Number.isInteger(stock)||stock<0)return response({error:"Invalid product values."},400,origin);
   const p=await env.DB.prepare("SELECT id,stock_qty FROM products WHERE id=?1").bind(id).first();if(!p)return response({error:"Product not found."},404,origin);
   const now=new Date().toISOString(),delta=stock-Number(p.stock_qty);
-  const stm=[env.DB.prepare("UPDATE products SET unit_price=?1,currency=?2,active=?3,stock_qty=?4,updated_at=?5 WHERE id=?6").bind(price,text(b.currency,8)||"USD",b.active===false?0:1,stock,now,id)];
+  const stm=[env.DB.prepare("UPDATE products SET unit_price=?1,unit_price_minor=?2,currency=?3,active=?4,stock_qty=?5,updated_at=?6 WHERE id=?7").bind(minorToMoney(priceMinor,currency),priceMinor,currency,b.active===false?0:1,stock,now,id)];
   if(delta)stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,note,created_at) VALUES(?1,?2,?3,?4,?5,?6)").bind(crypto.randomUUID(),id,delta>0?"RESTOCK":"ADJUST",delta,id+" admin adjustment",now));
   await env.DB.batch(stm);return response({ok:true},200,origin);
 }
 async function adminSale(request,env,origin){
   if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
-  const b=await readJson(request),id=text(b.product_id,40),qty=Number(b.quantity),price=Number(b.unit_price);
-  if(!id||!Number.isInteger(qty)||qty<1||qty>100000||!Number.isInteger(price)||price<0)return response({error:"Invalid sale."},400,origin);
+  const b=await readJson(request),id=text(b.product_id,40),qty=Number(b.quantity);
+  if(!id||!Number.isInteger(qty)||qty<1||qty>100000)return response({error:"Invalid sale."},400,origin);
   const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1 AND active=1").bind(id).first();if(!p)return response({error:"Product not found."},404,origin);
-  const now=new Date().toISOString(),saleId=crypto.randomUUID(),total=qty*price;
+  const priceMinor=b.unit_price===undefined||b.unit_price===""?Number(p.unit_price_minor):moneyToMinor(b.unit_price,p.currency);\n  if(priceMinor===null)return response({error:"Invalid sale price."},400,origin);\n  const now=new Date().toISOString(),saleId=crypto.randomUUID(),total=qty*priceMinor;
   try{
     const r=await env.DB.batch([
       env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(qty,now,id),
       env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'SALE',?3,?4,?5,?6)").bind(crypto.randomUUID(),id,qty,saleId,"Manual / in-person sale",now),
-      env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,currency,description,created_at) VALUES(?1,'SALE',?2,?3,?4,?5)").bind(saleId,total,p.currency,"In-person sale",now),
+      env.DB.prepare("INSERT INTO accounting_ledger(id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,'SALE',?2,?2,?3,?4,?5)").bind(saleId,minorToMoney(total,p.currency),p.currency,"In-person sale",now),
       env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'SALE',?2,'In-person sale recorded',?3,?4)").bind(crypto.randomUUID(),saleId,qty+" × "+p.name_en+" sold",now)
     ]);
 
-    return response({ok:true,total,currency:p.currency},200,origin);
+    return response({ok:true,total:minorToMoney(total,p.currency),currency:p.currency},200,origin);
   }catch(e){return response({error:String(e).includes("INSUFFICIENT_STOCK")?"Insufficient stock.":"Sale could not be recorded."},String(e).includes("INSUFFICIENT_STOCK")?409:500,origin)}
 }
 async function adminOrderStatus(request,env,origin){
@@ -164,9 +175,9 @@ async function adminOrderStatus(request,env,origin){
       stm.push(env.DB.prepare("UPDATE products SET reserved_qty=MAX(0,reserved_qty-?1),sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
       stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,created_at) VALUES(?1,?2,'FULFILL',?3,?4,'Order fulfilled',?5)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,now));
     }
-    stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,currency,description,created_at) SELECT ?1,id,'SALE',total,currency,'Order fulfilled',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
+    stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) SELECT ?1,id,'SALE',total,total_minor,currency,'Order fulfilled',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
   }
-  if(next==="paid")stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,currency,description,created_at) SELECT ?1,id,'PAYMENT',total,currency,'Payment confirmed',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
+  if(next==="paid")stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) SELECT ?1,id,'PAYMENT',total,total_minor,currency,'Payment confirmed',?2 FROM orders WHERE id=?3").bind(crypto.randomUUID(),now,orderId));
   stm.push(env.DB.prepare("UPDATE orders SET status=?1,payment_status=CASE WHEN ?1='paid' OR payment_status='paid' THEN 'paid' ELSE payment_status END,updated_at=?2 WHERE id=?3").bind(next,now,orderId));
   stm.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'ORDER_STATUS',?2,'Order status updated',?3,?4)").bind(crypto.randomUUID(),orderId,order.order_no+" → "+next,now));
   await env.DB.batch(stm);return response({ok:true},200,origin);
