@@ -35,7 +35,8 @@ async function prepareOrder(){
   if(result.ok && result.result?.orderId){
     const ref=document.createElement("p");
     ref.className="order-reference";
-    ref.textContent=(t()("dynamic.orderReference")||"Order reference")+": "+result.result.orderId;
+    const labels={en:"Order reference",fa:"شماره پیگیری سفارش",ar:"مرجع الطلب"};
+    ref.textContent=(labels[document.documentElement.lang]||labels.en)+": "+result.result.orderId;
     box.appendChild(ref);
   }
   box.append(strong,p1,p2);status.replaceChildren(box);
