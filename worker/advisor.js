@@ -127,7 +127,8 @@ async function catalog(env){
 }
 async function adminDashboard(env){
   const products=(await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price,stock_qty,reserved_qty,sold_qty,active,updated_at FROM products ORDER BY id").all()).results;
-  const rawOrders=(await env.DB.prepare("SELECT id,order_no,customer_name,company,email,phone,destination,status,payment_status,currency,total,total_minor,created_at,updated_at FROM orders ORDER BY created_at DESC LIMIT 50").all()).results;\n  const orders=rawOrders.map(o=>({...o,total:Number(o.total_minor||0)?minorToMoney(o.total_minor,o.currency):o.total}));
+  const rawOrders=(await env.DB.prepare("SELECT id,order_no,customer_name,company,email,phone,destination,status,payment_status,currency,total,total_minor,created_at,updated_at FROM orders ORDER BY created_at DESC LIMIT 50").all()).results;
+  const orders=rawOrders.map(o=>({...o,total:Number(o.total_minor||0)?minorToMoney(o.total_minor,o.currency):o.total}));
   const alerts=(await env.DB.prepare("SELECT * FROM alerts WHERE is_read=0 ORDER BY created_at DESC LIMIT 30").all()).results;
   const totals=(await env.DB.prepare("SELECT currency,COALESCE(SUM(CASE WHEN entry_type IN ('SALE','PAYMENT') THEN amount_minor ELSE 0 END),0) AS revenue_minor,COALESCE(SUM(CASE WHEN entry_type='SALE' THEN amount_minor ELSE 0 END),0) AS sales_minor FROM accounting_ledger GROUP BY currency").all()).results;
   return{products,orders,alerts,totals};
@@ -147,7 +148,9 @@ async function adminSale(request,env,origin){
   const b=await readJson(request),id=text(b.product_id,40),qty=Number(b.quantity);
   if(!id||!Number.isInteger(qty)||qty<1||qty>100000)return response({error:"Invalid sale."},400,origin);
   const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1 AND active=1").bind(id).first();if(!p)return response({error:"Product not found."},404,origin);
-  const priceMinor=b.unit_price===undefined||b.unit_price===""?Number(p.unit_price_minor):moneyToMinor(b.unit_price,p.currency);\n  if(priceMinor===null)return response({error:"Invalid sale price."},400,origin);\n  const now=new Date().toISOString(),saleId=crypto.randomUUID(),total=qty*priceMinor;
+  const priceMinor=b.unit_price===undefined||b.unit_price===""?Number(p.unit_price_minor):moneyToMinor(b.unit_price,p.currency);
+  if(priceMinor===null)return response({error:"Invalid sale price."},400,origin);
+  const now=new Date().toISOString(),saleId=crypto.randomUUID(),total=qty*priceMinor;
   try{
     const r=await env.DB.batch([
       env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(qty,now,id),
@@ -164,7 +167,9 @@ async function adminOrderStatus(request,env,origin){
   const b=await readJson(request),orderId=text(b.order_id,80),next=text(b.status,30);
   if(!orderId||!["pending","processing","paid","ready","fulfilled","cancelled"].includes(next))return response({error:"Invalid order status."},400,origin);
   const order=await env.DB.prepare("SELECT * FROM orders WHERE id=?1").bind(orderId).first();if(!order)return response({error:"Order not found."},404,origin);
-  if(order.status==="fulfilled"||order.status==="cancelled")return response({error:"Closed orders cannot be changed."},409,origin);\n  if(next==="fulfilled"&&order.payment_status!=="paid")return response({error:"Payment must be confirmed before fulfillment."},409,origin);\n  if(next==="paid"&&order.payment_status==="paid")return response({ok:true},200,origin);
+  if(order.status==="fulfilled"||order.status==="cancelled")return response({error:"Closed orders cannot be changed."},409,origin);
+  if(next==="fulfilled"&&order.payment_status!=="paid")return response({error:"Payment must be confirmed before fulfillment."},409,origin);
+  if(next==="paid"&&order.payment_status==="paid")return response({ok:true},200,origin);
   const now=new Date().toISOString(),items=(await env.DB.prepare("SELECT * FROM order_items WHERE order_id=?1").bind(orderId).all()).results,stm=[];
   if(next==="cancelled"){
     for(const x of items)stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,reserved_qty=MAX(0,reserved_qty-?1),updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
