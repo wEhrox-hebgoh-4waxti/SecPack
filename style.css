@@ -183,9 +183,14 @@ button{font-family:inherit}
 @media(max-width:560px){.hero h1{font-size:34px}.hero-brand{width:96px;height:96px;margin-bottom:18px}.section-tight{padding-left:6%;padding-right:6%}}
 
 /* Final homepage visual balance */
-.hero h1{font-size:clamp(30px,4vw,45px);max-width:720px}
+.hero h1{font-size:clamp(28px,3.2vw,38px);max-width:680px;line-height:1.08}
 .hero p{font-size:16px}
 .hero .actions{margin-top:24px}
+.hero{background:
+radial-gradient(circle at 12% 16%,rgba(85,215,192,.26),transparent 24%),
+radial-gradient(circle at 88% 12%,rgba(242,184,75,.30),transparent 25%),
+radial-gradient(circle at 76% 92%,rgba(239,128,104,.22),transparent 27%),
+linear-gradient(125deg,#061827 0%,#07546a 48%,#173f67 100%)}
 .section:not(.dark) .card{background:linear-gradient(145deg,#ffffff 0%,#f5fbfd 100%);border-color:#cdeaf2}
 .section:not(.dark) .card:nth-child(3n+1){box-shadow:0 14px 38px rgba(19,168,216,.10)}
 .section:not(.dark) .card:nth-child(3n+2){box-shadow:0 14px 38px rgba(77,221,180,.09)}
@@ -194,4 +199,4 @@ button{font-family:inherit}
 .product-card:nth-child(4n+2){background:linear-gradient(145deg,#fff,#f1fffa)}
 .product-card:nth-child(4n+3){background:linear-gradient(145deg,#fff,#fff8eb)}
 .product-card:nth-child(4n){background:linear-gradient(145deg,#fff,#f7f1ff)}
-@media(max-width:560px){.hero h1{font-size:30px;line-height:1.08}.hero p{font-size:14px}}
+@media(max-width:560px){.hero h1{font-size:27px;line-height:1.1;max-width:100%}.hero p{font-size:14px}}
