@@ -100,6 +100,28 @@ async function ensureColumn(env,table,column,definition){
   const rows=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];
   if(!rows.some(x=>x.name===column))await env.DB.prepare("ALTER TABLE "+table+" ADD COLUMN "+column+" "+definition).run();
 }
+async function buildJournal(env,{referenceType,referenceId,description,currency,lines,requestId=null}){
+  if(!Array.isArray(lines)||lines.length<2)return null;
+  const normalized=lines.map(x=>({accountId:text(x.accountId,60),side:x.side,amount:Number(x.amount)}));
+  if(normalized.some(x=>!x.accountId||!["debit","credit"].includes(x.side)||!Number.isSafeInteger(x.amount)||x.amount<=0))return null;
+  const debit=normalized.filter(x=>x.side==="debit").reduce((s,x)=>s+x.amount,0);
+  const credit=normalized.filter(x=>x.side==="credit").reduce((s,x)=>s+x.amount,0);
+  if(!Number.isSafeInteger(debit)||debit!==credit)return null;
+  const ids=[...new Set(normalized.map(x=>x.accountId))],rows=[];
+  for(const id of ids){const a=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(id).first();if(!a||!a.active||a.currency!==currency)return null;rows.push(a);}
+  const txId=crypto.randomUUID(),now=new Date().toISOString(),stm=[
+    env.DB.prepare("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)").bind(txId,text(referenceType,40),text(referenceId,100),text(description,300),currency,debit,requestId||null,now)
+  ];
+  for(const x of normalized){
+    const lineId=crypto.randomUUID();
+    stm.push(env.DB.prepare("INSERT INTO journal_lines(id,transaction_id,account_id,side,amount_minor,currency,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7)").bind(lineId,txId,x.accountId,x.side,x.amount,currency,now));
+    const row=rows.find(a=>a.id===x.accountId), normal=["asset","expense"].includes(row.account_type)?"debit":"credit",delta=x.side===normal?x.amount:-x.amount;
+    stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id=?3").bind(delta,now,x.accountId));
+  }
+  stm.push(env.DB.prepare("INSERT INTO accounting_ledger(id,order_id,entry_type,amount,amount_minor,currency,description,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)").bind(txId,referenceType==="order"?referenceId:null,referenceType.toUpperCase(),minorToMoney(debit,currency),debit,currency,text(description,300),now));
+  return {txId,statements:stm};
+}
+
 async function auditStatement(env,{action,entityType,entityId,before=null,after=null,requestId=null,actor="admin"}){
   return env.DB.prepare("INSERT INTO audit_log(id,actor,action,entity_type,entity_id,before_json,after_json,request_id,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)")
     .bind(crypto.randomUUID(),actor,action,entityType,entityId||null,before?JSON.stringify(before):null,after?JSON.stringify(after):null,requestId||null,new Date().toISOString());
@@ -116,7 +138,15 @@ async function ensureOperationsSchema(env){
       env.DB.prepare("CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY,order_no TEXT NOT NULL UNIQUE,request_id TEXT UNIQUE,customer_name TEXT NOT NULL,company TEXT,email TEXT NOT NULL,phone TEXT,destination TEXT,payment_method TEXT,status TEXT NOT NULL DEFAULT 'pending',payment_status TEXT NOT NULL DEFAULT 'unpaid',currency TEXT NOT NULL,subtotal REAL NOT NULL DEFAULT 0,total REAL NOT NULL DEFAULT 0,subtotal_minor INTEGER NOT NULL DEFAULT 0,total_minor INTEGER NOT NULL DEFAULT 0,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS order_items (id TEXT PRIMARY KEY,order_id TEXT NOT NULL,product_id TEXT NOT NULL,product_name TEXT NOT NULL,unit TEXT NOT NULL,quantity INTEGER NOT NULL,unit_price REAL NOT NULL,line_total REAL NOT NULL,unit_price_minor INTEGER NOT NULL,line_total_minor INTEGER NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS inventory_ledger (id TEXT PRIMARY KEY,product_id TEXT NOT NULL,movement_type TEXT NOT NULL,quantity INTEGER NOT NULL,reference_id TEXT,note TEXT,warehouse TEXT NOT NULL DEFAULT 'Gorgan',created_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS accounting_ledger (id TEXT PRIMARY KEY,order_id TEXT,entry_type TEXT NOT NULL,amount REAL NOT NULL DEFAULT 0,amount_minor INTEGER NOT NULL DEFAULT 0,currency TEXT NOT NULL,description TEXT,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS accounting_ledger (id TEXT PRIMARY KEY,order_id TEXT,entry_type TEXT NOT NULL,amount REAL NOT NULL DEFAULT 0,amount_minor INTEGER NOT NULL DEFAULT 0,currency TEXT NOT NULL,description TEXT,created_at TEXT NOT NULL)"),env.DB.prepare("CREATE TABLE IF NOT EXISTS journal_transactions (id TEXT PRIMARY KEY,reference_type TEXT,reference_id TEXT,description TEXT NOT NULL,currency TEXT NOT NULL,total_minor INTEGER NOT NULL,request_id TEXT,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS journal_lines (id TEXT PRIMARY KEY,transaction_id TEXT NOT NULL,account_id TEXT NOT NULL,side TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,created_at TEXT NOT NULL)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_journal_lines_tx ON journal_lines(transaction_id)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_journal_lines_account ON journal_lines(account_id,created_at)"),
+      env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_journal_request_id_unique ON journal_transactions(request_id) WHERE request_id IS NOT NULL"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_tx_update BEFORE UPDATE ON journal_transactions BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_tx_delete BEFORE DELETE ON journal_transactions BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_line_update BEFORE UPDATE ON journal_lines BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_line_delete BEFORE DELETE ON journal_lines BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS alerts (id TEXT PRIMARY KEY,type TEXT NOT NULL,reference_id TEXT,title TEXT NOT NULL,message TEXT NOT NULL,is_read INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY,name TEXT NOT NULL,account_type TEXT NOT NULL,currency TEXT NOT NULL DEFAULT 'USD',opening_balance_minor INTEGER NOT NULL DEFAULT 0,current_balance_minor INTEGER NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS financial_entries (id TEXT PRIMARY KEY,account_id TEXT NOT NULL,entry_type TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,direction TEXT NOT NULL,reference_type TEXT,reference_id TEXT,description TEXT,created_at TEXT NOT NULL)"),
