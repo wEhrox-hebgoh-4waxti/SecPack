@@ -83,7 +83,7 @@
 
 <form id="entryForm" class="admin-form admin-card">
 <h3>ثبت دریافت / پرداخت</h3>
-<input name="account_id" placeholder="شناسه حساب" required>
+<select name="account_id" id="entryAccount" required></select>
 <select name="direction"><option value="in">دریافت</option><option value="out">پرداخت</option></select>
 <select name="entry_type"><option value="income">درآمد</option><option value="expense">هزینه</option><option value="transfer">انتقال</option><option value="adjustment">اصلاح</option></select>
 <select name="currency"><option>USD</option><option>IRR</option><option>EUR</option><option>TRY</option><option>AED</option></select>
@@ -102,7 +102,7 @@
 <select name="currency"><option>USD</option><option>IRR</option><option>EUR</option><option>TRY</option><option>AED</option></select>
 <input name="amount" inputmode="decimal" placeholder="مبلغ" required>
 <input name="due_date" type="date">
-<input name="account_id" placeholder="شناسه حساب پرداخت (در صورت پرداخت)">
+<select name="account_id" id="costAccount"><option value="">حساب پرداخت را انتخاب کنید</option></select>
 <select name="status"><option value="planned">برنامه‌ریزی‌شده</option><option value="paid">پرداخت‌شده</option><option value="cancelled">لغوشده</option></select>
 <button class="btn primary" type="submit">ثبت هزینه</button>
 </form>
@@ -113,7 +113,7 @@
 <input name="quantity" type="number" min="1" step="1" placeholder="تعداد" required>
 <select name="currency"><option>USD</option><option>IRR</option><option>EUR</option><option>TRY</option><option>AED</option></select>
 <input name="unit_cost" inputmode="decimal" placeholder="بهای واحد" required>
-<input name="account_id" placeholder="شناسه حساب پرداخت">
+<select name="account_id" id="receiptAccount"><option value="">حساب پرداخت را انتخاب کنید</option></select>
 <input name="note" placeholder="شرح ورود کالا">
 <button class="btn primary" type="submit">ثبت ورود به انبار</button>
 </form>
