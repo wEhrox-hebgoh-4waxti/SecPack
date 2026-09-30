@@ -110,6 +110,7 @@ async function ensureOperationsSchema(env){
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type,entity_id,created_at)"),
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at)"),
       env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_request_id_unique ON orders(request_id) WHERE request_id IS NOT NULL"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_negative_stock BEFORE UPDATE OF stock_qty ON products WHEN NEW.stock_qty < 0 BEGIN SELECT RAISE(ABORT, 'INSUFFICIENT_STOCK'); END"),
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_reserved_over_available BEFORE UPDATE OF reserved_qty ON products WHEN NEW.reserved_qty < 0 OR NEW.reserved_qty > NEW.stock_qty BEGIN SELECT RAISE(ABORT, 'INVALID_RESERVATION'); END"),
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_audit_update BEFORE UPDATE ON audit_log BEGIN SELECT RAISE(ABORT, 'AUDIT_IMMUTABLE'); END"),
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_audit_delete BEFORE DELETE ON audit_log BEGIN SELECT RAISE(ABORT, 'AUDIT_IMMUTABLE'); END"),
