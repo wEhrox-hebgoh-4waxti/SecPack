@@ -111,6 +111,8 @@ async function ensureOperationsSchema(env){
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at)"),
       env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_request_id_unique ON orders(request_id) WHERE request_id IS NOT NULL"),
       env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_reserved_over_available BEFORE UPDATE OF reserved_qty ON products WHEN NEW.reserved_qty < 0 OR NEW.reserved_qty > NEW.stock_qty BEGIN SELECT RAISE(ABORT, 'INVALID_RESERVATION'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_audit_update BEFORE UPDATE ON audit_log BEGIN SELECT RAISE(ABORT, 'AUDIT_IMMUTABLE'); END"),
+      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_audit_delete BEFORE DELETE ON audit_log BEGIN SELECT RAISE(ABORT, 'AUDIT_IMMUTABLE'); END"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_cases (id TEXT PRIMARY KEY,case_no TEXT NOT NULL UNIQUE,product_id TEXT,quantity INTEGER NOT NULL DEFAULT 0,supplier TEXT,currency TEXT NOT NULL DEFAULT 'USD',purchase_total_minor INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'open',expected_date TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_milestones (id TEXT PRIMARY KEY,case_id TEXT NOT NULL,milestone_type TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',due_date TEXT,completed_at TEXT,reference_id TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
       env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_accounts_type_currency ON accounts(account_type,currency)"),
@@ -457,7 +459,10 @@ async function adminAccounting(request,env,origin){
 }
 
 async function adminRequest(request,env,origin){
-  if(!authorized(request,env))return response({error:"Unauthorized."},401,origin);
+  if(!authorized(request,env)){
+    const limited=await rateLimit(env,request,"admin-auth",10);
+    return response({error:"Unauthorized."},limited.allowed?401:429,origin);
+  }
   const path=new URL(request.url).pathname;
   if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/document"||path==="/admin/audit")return adminAccounting(request,env,origin);
   if(path==="/admin/dashboard"&&request.method==="GET")return response(await adminDashboard(env),200,origin);
