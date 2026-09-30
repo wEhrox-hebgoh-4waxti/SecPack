@@ -120,6 +120,23 @@
 </form>
 </div>
 
+<div class="admin-card supply-chain-panel">
+<h3>کنترل زنجیره تأمین</h3>
+<p class="admin-note">هر پرونده خرید از کارخانه تا پرداخت، گمرک، حمل، انبار گرگان و آماده تحویل قابل پیگیری است.</p>
+<form id="supplyCaseForm" class="admin-form">
+<input name="case_no" placeholder="شماره پرونده (اختیاری)">
+<select name="product_id" id="supplyProduct"></select>
+<input name="quantity" type="number" min="0" step="1" placeholder="تعداد">
+<input name="supplier" placeholder="تأمین‌کننده / کارخانه">
+<select name="currency"><option>USD</option><option>IRR</option><option>EUR</option><option>TRY</option><option>AED</option></select>
+<input name="purchase_total" inputmode="decimal" placeholder="ارزش خرید">
+<input name="expected_date" type="date">
+<input name="notes" placeholder="یادداشت پرونده">
+<button class="btn primary" type="submit">ایجاد پرونده زنجیره تأمین</button>
+</form>
+<div id="supplyCases">—</div>
+</div>
+
 <form id="documentForm" class="admin-form admin-card">
 <h3>تصویر اسناد</h3>
 <p class="admin-note">از دوربین موبایل یا فایل انتخاب کنید. تصویر فشرده می‌شود و در صورت قطع اینترنت ابتدا روی همین دستگاه در صف امن قرار می‌گیرد.</p>
