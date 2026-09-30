@@ -408,9 +408,9 @@ async function runAudit(env){
   for(const o of pending)add("high","order",o.id,"سفارش باز قدیمی","سفارش "+o.order_no+" بیش از ۲۴ ساعت باز مانده است.","وضعیت پرداخت، آماده‌سازی یا تحویل را بررسی کنید.");
   const paid=(await env.DB.prepare("SELECT id,order_no FROM orders WHERE payment_status='paid' AND status NOT IN ('fulfilled','cancelled') AND created_at < datetime('now','-1 day')").all()).results;
   for(const o of paid)add("high","payment",o.id,"پرداخت بدون تحویل","سفارش "+o.order_no+" پرداخت شده اما هنوز تحویل نهایی نشده است.","آماده‌سازی و لجستیک را بررسی کنید.");
-  const missingSale=(await env.DB.prepare("SELECT o.id,o.order_no FROM orders o WHERE o.status='fulfilled' AND NOT EXISTS(SELECT 1 FROM accounting_ledger a WHERE a.order_id=o.id AND a.entry_type='SALE')").all()).results;
+  const missingSale=(await env.DB.prepare("SELECT o.id,o.order_no FROM orders o WHERE o.status IN ('paid','ready','fulfilled') AND NOT EXISTS(SELECT 1 FROM journal_transactions j WHERE j.reference_type='order_sale' AND j.reference_id=o.id)").all()).results;
   for(const o of missingSale)add("critical","accounting",o.id,"فروش بدون ثبت حسابداری","سفارش "+o.order_no+" تحویل شده ولی سند فروش ندارد.","ثبت حسابداری فروش را بررسی کنید.");
-  const missingPayment=(await env.DB.prepare("SELECT o.id,o.order_no FROM orders o WHERE o.payment_status='paid' AND NOT EXISTS(SELECT 1 FROM accounting_ledger a WHERE a.order_id=o.id AND a.entry_type='PAYMENT')").all()).results;
+  const missingPayment=(await env.DB.prepare("SELECT o.id,o.order_no FROM orders o WHERE o.payment_status='paid' AND NOT EXISTS(SELECT 1 FROM journal_transactions j WHERE j.reference_type='order_payment' AND j.reference_id=o.id)").all()).results;
   for(const o of missingPayment)add("critical","accounting",o.id,"دریافت بدون ثبت حسابداری","پرداخت سفارش "+o.order_no+" ثبت شده ولی سند دریافت ندارد.","ثبت دریافت را بررسی کنید.");
   const due=(await env.DB.prepare("SELECT id,description,due_date,amount_minor,currency FROM supply_costs WHERE status='planned' AND due_date IS NOT NULL AND due_date < date('now')").all()).results;
   for(const x of due)add("high","supply_cost",x.id,"هزینه سررسید گذشته","هزینه «"+x.description+"» از موعد پرداخت گذشته است.","پرداخت یا وضعیت آن را ثبت کنید.");
@@ -418,11 +418,11 @@ async function runAudit(env){
   for(const j of imbalanced)add("critical","journal",j.id,"سند حسابداری نامتوازن","سند "+(j.reference_id||j.id)+" توازن بدهکار و بستانکار ندارد.","سند را مسدود و منبع ثبت را بررسی کنید.");
   const negative=(await env.DB.prepare("SELECT id,name,current_balance_minor,currency FROM accounts WHERE active=1 AND account_type IN ('cash','bank') AND current_balance_minor<0").all()).results;
   for(const a of negative)add("high","account",a.id,"مانده منفی حساب","مانده "+a.name+" منفی است.","ثبت‌ها و انتقال‌های مالی را تطبیق دهید.");
+  const overdue=(await env.DB.prepare("SELECT m.id,m.case_id,m.milestone_type,m.due_date,c.case_no FROM supply_milestones m JOIN supply_cases c ON c.id=m.case_id WHERE m.status NOT IN ('done') AND m.due_date IS NOT NULL AND m.due_date < datetime('now')").all()).results;
+  for(const m of overdue)add("high","supply_chain",m.id,"مرحله زنجیره تأمین عقب‌افتاده","مرحله "+m.milestone_type+" در پرونده "+m.case_no+" از موعد گذشته است.","مرحله را بررسی و وضعیت یا تاریخ آن را به‌روزرسانی کنید.");
   if(flags.length){
     await env.DB.batch(flags.map(x=>env.DB.prepare("INSERT INTO audit_flags(id,severity,category,reference_type,reference_id,title,message,suggested_action,is_resolved,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,0,?9) ON CONFLICT(id) DO UPDATE SET severity=excluded.severity,title=excluded.title,message=excluded.message,suggested_action=excluded.suggested_action,is_resolved=0,resolved_at=NULL").bind(x.id,x.severity,"AUTO",x.reference_type,x.reference_id,x.title,x.message,x.suggested_action,now)));
   }
-  const overdue=(await env.DB.prepare("SELECT m.id,m.case_id,m.milestone_type,m.due_date,c.case_no FROM supply_milestones m JOIN supply_cases c ON c.id=m.case_id WHERE m.status NOT IN ('done') AND m.due_date IS NOT NULL AND m.due_date < datetime('now')").all()).results;
-  for(const m of overdue)add("high","supply_chain",m.id,"مرحله زنجیره تأمین عقب‌افتاده","مرحله "+m.milestone_type+" در پرونده "+m.case_no+" از موعد گذشته است.","مرحله را بررسی و وضعیت یا تاریخ آن را به‌روزرسانی کنید.");
   return flags;
 }
 
