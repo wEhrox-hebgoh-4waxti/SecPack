@@ -1,52 +1,15 @@
-const items=[];
-const productNames={paper:"product.name.paper",film:"product.name.film",adhesive:"product.name.adhesive",packaging:"product.name.packaging"};
-const t=()=>window.secpackT||((key)=>key);
-function addToCart(id){if(!productNames[id])return;const x=items.find(i=>i.id===id);if(x)x.qty++;else items.push({id,qty:1});render();document.getElementById("orderPanel")?.classList.add("open")}
-function changeQty(id,delta){const x=items.find(i=>i.id===id);if(!x)return;x.qty+=delta;if(x.qty<1)items.splice(items.indexOf(x),1);render()}
-function render(){
-  const translate=t();
-  const count=document.getElementById("cartCount");
-  const rows=document.getElementById("cartRows");
-  if(count)count.textContent=String(items.reduce((sum,item)=>sum+item.qty,0));
-  if(!rows)return;
-  rows.replaceChildren();
-  if(!items.length){const empty=document.createElement("p");empty.textContent=translate("dynamic.cartEmpty");rows.appendChild(empty);return;}
-  items.forEach(item=>{
-    const row=document.createElement("div");row.className="cart-row";
-    const strong=document.createElement("strong");strong.textContent=translate(productNames[item.id]);
-    const controls=document.createElement("span");controls.className="qty";
-    const qty=document.createElement("input");qty.type="number";qty.min="1";qty.max="100000";qty.step="1";qty.value=String(item.qty);qty.className="qty-input";qty.dataset.qtyInput=item.id;qty.setAttribute("aria-label",({en:"Quantity",fa:"تعداد",ar:"الكمية"}[document.documentElement.lang]||"Quantity"));controls.appendChild(qty);row.append(strong,controls);rows.appendChild(row);
-  });
-}
-function toggleCart(){document.getElementById("orderPanel")?.classList.toggle("open");render()}
-async function prepareOrder(){
-  if(!items.length){alert(t()("dynamic.addProduct"));return;}
-  const status=document.getElementById("orderResult");
-  const data={name:document.getElementById("customerName").value,email:document.getElementById("customerEmail").value,phone:document.getElementById("customerPhone").value,destination:document.getElementById("destination").value,payment:document.getElementById("payment").value,notes:document.getElementById("notes").value,items:JSON.stringify(items)};
-  const result=await window.secpackSubmitPayload(data,"order",status,null);
-  const box=document.createElement("div");box.className="quote";
-  const strong=document.createElement("strong");strong.textContent=t()("dynamic.orderPrepared");
-  const p1=document.createElement("p");p1.textContent=t()("dynamic.orderDraft");
-  const p2=document.createElement("p");p2.className="form-status";if(result.ok)p2.classList.add("success");p2.textContent=t()(result.ok?"dynamic.formSent":(result.configured?"dynamic.formError":"dynamic.formNotConfigured"));
-  if(result.ok && result.result?.orderId){
-    const ref=document.createElement("p");ref.className="order-reference";
-    const labels={en:"Order reference",fa:"شماره پیگیری سفارش",ar:"مرجع الطلب"};
-    ref.textContent=(labels[document.documentElement.lang]||labels.en)+": "+result.result.orderId;box.appendChild(ref);
-  }
-  box.append(strong,p1,p2);status.replaceChildren(box);
-}
-document.addEventListener("change",(event)=>{
-  const qty=event.target.closest("[data-qty-input]");
-  if(!qty)return;
-  const item=items.find(i=>i.id===qty.dataset.qtyInput);
-  const value=Number(qty.value);
-  if(!item)return;
-  if(!Number.isInteger(value)||value<1||value>100000){qty.value=String(item.qty);return;}
-  item.qty=value;render();
-});
-document.addEventListener("click",(event)=>{
-  const add=event.target.closest("[data-add-cart]");if(add)addToCart(add.dataset.addCart);
-  const action=event.target.closest("[data-sec-action]")?.dataset.secAction;if(action==="cart-toggle")toggleCart();if(action==="prepare-order")prepareOrder();
-  const qty=event.target.closest("[data-qty-change]");if(qty)changeQty(qty.dataset.itemId,Number(qty.dataset.qtyChange));
-});
-render();window.addEventListener("secpack:languagechange",render);
+const API="https://api.secpackco.com";
+let product=null;
+const STORE_TEXT={
+en:{eyebrow:"ONLINE PURCHASE",title:"Buy A4 Copy Paper Online",intro:"Choose the quantity, enter your delivery details and submit the order. SEC PACK records the order immediately and prepares it for fulfillment.",paper:"A4 Copy Paper",spec:"500 sheets / ream · 5 reams / carton",price:"Current price",quantity:"Quantity (reams)",available:"Available",total:"Order total",details:"1. Your details",buy:"Place online order",stepsTitle:"Simple 3-step purchase",step1:"Choose quantity.",step2:"Enter your details.",step3:"Submit. Your order is recorded and sent to SEC PACK operations for preparation.",ctaEyebrow:"SEC PACK OPERATIONS",ctaTitle:"Order, inventory and fulfillment stay connected.",ctaText:"Every confirmed order reserves stock immediately. Operations can then mark payment, preparation and delivery from one management screen.",loading:"Loading current price…",unavailable:"This product is not currently available online.",orderOk:"Order received. SEC PACK has recorded it and reserved the requested stock.",ref:"Order reference",failed:"The order could not be completed."},
+fa:{eyebrow:"خرید اینترنتی",title:"خرید آنلاین کاغذ کپی A4",intro:"تعداد را انتخاب کنید، اطلاعات تحویل را وارد کنید و سفارش را ثبت کنید. سفارش بلافاصله در سیستم SEC PACK ثبت و برای آماده‌سازی ارسال می‌شود.",paper:"کاغذ کپی A4",spec:"۵۰۰ برگ در ریم · ۵ ریم در کارتن",price:"قیمت روز",quantity:"تعداد (ریم)",available:"موجودی",total:"مبلغ سفارش",details:"۱. اطلاعات خریدار",buy:"ثبت سفارش اینترنتی",stepsTitle:"خرید در ۳ مرحله ساده",step1:"تعداد را انتخاب کنید.",step2:"اطلاعات خود را وارد کنید.",step3:"ثبت کنید؛ سفارش در سیستم ثبت و برای آماده‌سازی ارسال می‌شود.",ctaEyebrow:"عملیات SEC PACK",ctaTitle:"سفارش، موجودی و تحویل به هم متصل هستند.",ctaText:"هر سفارش تأییدشده بلافاصله موجودی را رزرو می‌کند و عملیات می‌تواند پرداخت، آماده‌سازی و تحویل را از یک صفحه مدیریت کند.",loading:"در حال دریافت قیمت روز…",unavailable:"این محصول در حال حاضر برای خرید آنلاین فعال نیست.",orderOk:"سفارش دریافت شد. در سیستم SEC PACK ثبت و موجودی موردنیاز رزرو شد.",ref:"شماره سفارش",failed:"ثبت سفارش انجام نشد."},
+ar:{eyebrow:"الشراء عبر الإنترنت",title:"شراء ورق A4 عبر الإنترنت",intro:"اختر الكمية وأدخل بيانات التسليم وأرسل الطلب. تسجل SEC PACK الطلب فوراً وتجهزه للتنفيذ.",paper:"ورق نسخ A4",spec:"500 ورقة / رزمة · 5 رزم / كرتون",price:"السعر الحالي",quantity:"الكمية (رزمة)",available:"المتاح",total:"إجمالي الطلب",details:"1. بيانات المشتري",buy:"إرسال الطلب عبر الإنترنت",stepsTitle:"شراء بسيط من 3 خطوات",step1:"اختر الكمية.",step2:"أدخل بياناتك.",step3:"أرسل الطلب؛ يتم تسجيله وإرساله إلى عمليات SEC PACK للتجهيز.",ctaEyebrow:"عمليات SEC PACK",ctaTitle:"الطلب والمخزون والتنفيذ مترابطة.",ctaText:"كل طلب مؤكد يحجز المخزون فوراً، ويمكن للعمليات تسجيل الدفع والتجهيز والتسليم من شاشة إدارة واحدة.",loading:"جارٍ تحميل السعر الحالي…",unavailable:"هذا المنتج غير متاح حالياً للشراء عبر الإنترنت.",orderOk:"تم استلام الطلب وتسجيله وحجز المخزون المطلوب.",ref:"مرجع الطلب",failed:"تعذر إتمام الطلب."}};
+function lang(){return STORE_TEXT[document.documentElement.lang]||STORE_TEXT.en}
+function applyText(){const t=lang();document.querySelectorAll("[data-store]").forEach(e=>{const k=e.dataset.store;if(t[k])e.textContent=t[k]});document.title="SEC PACK | "+t.title;document.getElementById("customerName").placeholder=t.details.includes("۱")?"نام / شرکت":"Name / Company";document.getElementById("customerEmail").placeholder="Email";document.getElementById("customerPhone").placeholder=t.quantity.startsWith("ت")?"موبایل / واتساپ":"Phone / WhatsApp";document.getElementById("destination").placeholder=t.available.startsWith("م")?"مقصد تحویل":"Delivery destination";document.getElementById("notes").placeholder=t.stepsTitle.startsWith("خ")?"توضیحات تحویل یا نیاز ویژه":"Delivery notes or special requirements";}
+function money(v,c){const d=["USD","EUR","GBP","AED","SAR","TRY"].includes(c)?2:0;return Number(v||0).toLocaleString(document.documentElement.lang==="fa"?"fa-IR":"en-US",{minimumFractionDigits:d,maximumFractionDigits:d})+" "+c}
+async function loadCatalog(){applyText();$("catalogStatus").textContent=lang().loading;try{const r=await fetch(API+"/catalog",{headers:{Accept:"application/json"}});const d=await r.json();if(!r.ok)throw new Error();product=d.products?.find(x=>x.id==="paper");if(!product)throw new Error();$("unitPrice").textContent=money(product.unit_price,product.currency);$("availableQty").textContent=Number(product.available_qty).toLocaleString();$("catalogStatus").textContent="";updateTotal();}catch(_){$("catalogStatus").textContent=lang().unavailable;$("buyButton").disabled=true;}}
+function updateTotal(){if(!product)return;const q=Math.max(1,Math.floor(Number($("buyQty").value)||1));$("buyQty").value=q;$("orderTotal").textContent=money(q*product.unit_price,product.currency);if(q>Number(product.available_qty)){$("orderTotal").textContent=lang().unavailable;$("buyButton").disabled=true}else $("buyButton").disabled=false;}
+$("buyQty").addEventListener("input",updateTotal);
+$("buyButton").addEventListener("click",async()=>{if(!product)return;const q=Math.max(1,Math.floor(Number($("buyQty").value)||1));const name=$("customerName").value.trim(),email=$("customerEmail").value.trim(),phone=$("customerPhone").value.trim(),destination=$("destination").value.trim();if(!name||!email||!phone||!destination){$("orderResult").textContent=lang().failed;return}$("buyButton").disabled=true;const body={name,email,phone,destination,notes:$("notes").value,items:JSON.stringify([{id:"paper",qty:q}])};try{const result=await window.secpackSubmitPayload(body,"order",$("orderResult"),$("buyButton"));if(!result.ok)throw new Error();const box=document.createElement("div");box.className="quote";const p=document.createElement("p");p.textContent=lang().orderOk;const ref=document.createElement("strong");ref.textContent=lang().ref+": "+(result.result.orderNo||result.result.orderId||"");box.append(p,ref);$("orderResult").replaceChildren(box);await loadCatalog();}catch(_){$("orderResult").textContent=lang().failed;$("buyButton").disabled=false;}});
+window.addEventListener("secpack:languagechange",()=>{applyText();if(product){$("unitPrice").textContent=money(product.unit_price,product.currency);$("availableQty").textContent=Number(product.available_qty).toLocaleString();updateTotal();}});
+loadCatalog();
