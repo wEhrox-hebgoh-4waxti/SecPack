@@ -39,6 +39,9 @@ jobs:
       - name: Validate Worker syntax
         run: node --check worker/advisor.js
 
+      - name: Audit migration architecture
+        run: npm run audit:migrations
+
       - name: Validate Cloudflare credentials
         shell: bash
         env:
