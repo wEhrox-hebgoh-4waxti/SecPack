@@ -50,7 +50,7 @@ jobs:
             echo "::error::CLOUDFLARE_API_TOKEN GitHub Actions secret is not configured."
             exit 1
           fi
-          npx wrangler@4.145.0 whoami --json
+          npx wrangler@4.145.0 whoami
           npx wrangler@4.145.0 whoami --json | node -e 'let s="";process.stdin.on("data",d=>s+=d);process.stdin.on("end",()=>{const x=JSON.parse(s);if(!(x.accounts||[]).some(v=>v.id==="3bd54dc7be56e0ade3d2e99a273853d6")){console.error("Token is not authorized for the SEC PACK Cloudflare account.");process.exit(1)}})'
 
       - name: Validate Wrangler configuration
