@@ -414,7 +414,7 @@ async function adminAccounting(request,env,origin){
     if(opening>0&&!offsetId)return response({error:"An opening balance requires an offset account."},400,origin);
     if(offsetId===id)return response({error:"Opening balance requires a different offset account."},400,origin);
     const normal=["cash","bank","receivable","inventory","expense","cogs"].includes(type)?"debit":"credit";
-    const statements=[env.DB.prepare("INSERT INTO accounts(id,request_id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,0,1,?7,?7) ON CONFLICT(id) DO UPDATE SET name=excluded.name,account_type=excluded.account_type,currency=excluded.currency,updated_at=excluded.updated_at") .bind(id,requestId,name,type,currency,opening,now)];
+    const statements=[env.DB.prepare("INSERT INTO accounts(id,request_id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,0,1,?7,?7)").bind(id,requestId,name,type,currency,opening,now)];
     if(opening>0){
       const offset=await env.DB.prepare("SELECT id,name,account_type,currency,active FROM accounts WHERE id=?1").bind(offsetId).first();
       if(!offset||!offset.active||offset.currency!==currency)return response({error:"Invalid opening balance offset account."},400,origin);
