@@ -148,112 +148,32 @@ async function auditStatement(env,{action,entityType,entityId,before=null,after=
 
 async function ensureOperationsSchema(env){
   if(!env.DB)return false;
-  if(!operationsSchemaPromise){
-    operationsSchemaPromise=env.DB.batch([
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS inquiries (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,form_type TEXT NOT NULL,name TEXT NOT NULL,company TEXT,email TEXT NOT NULL,phone TEXT,product TEXT,destination TEXT,payment TEXT,notes TEXT,message TEXT,items TEXT,created_at TEXT NOT NULL,visitor_details TEXT)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS rate_limits (bucket_key TEXT PRIMARY KEY,window_start INTEGER NOT NULL,count INTEGER NOT NULL)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rate_limits_window_start ON rate_limits(window_start)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY,name_en TEXT NOT NULL,name_fa TEXT NOT NULL,name_ar TEXT NOT NULL,unit TEXT NOT NULL DEFAULT 'unit',currency TEXT NOT NULL DEFAULT 'USD',unit_price REAL NOT NULL DEFAULT 0,unit_price_minor INTEGER NOT NULL DEFAULT 0,unit_cost_minor INTEGER NOT NULL DEFAULT 0,stock_qty INTEGER NOT NULL DEFAULT 0,reserved_qty INTEGER NOT NULL DEFAULT 0,sold_qty INTEGER NOT NULL DEFAULT 0,warehouse TEXT NOT NULL DEFAULT 'Gorgan',active INTEGER NOT NULL DEFAULT 1,updated_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY,order_no TEXT NOT NULL UNIQUE,request_id TEXT UNIQUE,customer_name TEXT NOT NULL,company TEXT,email TEXT NOT NULL,phone TEXT,destination TEXT,payment_method TEXT,status TEXT NOT NULL DEFAULT 'pending',payment_status TEXT NOT NULL DEFAULT 'unpaid',currency TEXT NOT NULL,subtotal REAL NOT NULL DEFAULT 0,total REAL NOT NULL DEFAULT 0,subtotal_minor INTEGER NOT NULL DEFAULT 0,total_minor INTEGER NOT NULL DEFAULT 0,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS order_items (id TEXT PRIMARY KEY,order_id TEXT NOT NULL,product_id TEXT NOT NULL,product_name TEXT NOT NULL,unit TEXT NOT NULL,quantity INTEGER NOT NULL,unit_price REAL NOT NULL,line_total REAL NOT NULL,unit_price_minor INTEGER NOT NULL,line_total_minor INTEGER NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS inventory_ledger (id TEXT PRIMARY KEY,product_id TEXT NOT NULL,movement_type TEXT NOT NULL,quantity INTEGER NOT NULL,reference_id TEXT,note TEXT,warehouse TEXT NOT NULL DEFAULT 'Gorgan',created_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS accounting_ledger (id TEXT PRIMARY KEY,order_id TEXT,entry_type TEXT NOT NULL,amount REAL NOT NULL DEFAULT 0,amount_minor INTEGER NOT NULL DEFAULT 0,currency TEXT NOT NULL,description TEXT,created_at TEXT NOT NULL)"),env.DB.prepare("CREATE TABLE IF NOT EXISTS journal_transactions (id TEXT PRIMARY KEY,reference_type TEXT,reference_id TEXT,description TEXT NOT NULL,currency TEXT NOT NULL,total_minor INTEGER NOT NULL,request_id TEXT,created_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS journal_lines (id TEXT PRIMARY KEY,transaction_id TEXT NOT NULL,account_id TEXT NOT NULL,side TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,created_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_journal_lines_tx ON journal_lines(transaction_id)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_journal_lines_account ON journal_lines(account_id,created_at)"),
-      env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_journal_request_id_unique ON journal_transactions(request_id) WHERE request_id IS NOT NULL"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_journal_transactions_reference ON journal_transactions(reference_type,reference_id,created_at)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_journal_transactions_currency ON journal_transactions(currency,created_at)"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_invalid_journal_line_insert BEFORE INSERT ON journal_lines WHEN NEW.amount_minor<=0 OR NEW.side NOT IN ('debit','credit') OR NOT EXISTS (SELECT 1 FROM journal_transactions WHERE id=NEW.transaction_id AND currency=NEW.currency) OR NOT EXISTS (SELECT 1 FROM accounts WHERE id=NEW.account_id AND active=1 AND currency=NEW.currency) BEGIN SELECT RAISE(ABORT,'INVALID_JOURNAL_LINE'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_tx_update BEFORE UPDATE ON journal_transactions BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_tx_delete BEFORE DELETE ON journal_transactions BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_line_update BEFORE UPDATE ON journal_lines BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_journal_line_delete BEFORE DELETE ON journal_lines BEGIN SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS alerts (id TEXT PRIMARY KEY,type TEXT NOT NULL,reference_id TEXT,title TEXT NOT NULL,message TEXT NOT NULL,is_read INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,name TEXT NOT NULL,account_type TEXT NOT NULL,currency TEXT NOT NULL DEFAULT 'USD',opening_balance_minor INTEGER NOT NULL DEFAULT 0,current_balance_minor INTEGER NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS financial_entries (id TEXT PRIMARY KEY,account_id TEXT NOT NULL,entry_type TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,direction TEXT NOT NULL,reference_type TEXT,reference_id TEXT,description TEXT,created_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_costs (id TEXT PRIMARY KEY,category TEXT NOT NULL,supplier TEXT,description TEXT NOT NULL,amount_minor INTEGER NOT NULL,currency TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'planned',due_date TEXT,paid_at TEXT,account_id TEXT,reference_id TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS documents (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,document_type TEXT NOT NULL,title TEXT NOT NULL,reference_type TEXT,reference_id TEXT,data_url TEXT NOT NULL,mime_type TEXT NOT NULL,size_bytes INTEGER NOT NULL DEFAULT 0,notes TEXT,captured_offline INTEGER NOT NULL DEFAULT 0,share_token_hash TEXT,share_expires_at TEXT,created_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS audit_flags (id TEXT PRIMARY KEY,severity TEXT NOT NULL,category TEXT NOT NULL,reference_type TEXT,reference_id TEXT,title TEXT NOT NULL,message TEXT NOT NULL,suggested_action TEXT,is_resolved INTEGER NOT NULL DEFAULT 0,resolved_at TEXT,created_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS operational_settings (key TEXT PRIMARY KEY,value TEXT NOT NULL,updated_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS audit_log (id TEXT PRIMARY KEY,actor TEXT NOT NULL,action TEXT NOT NULL,entity_type TEXT NOT NULL,entity_id TEXT,before_json TEXT,after_json TEXT,request_id TEXT,created_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type,entity_id,created_at)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at)"),
-      env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_request_id_unique ON orders(request_id) WHERE request_id IS NOT NULL"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_negative_stock BEFORE UPDATE OF stock_qty ON products WHEN NEW.stock_qty < 0 BEGIN SELECT RAISE(ABORT, 'INSUFFICIENT_STOCK'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_reserved_over_available BEFORE UPDATE OF reserved_qty,stock_qty ON products WHEN NEW.reserved_qty < 0 OR NEW.reserved_qty > NEW.stock_qty BEGIN SELECT RAISE(ABORT, 'INVALID_RESERVATION'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_negative_sold BEFORE UPDATE OF sold_qty ON products WHEN NEW.sold_qty < 0 BEGIN SELECT RAISE(ABORT, 'INVALID_SOLD_QTY'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_audit_update BEFORE UPDATE ON audit_log BEGIN SELECT RAISE(ABORT, 'AUDIT_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_audit_delete BEFORE DELETE ON audit_log BEGIN SELECT RAISE(ABORT, 'AUDIT_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_financial_entry_update BEFORE UPDATE ON financial_entries BEGIN SELECT RAISE(ABORT, 'FINANCIAL_LEDGER_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_financial_entry_delete BEFORE DELETE ON financial_entries BEGIN SELECT RAISE(ABORT, 'FINANCIAL_LEDGER_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_inventory_ledger_update BEFORE UPDATE ON inventory_ledger BEGIN SELECT RAISE(ABORT, 'INVENTORY_LEDGER_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_inventory_ledger_delete BEFORE DELETE ON inventory_ledger BEGIN SELECT RAISE(ABORT, 'INVENTORY_LEDGER_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_accounting_ledger_update BEFORE UPDATE ON accounting_ledger BEGIN SELECT RAISE(ABORT, 'ACCOUNTING_LEDGER_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TRIGGER IF NOT EXISTS prevent_accounting_ledger_delete BEFORE DELETE ON accounting_ledger BEGIN SELECT RAISE(ABORT, 'ACCOUNTING_LEDGER_IMMUTABLE'); END"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_cases (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,case_no TEXT NOT NULL UNIQUE,product_id TEXT,quantity INTEGER NOT NULL DEFAULT 0,supplier TEXT,currency TEXT NOT NULL DEFAULT 'USD',purchase_total_minor INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'open',expected_date TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE TABLE IF NOT EXISTS supply_milestones (id TEXT PRIMARY KEY,request_id TEXT UNIQUE,case_id TEXT NOT NULL,milestone_type TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',due_date TEXT,completed_at TEXT,reference_id TEXT,notes TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_accounts_type_currency ON accounts(account_type,currency)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_financial_entries_account_created ON financial_entries(account_id,created_at)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_supply_costs_status_due ON supply_costs(status,due_date)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_documents_reference ON documents(reference_type,reference_id)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_audit_flags_open ON audit_flags(is_resolved,severity,created_at)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_supply_cases_status_updated ON supply_cases(status,updated_at)"),
-      env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_milestone_case_type ON supply_milestones(case_id,milestone_type)"),
-      env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_supply_milestones_status_due ON supply_milestones(status,due_date)"),
-      env.DB.prepare("INSERT OR IGNORE INTO operational_settings(key,value,updated_at) VALUES ('low_stock_threshold','100',datetime('now'))"),
-      env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,created_at,updated_at) VALUES ('cash','صندوق','cash','USD',datetime('now'),datetime('now')),('bank','بانک','bank','USD',datetime('now'),datetime('now')),('receivables','حساب‌های دریافتنی','receivable','USD',datetime('now'),datetime('now')),('payable','حساب‌های پرداختنی','payable','USD',datetime('now'),datetime('now')),('inventory','موجودی کالا','inventory','USD',datetime('now'),datetime('now')),('expense','هزینه‌ها','expense','USD',datetime('now'),datetime('now')),('income','درآمد','income','USD',datetime('now'),datetime('now'))")
-    ]).then(async()=>{
-      await ensureColumn(env,"inquiries","visitor_details","TEXT");
-      await ensureColumn(env,"products","unit_price_minor","INTEGER NOT NULL DEFAULT 0");
-      await ensureColumn(env,"products","unit_cost_minor","INTEGER NOT NULL DEFAULT 0");
-      await ensureColumn(env,"products","warehouse","TEXT NOT NULL DEFAULT 'Gorgan'");
-      await ensureColumn(env,"orders","request_id","TEXT");
-      await ensureColumn(env,"orders","subtotal_minor","INTEGER NOT NULL DEFAULT 0");
-      await ensureColumn(env,"orders","total_minor","INTEGER NOT NULL DEFAULT 0");
-      await ensureColumn(env,"order_items","unit_price_minor","INTEGER NOT NULL DEFAULT 0");
-      await ensureColumn(env,"order_items","line_total_minor","INTEGER NOT NULL DEFAULT 0");
-      await ensureColumn(env,"order_items","unit_cost_minor","INTEGER NOT NULL DEFAULT 0");
-      await ensureColumn(env,"inventory_ledger","warehouse","TEXT NOT NULL DEFAULT 'Gorgan'");
-      await ensureColumn(env,"inventory_ledger","request_id","TEXT");
-      await ensureColumn(env,"financial_entries","request_id","TEXT");
-      await ensureColumn(env,"supply_costs","request_id","TEXT");
-      await ensureColumn(env,"documents","request_id","TEXT");
-      await ensureColumn(env,"supply_cases","request_id","TEXT");
-      await ensureColumn(env,"supply_milestones","request_id","TEXT");
-      await ensureColumn(env,"accounts","request_id","TEXT");
-      await ensureColumn(env,"accounting_ledger","amount_minor","INTEGER NOT NULL DEFAULT 0");
-      await env.DB.batch([
-        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_request_id_unique ON inventory_ledger(request_id) WHERE request_id IS NOT NULL"),
-        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_financial_request_id_unique ON financial_entries(request_id) WHERE request_id IS NOT NULL"),
-        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_cost_request_id_unique ON supply_costs(request_id) WHERE request_id IS NOT NULL"),
-        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_documents_request_id_unique ON documents(request_id) WHERE request_id IS NOT NULL"),
-        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_cases_request_id_unique ON supply_cases(request_id) WHERE request_id IS NOT NULL"),
-        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_supply_milestones_request_id_unique ON supply_milestones(request_id) WHERE request_id IS NOT NULL"),
-        env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_request_id_unique ON accounts(request_id) WHERE request_id IS NOT NULL")
-      ]);
-      await env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES ('cogs','بهای تمام‌شده','cogs','USD',0,0,1,datetime('now'),datetime('now'))");
-      for(const cur of ["IRR","EUR","TRY","AED","GBP","SAR"]){
-        await env.DB.batch([
-          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'cash',?3,0,0,1,datetime('now'),datetime('now'))").bind("cash:"+cur,"صندوق "+cur,cur),
-          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'bank',?3,0,0,1,datetime('now'),datetime('now'))").bind("bank:"+cur,"بانک "+cur,cur),
-          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'receivable',?3,0,0,1,datetime('now'),datetime('now'))").bind("receivables:"+cur,"دریافتنی "+cur,cur),
-          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'inventory',?3,0,0,1,datetime('now'),datetime('now'))").bind("inventory:"+cur,"موجودی "+cur,cur),
-          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'expense',?3,0,0,1,datetime('now'),datetime('now'))").bind("expense:"+cur,"هزینه "+cur,cur),
-          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'income',?3,0,0,1,datetime('now'),datetime('now'))").bind("income:"+cur,"درآمد "+cur,cur),
-          env.DB.prepare("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,opening_balance_minor,current_balance_minor,active,created_at,updated_at) VALUES(?1,?2,'cogs',?3,0,0,1,datetime('now'),datetime('now'))").bind("cogs:"+cur,"بهای تمام‌شده "+cur,cur)
-        ]);
-      }
-      await env.DB.batch([
-        env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('paper','A4 Copy Paper','کاغذ کپی A4','ورق نسخ A4','ream','USD',0,0,0,0,0,'Gorgan',1,datetime('now'))"),
-        env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('film','Lamination Films','فیلم لمینیشن','أفلام التغليف','kg','USD',0,0,0,0,0,'Gorgan',0,datetime('now'))"),
-        env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('adhesive','Water-Based Adhesives','چسب‌های پایه آب','لاصقات مائية','kg','USD',0,0,0,0,0,'Gorgan',0,datetime('now'))"),
-        env.DB.prepare("INSERT OR IGNORE INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('packaging','Packaging Materials','مواد بسته‌بندی','مواد التغليف','unit','USD',0,0,0,0,0,'Gorgan',0,datetime('now'))")
-      ]);
-      return true;
-    }).catch(()=>{operationsSchemaPromise=null;return false;});
-  }
-  return operationsSchemaPromise;
+  try{
+    const required=["products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines","supply_costs","documents","supply_cases","supply_milestones","audit_log","audit_flags","operational_settings","rate_limits"];
+    const tables=new Set(((await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results||[]).map(x=>x.name));
+    if(required.some(x=>!tables.has(x)))return false;
+    const requiredColumns={
+      products:["unit_price_minor","unit_cost_minor","stock_qty","reserved_qty","sold_qty","warehouse"],
+      orders:["request_id","total_minor"],
+      order_items:["unit_price_minor","line_total_minor","unit_cost_minor"],
+      inventory_ledger:["request_id","warehouse"],
+      financial_entries:["request_id"],
+      supply_costs:["request_id"],
+      documents:["request_id"],
+      supply_cases:["request_id"],
+      supply_milestones:["request_id"],
+      accounts:["request_id"],
+      audit_log:["request_id"]
+    };
+    for(const [table,cols] of Object.entries(requiredColumns)){
+      const info=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];
+      const have=new Set(info.map(x=>x.name));
+      if(cols.some(x=>!have.has(x)))return false;
+    }
+    const requiredTriggers=["prevent_negative_stock","prevent_reserved_over_available","prevent_negative_sold","prevent_audit_update","prevent_audit_delete","prevent_financial_entry_update","prevent_financial_entry_delete","prevent_inventory_ledger_update","prevent_inventory_ledger_delete","prevent_accounting_ledger_update","prevent_accounting_ledger_delete","prevent_invalid_journal_line_insert","prevent_journal_tx_update","prevent_journal_tx_delete","prevent_journal_line_update","prevent_journal_line_delete"];
+    const triggers=new Set(((await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='trigger'").all()).results||[]).map(x=>x.name));
+    return requiredTriggers.every(x=>triggers.has(x));
+  }catch(_){return false}
 }
 
 async function handleForm(request,env,origin){
