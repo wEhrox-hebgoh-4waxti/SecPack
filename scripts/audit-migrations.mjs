@@ -28,10 +28,34 @@ for (const file of files) {
 }
 
 const duplicates = [...versions.entries()].filter(([, list]) => list.length > 1);
+const allSql = files.map(file => readFileSync(join(dir, file), "utf8")).join("\n");
+const baselineContracts = {
+  products: ["unit_cost_minor", "warehouse"],
+  orders: ["request_id"],
+  order_items: ["unit_cost_minor"],
+  inventory_ledger: ["request_id", "warehouse"],
+  accounting_ledger: ["request_id"],
+  accounts: ["request_id"],
+  financial_entries: ["request_id"],
+  supply_costs: ["request_id"],
+  documents: ["request_id"],
+  supply_cases: ["request_id"],
+  supply_milestones: ["request_id"]
+};
 
 console.log("SEC PACK migration audit");
 console.log(`Files: ${files.length}`);
 console.log(`Highest version: ${Math.max(0, ...versions.keys())}`);
+
+for (const [table, columns] of Object.entries(baselineContracts)) {
+  for (const column of columns) {
+    const pattern = new RegExp(`\\b${column}\\b`, "i");
+    if (!pattern.test(allSql)) {
+      console.error(`ERROR: baseline schema contract missing ${table}.${column}`);
+      process.exit(1);
+    }
+  }
+}
 
 if (invalid.length) {
   console.error("Invalid migration filenames:", invalid.join(", "));
