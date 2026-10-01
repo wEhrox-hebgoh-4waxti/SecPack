@@ -139,8 +139,10 @@ async function auditStatement(env,{action,entityType,entityId,before=null,after=
     .bind(crypto.randomUUID(),actor,action,entityType,entityId||null,before?JSON.stringify(before):null,after?JSON.stringify(after):null,requestId||null,new Date().toISOString());
 }
 
+let schemaReadiness={at:0,ok:false};
 async function schemaReady(env){
   if(!env.DB)return false;
+  if(Date.now()-schemaReadiness.at<30000)return schemaReadiness.ok;
   try{
     const required=["products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines","supply_costs","documents","supply_cases","supply_milestones","audit_log","audit_flags","operational_settings","rate_limits"];
     const tables=new Set(((await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results||[]).map(x=>x.name));
@@ -165,8 +167,13 @@ async function schemaReady(env){
     }
     const requiredTriggers=["prevent_negative_stock","prevent_reserved_over_available","prevent_negative_sold","prevent_audit_update","prevent_audit_delete","prevent_financial_entry_update","prevent_financial_entry_delete","prevent_inventory_ledger_update","prevent_inventory_ledger_delete","prevent_accounting_ledger_update","prevent_accounting_ledger_delete","prevent_invalid_journal_line_insert","prevent_journal_tx_update","prevent_journal_tx_delete","prevent_journal_line_update","prevent_journal_line_delete"];
     const triggers=new Set(((await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='trigger'").all()).results||[]).map(x=>x.name));
-    return requiredTriggers.every(x=>triggers.has(x));
-  }catch(_){return false}
+    const ok=requiredTriggers.every(x=>triggers.has(x));
+    schemaReadiness={at:Date.now(),ok};
+    return ok;
+  }catch(_){
+    schemaReadiness={at:Date.now(),ok:false};
+    return false;
+  }
 }
 
 async function handleForm(request,env,origin){
