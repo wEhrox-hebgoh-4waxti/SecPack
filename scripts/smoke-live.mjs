@@ -18,6 +18,9 @@ for (const [name, url] of checks) {
     console.log(name, r.status, r.headers.get("content-type") || "", body.slice(0, 120).replace(/\s+/g, " "));
     if (r.status < 200 || r.status >= 400) fail.push(`${name}: HTTP ${r.status}`);
     if (name === "health" && (!body.includes('"ok":true') || !body.includes('"commerceSchema":true'))) fail.push(`health: unhealthy response ${body}`);
+    if (name === "catalog" && /"(?:(?:unit_)?price(?:_minor)?|stock_qty|reserved_qty|sold_qty|unit_cost_minor|warehouse)"/.test(body)) {
+      fail.push("catalog: public response contains internal commercial/inventory fields");
+    }
   } catch (e) {
     fail.push(`${name}: ${e.message}`);
   }
