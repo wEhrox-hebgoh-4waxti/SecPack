@@ -1,3 +1,4 @@
+account_id = "3bd54dc7be56e0ade3d2e99a273853d6"
 name = "secpack"
 main = "worker/advisor.js"
 compatibility_date = "2026-09-25"
