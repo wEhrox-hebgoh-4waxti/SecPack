@@ -3,6 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS accounts (
   id TEXT PRIMARY KEY,
+  request_id TEXT UNIQUE,
   name TEXT NOT NULL,
   account_type TEXT NOT NULL,
   currency TEXT NOT NULL DEFAULT 'USD',
@@ -17,6 +18,7 @@ CREATE INDEX IF NOT EXISTS idx_accounts_type_currency ON accounts(account_type,c
 
 CREATE TABLE IF NOT EXISTS financial_entries (
   id TEXT PRIMARY KEY,
+  request_id TEXT,
   account_id TEXT NOT NULL,
   entry_type TEXT NOT NULL,
   amount_minor INTEGER NOT NULL,
@@ -34,6 +36,7 @@ CREATE INDEX IF NOT EXISTS idx_financial_entries_reference ON financial_entries(
 
 CREATE TABLE IF NOT EXISTS supply_costs (
   id TEXT PRIMARY KEY,
+  request_id TEXT UNIQUE,
   category TEXT NOT NULL,
   supplier TEXT,
   description TEXT NOT NULL,
@@ -54,6 +57,7 @@ CREATE INDEX IF NOT EXISTS idx_supply_costs_category_created ON supply_costs(cat
 
 CREATE TABLE IF NOT EXISTS documents (
   id TEXT PRIMARY KEY,
+  request_id TEXT UNIQUE,
   document_type TEXT NOT NULL,
   title TEXT NOT NULL,
   reference_type TEXT,
