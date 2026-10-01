@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS products (
   currency TEXT NOT NULL DEFAULT 'USD',
   unit_price REAL NOT NULL DEFAULT 0,
   unit_price_minor INTEGER NOT NULL DEFAULT 0,
+  unit_cost_minor INTEGER NOT NULL DEFAULT 0,
+  warehouse TEXT NOT NULL DEFAULT 'Gorgan',
   stock_qty INTEGER NOT NULL DEFAULT 0,
   reserved_qty INTEGER NOT NULL DEFAULT 0,
   sold_qty INTEGER NOT NULL DEFAULT 0,
@@ -17,6 +19,7 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE TABLE IF NOT EXISTS orders (
   id TEXT PRIMARY KEY,
   order_no TEXT NOT NULL UNIQUE,
+  request_id TEXT UNIQUE,
   customer_name TEXT NOT NULL,
   company TEXT,
   email TEXT NOT NULL,
@@ -45,7 +48,8 @@ CREATE TABLE IF NOT EXISTS order_items (
   unit_price REAL NOT NULL,
   line_total REAL NOT NULL,
   unit_price_minor INTEGER NOT NULL,
-  line_total_minor INTEGER NOT NULL
+  line_total_minor INTEGER NOT NULL,
+  unit_cost_minor INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
@@ -58,7 +62,9 @@ CREATE TABLE IF NOT EXISTS inventory_ledger (
   movement_type TEXT NOT NULL,
   quantity INTEGER NOT NULL,
   reference_id TEXT,
+  request_id TEXT,
   note TEXT,
+  warehouse TEXT NOT NULL DEFAULT 'Gorgan',
   created_at TEXT NOT NULL
 );
 
@@ -70,6 +76,7 @@ CREATE TABLE IF NOT EXISTS accounting_ledger (
   entry_type TEXT NOT NULL,
   amount REAL NOT NULL DEFAULT 0,
   amount_minor INTEGER NOT NULL DEFAULT 0,
+  request_id TEXT,
   currency TEXT NOT NULL,
   description TEXT,
   created_at TEXT NOT NULL
