@@ -722,25 +722,24 @@ export default {
       return new Response(bin,{status:200,headers:{"Content-Type":match[1]||doc.mime_type||"image/jpeg","Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Content-Disposition":"inline"}});
     }
     if(url.pathname==="/health"&&request.method==="GET"){try{
-      const ready=await ensureOperationsSchema(env);
-      const required=["products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines"];
+      const required=["products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines","supply_costs","documents","supply_cases","supply_milestones","audit_log","audit_flags","operational_settings","rate_limits"];
       const rows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results:[];
       const tables=new Set(rows.map(x=>x.name));
-      const requiredColumns={products:["unit_price_minor","unit_cost_minor","stock_qty","reserved_qty"],orders:["request_id","total_minor"],order_items:["unit_price_minor","line_total_minor","unit_cost_minor"],inventory_ledger:["request_id"],financial_entries:["request_id"],supply_costs:["request_id"],documents:["request_id"],supply_cases:["request_id"],supply_milestones:["request_id"],accounts:["request_id"]};
-      let columnsOk=true;
-      if(ready)for(const [table,cols] of Object.entries(requiredColumns)){const info=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];const have=new Set(info.map(x=>x.name));if(cols.some(x=>!have.has(x))){columnsOk=false;break;}}
-      const requiredTriggers=["prevent_negative_stock","prevent_reserved_over_available","prevent_negative_sold","prevent_audit_update","prevent_audit_delete","prevent_financial_entry_update","prevent_financial_entry_delete","prevent_inventory_ledger_update","prevent_inventory_ledger_delete","prevent_accounting_ledger_update","prevent_accounting_ledger_delete","prevent_invalid_journal_line_insert"];
-      const triggerRows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='trigger'").all()).results||[]:[];
+      const requiredColumns={products:["unit_price_minor","unit_cost_minor","stock_qty","reserved_qty","sold_qty"],orders:["request_id","total_minor"],order_items:["unit_price_minor","line_total_minor","unit_cost_minor"],inventory_ledger:["request_id"],financial_entries:["request_id"],supply_costs:["request_id"],documents:["request_id"],supply_cases:["request_id"],supply_milestones:["request_id"],accounts:["request_id"],audit_log:["request_id"]};
+      let columnsOk=Boolean(env.DB);
+      if(columnsOk)for(const [table,cols] of Object.entries(requiredColumns)){const info=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];const have=new Set(info.map(x=>x.name));if(cols.some(x=>!have.has(x))){columnsOk=false;break;}}
+      const requiredTriggers=["prevent_negative_stock","prevent_reserved_over_available","prevent_negative_sold","prevent_audit_update","prevent_audit_delete","prevent_financial_entry_update","prevent_financial_entry_delete","prevent_inventory_ledger_update","prevent_inventory_ledger_delete","prevent_accounting_ledger_update","prevent_accounting_ledger_delete","prevent_invalid_journal_line_insert","prevent_journal_tx_update","prevent_journal_tx_delete","prevent_journal_line_update","prevent_journal_line_delete"];
+      const triggerRows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='trigger'").all()).results||[];
       const triggers=new Set(triggerRows.map(x=>x.name));
       const triggersOk=requiredTriggers.every(x=>triggers.has(x));
-      const healthy=Boolean(env.DB)&&ready&&required.every(x=>tables.has(x))&&columnsOk&&triggersOk;
+      const healthy=Boolean(env.DB)&&required.every(x=>tables.has(x))&&columnsOk&&triggersOk;
       return response({ok:healthy,service:"secpack-api",database:Boolean(env.DB),commerceSchema:healthy,time:new Date().toISOString()},healthy?200:503,null);
     }catch(_){return response({ok:false,service:"secpack-api",database:Boolean(env.DB),commerceSchema:false},503,null)}}
-    const needsOperations = url.pathname==="/catalog" || url.pathname==="/forms" || url.pathname==="/advisor" || url.pathname==="/" || url.pathname.startsWith("/admin/") || url.pathname==="/payment/webhook";
-    if(needsOperations && env.DB && !await ensureOperationsSchema(env)) return response({error:"Database initialization is temporarily unavailable."},503,null);
     const origin=request.headers.get("Origin");
     if(!origin||!ORIGINS.has(origin))return response({error:"Origin not allowed."},403,origin);
     if(request.method==="OPTIONS")return response({},204,origin);
+    const needsOperations = url.pathname==="/catalog" || url.pathname==="/forms" || url.pathname==="/advisor" || url.pathname==="/" || url.pathname.startsWith("/admin/") || url.pathname==="/payment/webhook";
+    if(needsOperations && env.DB && !await ensureOperationsSchema(env)) return response({error:"Database initialization is temporarily unavailable."},503,origin);
     if(url.pathname==="/catalog"&&request.method==="GET")try{return response({products:await catalog(env)},200,origin)}catch(_){return response({error:"Catalog unavailable."},503,origin)};
     if(url.pathname.startsWith("/admin/"))return adminRequest(request,env,origin);
     if(url.pathname==="/payment/webhook"&&request.method==="POST"){if(!webhookAuthorized(request,env))return response({error:"Unauthorized."},401,origin);return response({ok:false,error:"Payment provider is not connected yet."},501,origin)}
