@@ -37,9 +37,17 @@ if (invalid.length) {
   console.error("Invalid migration filenames:", invalid.join(", "));
   process.exit(1);
 }
+const knownDuplicateVersions = new Set([3,4,5,6,7]);
 if (duplicates.length) {
   console.warn("WARNING: duplicate migration version prefixes:");
-  for (const [version, list] of duplicates) console.warn(`  ${String(version).padStart(4,"0")}: ${list.join(", ")}`);
+  for (const [version, list] of duplicates) {
+    console.warn(`  ${String(version).padStart(4,"0")}: ${list.join(", ")}`);
+  }
+  const unexpected = duplicates.filter(([version]) => !knownDuplicateVersions.has(version));
+  if (unexpected.length) {
+    console.error("ERROR: new duplicate migration version prefixes detected.");
+    process.exit(1);
+  }
 }
 if (markers.length) {
   console.warn("WARNING: compatibility/marker migrations detected:");
