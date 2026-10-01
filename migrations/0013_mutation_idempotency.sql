@@ -1,4 +1,4 @@
--- Compatibility marker for idempotency schema.
--- Existing deployments may have received these columns through the runtime
--- self-healing path. ensureOperationsSchema is the canonical additive path
--- and creates the guarded unique indexes after columns exist.
+-- Compatibility marker.
+-- Idempotency columns are now part of the baseline schema and are therefore
+-- created deterministically on fresh databases. Existing deployments keep
+-- their historical migration record; no runtime schema mutation is required.
