@@ -200,7 +200,7 @@ async function createOrder(data,env,origin){
   for(const id of ids){const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1 AND active=1").bind(id).first();if(!p||Number(p.unit_price_minor)<=0)return response({error:"One or more selected products are currently unavailable."},409,origin);products.push(p)}
   if(data.requestId){
     const existing=await env.DB.prepare("SELECT id,order_no,total,total_minor,currency FROM orders WHERE request_id=?1").bind(data.requestId).first();
-    if(existing)return response({ok:true,orderId:existing.id,orderNo:existing.order_no,total:minorToMoney(existing.total_minor,existing.currency),currency:existing.currency},202,origin);
+    if(existing)return response({ok:true,orderId:existing.id,orderNo:existing.order_no,status:"submitted"},202,origin);
   }
   const map=new Map(products.map(p=>[p.id,p])),stockStatementIndexes=[],orderId=crypto.randomUUID(),orderNo="SP-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+orderId.slice(0,6).toUpperCase(),now=new Date().toISOString();
   if(new Set(products.map(p=>p.currency)).size!==1)return response({error:"Selected products must use the same currency."},409,origin);
@@ -220,7 +220,7 @@ async function createOrder(data,env,origin){
   try{
     statements.push(await auditStatement(env,{action:"ORDER_CREATED",entityType:"order",entityId:orderId,after:{order_no:orderNo,total_minor:total,currency:products[0]?.currency||"USD",items:lines.map(x=>({product_id:x.p.id,quantity:x.qty}))},requestId:data.requestId}));
     await env.DB.batch(statements);
-    return response({ok:true,orderId,orderNo,total:minorToMoney(total,products[0]?.currency||"USD"),currency:products[0]?.currency||"USD"},202,origin);
+    return response({ok:true,orderId,orderNo,status:"submitted"},202,origin);
   }catch(e){
     if(data.requestId){
       const existing=await env.DB.prepare("SELECT id,order_no,total_minor,currency FROM orders WHERE request_id=?1").bind(data.requestId).first();
@@ -231,8 +231,8 @@ async function createOrder(data,env,origin){
 }
 
 async function catalog(env){
-  const rows=await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price_minor,stock_qty,reserved_qty,active FROM products WHERE active=1 AND unit_price_minor>0 ORDER BY id").all();
-  return rows.results.map(p=>({...p,available_qty:Math.max(0,Number(p.stock_qty||0)-Number(p.reserved_qty||0)),unit_price:minorToMoney(p.unit_price_minor,p.currency),unit_price_minor:Number(p.unit_price_minor)}));
+  const rows=await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit FROM products WHERE active=1 ORDER BY id").all();
+  return rows.results.map(p=>({id:p.id,name_en:p.name_en,name_fa:p.name_fa,name_ar:p.name_ar,unit:p.unit}));
 }
 async function adminDashboard(env){
   const products=(await env.DB.prepare("SELECT id,name_en,name_fa,name_ar,unit,currency,unit_price,stock_qty,reserved_qty,sold_qty,active,updated_at FROM products ORDER BY id").all()).results;
