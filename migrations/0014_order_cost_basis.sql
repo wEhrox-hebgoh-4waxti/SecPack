@@ -1,3 +1,4 @@
--- Compatibility marker for order cost basis.
--- The runtime schema reconciler adds unit_cost_minor when it is absent, which
--- keeps both fresh and previously self-healed databases deployable.
+-- Compatibility marker.
+-- unit_cost_minor is now part of the baseline commerce schema. Existing
+-- deployments retain this migration in their history; schema ownership lives
+-- in migrations rather than request-time ALTER TABLE operations.
