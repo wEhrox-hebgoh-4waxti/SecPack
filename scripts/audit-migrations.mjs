@@ -49,9 +49,20 @@ if (duplicates.length) {
     process.exit(1);
   }
 }
+const knownMarkers = new Set([
+  "0004_commerce.sql",
+  "0005_money_minor_units.sql",
+  "0013_mutation_idempotency.sql",
+  "0014_order_cost_basis.sql"
+]);
 if (markers.length) {
   console.warn("WARNING: compatibility/marker migrations detected:");
   for (const file of markers) console.warn(`  ${file}`);
+  const unexpectedMarkers = markers.filter(file => !knownMarkers.has(file));
+  if (unexpectedMarkers.length) {
+    console.error("ERROR: new compatibility/marker migrations detected.");
+    process.exit(1);
+  }
 }
 if (/\b(?:ALTER TABLE|CREATE TABLE|CREATE TRIGGER|DROP TRIGGER)\b/i.test(workerSource)) {
   runtimeDdl.push("worker/advisor.js");
