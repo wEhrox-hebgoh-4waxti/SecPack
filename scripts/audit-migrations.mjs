@@ -45,7 +45,7 @@ if (markers.length) {
   console.warn("WARNING: compatibility/marker migrations detected:");
   for (const file of markers) console.warn(`  ${file}`);
 }
-if (/\\b(?:ALTER TABLE|CREATE TABLE|CREATE TRIGGER|DROP TRIGGER)\\b/i.test(workerSource)) {
+if (/\b(?:ALTER TABLE|CREATE TABLE|CREATE TRIGGER|DROP TRIGGER)\b/i.test(workerSource)) {
   runtimeDdl.push("worker/advisor.js");
 }
 if (runtimeDdl.length) {
