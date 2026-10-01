@@ -2,6 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS supply_cases (
   id TEXT PRIMARY KEY,
+  request_id TEXT UNIQUE,
   case_no TEXT NOT NULL UNIQUE,
   product_id TEXT,
   quantity INTEGER NOT NULL DEFAULT 0,
@@ -18,6 +19,7 @@ CREATE TABLE IF NOT EXISTS supply_cases (
 
 CREATE TABLE IF NOT EXISTS supply_milestones (
   id TEXT PRIMARY KEY,
+  request_id TEXT UNIQUE,
   case_id TEXT NOT NULL,
   milestone_type TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending',
