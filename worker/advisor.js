@@ -95,18 +95,11 @@ async function readJson(request,max=MAX_BODY){
 }
 async function ensureReady(env){return Boolean(env.DB&&env[KEY]);}
 
-let operationsSchemaPromise=null;
-async function ensureColumn(env,table,column,definition){
-  const allowed=new Set(["inquiries","products","orders","order_items","inventory_ledger","accounting_ledger","financial_entries","supply_costs","documents","supply_cases","supply_milestones","accounts"]);
-  if(!allowed.has(table))throw new Error("invalid_table");
-  const rows=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];
-  if(!rows.some(x=>x.name===column))await env.DB.prepare("ALTER TABLE "+table+" ADD COLUMN "+column+" "+definition).run();
-}
 async function resolveAccount(env,accountId,currency){
   const raw=text(accountId,60);
   const exact=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(raw).first();
   if(exact)return exact;
-  const symbolic=["cash","bank","receivables","payable","inventory","expense","income","cogs"];
+  const symbolic=["cash","bank","receivables","payable","payables","inventory","expense","income","cogs"];
   if(symbolic.includes(raw)){
     const candidate=raw+":"+currency;
     const scoped=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(candidate).first();
