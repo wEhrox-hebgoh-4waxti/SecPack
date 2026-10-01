@@ -2,11 +2,13 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const dir = "migrations";
+const workerSource = readFileSync("worker/advisor.js", "utf8");
 const files = readdirSync(dir).filter((x) => x.endsWith(".sql")).sort((a,b) => a.localeCompare(b));
 
 const versions = new Map();
 const markers = [];
 const invalid = [];
+const runtimeDdl = [];
 
 for (const file of files) {
   const m = /^(\d+)_([^/]+)\.sql$/.exec(file);
@@ -43,4 +45,12 @@ if (markers.length) {
   console.warn("WARNING: compatibility/marker migrations detected:");
   for (const file of markers) console.warn(`  ${file}`);
 }
+if (/\\b(?:ALTER TABLE|CREATE TABLE|CREATE TRIGGER|DROP TRIGGER)\\b/i.test(workerSource)) {
+  runtimeDdl.push("worker/advisor.js");
+}
+if (runtimeDdl.length) {
+  console.error("ERROR: runtime schema DDL detected in Worker source:", runtimeDdl.join(", "));
+  process.exit(1);
+}
+console.log("Runtime schema authority: migrations only.");
 console.log("Audit complete. Duplicate/marker findings are currently report-only until the remote D1 history is reconciled.");
