@@ -56,6 +56,15 @@ jobs:
       - name: Validate Wrangler configuration
         run: npx wrangler@4.145.0 deploy --dry-run --outdir=/tmp/secpack-worker-dryrun
 
+      - name: Verify D1 database access
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error \\
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \\
+            "https://api.cloudflare.com/client/v4/accounts/3bd54dc7be56e0ade3d2e99a273853d6/d1/database/a0c162d5-2706-428c-9be8-802968b2273c"
+
       - name: Inspect D1 migration state
         run: npx wrangler@4.145.0 d1 migrations list secpack-prod --remote
         env:
