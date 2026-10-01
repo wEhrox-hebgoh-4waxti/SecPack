@@ -139,7 +139,7 @@ async function auditStatement(env,{action,entityType,entityId,before=null,after=
     .bind(crypto.randomUUID(),actor,action,entityType,entityId||null,before?JSON.stringify(before):null,after?JSON.stringify(after):null,requestId||null,new Date().toISOString());
 }
 
-async function ensureOperationsSchema(env){
+async function schemaReady(env){
   if(!env.DB)return false;
   try{
     const required=["products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines","supply_costs","documents","supply_cases","supply_milestones","audit_log","audit_flags","operational_settings","rate_limits"];
@@ -652,7 +652,7 @@ export default {
     if(!origin||!ORIGINS.has(origin))return response({error:"Origin not allowed."},403,origin);
     if(request.method==="OPTIONS")return response({},204,origin);
     const needsOperations = url.pathname==="/catalog" || url.pathname==="/forms" || url.pathname==="/advisor" || url.pathname==="/" || url.pathname.startsWith("/admin/") || url.pathname==="/payment/webhook";
-    if(needsOperations && env.DB && !await ensureOperationsSchema(env)) return response({error:"Database initialization is temporarily unavailable."},503,origin);
+    if(needsOperations && env.DB && !await schemaReady(env)) return response({error:"Database initialization is temporarily unavailable."},503,origin);
     if(url.pathname==="/catalog"&&request.method==="GET")try{return response({products:await catalog(env)},200,origin)}catch(_){return response({error:"Catalog unavailable."},503,origin)};
     if(url.pathname.startsWith("/admin/"))return adminRequest(request,env,origin);
     if(url.pathname==="/payment/webhook"&&request.method==="POST"){if(!webhookAuthorized(request,env))return response({error:"Unauthorized."},401,origin);return response({ok:false,error:"Payment provider is not connected yet."},501,origin)}
