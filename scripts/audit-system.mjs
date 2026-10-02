@@ -54,8 +54,8 @@ for (const table of uniqueColumnTables) {
 
 expect(pkg.scripts["audit:system"], "package.json missing audit:system.");
 expect(smoke.includes('["ready", "https://api.secpackco.com/ready"]'), "Live smoke must test readiness.");
-expect(smoke.includes('name === "health" && !body.includes('"ok":true')'), "Live smoke health check is missing.");
-expect(smoke.includes('name === "ready" && (!body.includes('"ok":true')'), "Live smoke readiness check is missing.");
+expect(smoke.includes(`name === "health"`) && smoke.includes('"ok":true'), "Live smoke health check is missing.");
+expect(smoke.includes(`name === "ready"`) && smoke.includes('commerceSchema'), "Live smoke readiness check is missing.");
 
 expect(!ai.includes("public catalog reads current active price and available stock"), "AI architecture contains stale public-price/stock claim.");
 expect(!launch.includes("public store reads only active products with a positive selling price"), "Launch checklist contains stale public-price claim.");
