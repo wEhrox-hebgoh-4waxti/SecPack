@@ -15,9 +15,12 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
       - run: node --check worker/advisor.js
       - run: node --check assets/js/admin.js
       - run: node --check assets/js/accounting.js
@@ -25,7 +28,8 @@ jobs:
       - run: node --check scripts/test-db-integrity.mjs
       - run: node --check scripts/smoke-live.mjs
       - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npm run audit:system
       - run: npm run audit:migrations
       - run: npm run test:db
       - run: npm run test:db:integrity
-      - run: npx wrangler deploy --dry-run
+      - run: npx wrangler@4.145.0 deploy --dry-run --outdir=/tmp/secpack-worker-dryrun
