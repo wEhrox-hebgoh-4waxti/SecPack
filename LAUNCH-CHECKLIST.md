@@ -12,7 +12,7 @@
 - [x] Duplicate request protection
 - [x] Rate limiting with hashed client identifiers
 - [x] Security headers
-- [x] D1 migration files (0001–0007)
+- [x] Versioned D1 migration files with frozen historical history and additive production hardening
 - [x] Canonical root Wrangler configuration
 - [x] Removed obsolete Worker Wrangler configuration
 
@@ -21,7 +21,7 @@
 2. Put its real `database_id` in the canonical `wrangler.toml`.
 3. Configure the OpenAI API credential as a Cloudflare Secret.
 4. Configure a strong random `RATE_LIMIT_SALT` as a Cloudflare Secret (recommended; Worker safely falls back to the OpenAI secret until then).
-5. Apply all D1 migrations, including 0001–0007.
+5. Confirm the remote `d1_migrations` history, then apply only unapplied migrations through CI.
 6. Verify the Worker custom domain `api.secpackco.com`.
 7. Verify HTTPS and HSTS at the production domain.
 
@@ -48,10 +48,10 @@
 
 ## Commerce operations layer
 
-- Product catalog is server-controlled in D1; public store reads only active products with a positive selling price.
-- Price editing, stock adjustment, order status, accounting summary and in-person sales are available in `pages/admin.html`.
+- Product catalog is server-controlled in D1; public store exposes only active product identity/unit data.
+- Controlled price editing, stock receipt, order status, accounting summary and in-person sales are available in the private Admin UI.
 - Online orders reserve stock immediately; cancellation releases the reservation; fulfillment converts reserved stock to sold stock.
-- In-person sales decrement available stock and create inventory/accounting ledger entries in the same D1 transaction.
+- In-person sales decrement stock and create canonical Journal + inventory + audit records in the same D1 transaction.
 - New online orders create an unread operational alert in D1. The admin dashboard polls for new alerts and can use browser notifications.
 - Monetary values are stored in integer minor units for accounting accuracy.
 - Before using the admin screen, configure a strong random Cloudflare Secret named `ADMIN_TOKEN`. Do not put it in GitHub or public files.
@@ -63,12 +63,12 @@
 - [x] Online order reservation and fulfillment lifecycle
 - [x] In-person sales linked to inventory and accounting
 - [x] Expandable chart of accounts
-- [x] Manual financial entries and supplier/supply-chain costs
+- [x] Business-level financial entries and supplier/supply-chain costs routed through the canonical Journal
 - [x] Factory purchase, customs, freight and warehouse cost categories
 - [x] Stock receipt workflow
 - [x] Operational audit flags for low stock, overdue orders, missing accounting records and negative cash/bank
 - [x] AI accounting operations review using aggregate data only
 - [x] Private document image capture with size-limited D1 storage
-- [x] Offline queue for sales/financial entries/document captures; automatic sync when connectivity returns
+- [ ] Offline queue security and reconciliation hardening; browser-local operational data must not become a second source of truth
 - [x] Installable/offline website shell
 - [ ] Payment gateway and server-side settlement webhook — intentionally pending
