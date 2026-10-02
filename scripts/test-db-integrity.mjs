@@ -33,6 +33,7 @@ run("INSERT INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,un
 run("UPDATE products SET reserved_qty=6 WHERE id='"+productId+"';");
 
 expectFailure("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,created_at) VALUES('bad-movement-"+suffix+"','"+productId+"','TEST',0,datetime('now'));", "Expected invalid inventory movement guard did not fire.");
+expectFailure("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,created_at) VALUES('bad-type-"+suffix+"','"+productId+"','UNKNOWN',1,datetime('now'));", "Expected invalid inventory movement type guard did not fire.");
 expectFailure("UPDATE products SET stock_qty=5 WHERE id='"+productId+"';", "Expected stock-below-reservation guard did not fire.");
 run("UPDATE products SET stock_qty=4,reserved_qty=0,sold_qty=6 WHERE id='"+productId+"';");
 expectFailure("UPDATE products SET sold_qty=-1 WHERE id='"+productId+"';", "Expected negative-sold guard did not fire.");
@@ -40,6 +41,12 @@ expectFailure("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity
 run("UPDATE products SET stock_qty=9 WHERE id='"+productId+"';");
 
 run("INSERT INTO orders(id,order_no,customer_name,email,currency,created_at,updated_at) VALUES('"+orderId+"','"+orderNo+"','Integrity','integrity@example.com','USD',datetime('now'),datetime('now'));");
+expectFailure("UPDATE orders SET status='ready' WHERE id='"+orderId+"';", "Expected unpaid order -> ready transition guard did not fire.");
+run("UPDATE orders SET status='paid',payment_status='paid' WHERE id='"+orderId+"';");
+run("UPDATE orders SET status='ready' WHERE id='"+orderId+"';");
+expectFailure("UPDATE orders SET status='fulfilled' WHERE id='"+orderId+"';", "Expected paid -> fulfilled shortcut guard did not fire.");
+expectFailure("UPDATE orders SET payment_status='unpaid' WHERE id='"+orderId+"';", "Expected paid -> unpaid payment transition guard did not fire.");
+
 run("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor,unit_cost_minor) VALUES('"+itemId+"','"+orderId+"','paper','Integrity','unit',1,1,1,100,100,50);");
 expectFailure("UPDATE order_items SET unit_cost_minor=75 WHERE id='"+itemId+"';", "Expected historical order cost-basis guard did not fire.");
 run("DELETE FROM order_items WHERE id='"+itemId+"';");
