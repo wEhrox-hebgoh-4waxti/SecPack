@@ -45,7 +45,7 @@ jobs:
           rm -f site/assets/README* 2>/dev/null || true
 
       - name: Upload site
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./site
 
