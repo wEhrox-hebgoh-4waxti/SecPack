@@ -670,17 +670,21 @@ async function adminRequest(request,env,origin){
     if(!limited.allowed)return response({error:"Too many authentication attempts."},429,origin);
     const got=request.headers.get("Authorization")||"";
     if(!await secretEquals(got,"Bearer "+env[ADMIN_KEY]))return response({error:"Unauthorized."},401,origin);
-    const payload=String(Date.now()),sig=await signSession(payload,env),h=response({ok:true},200,origin).headers;
+    const sessionId=crypto.randomUUID(),ts=Date.now(),payload=sessionId+"."+String(ts),expiresAt=new Date(ts+8*60*60*1000).toISOString();
+    try{await env.DB.prepare("INSERT INTO admin_sessions(session_id,created_at,expires_at) VALUES(?1,?2,?3)").bind(sessionId,new Date(ts).toISOString(),expiresAt).run();}catch(_){return response({error:"Admin session service unavailable."},503,origin);}
+    const sig=await signSession(payload,env),h=response({ok:true},200,origin).headers;
     h.set("Set-Cookie",sessionCookie(payload+"."+sig));return new Response(JSON.stringify({ok:true}),{status:200,headers:h});
   }
   if(path==="/admin/logout"&&request.method==="POST"){
+    const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\\s*)__Host-sp_admin=([^;]+)/);
+    if(m){const parts=decodeURIComponent(m[1]).split(".");if(parts.length===3&&/^[0-9a-f-]{36}$/i.test(parts[0]))await env.DB.prepare("UPDATE admin_sessions SET revoked_at=?1 WHERE session_id=?2 AND revoked_at IS NULL").bind(new Date().toISOString(),parts[0]).run().catch(()=>{});}
     const h=response({ok:true},200,origin).headers;h.set("Set-Cookie","__Host-sp_admin=; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=Strict");return new Response(JSON.stringify({ok:true}),{status:200,headers:h});
   }
   if(!(await verifySession(request,env))){
     const limited=await rateLimit(env,request,"admin-auth",10);
     return response({error:"Unauthorized."},limited.allowed?401:429,origin);
   }
-  if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/refund"||path==="/admin/document"||path==="/admin/audit")return adminAccounting(request,env,origin);
+if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/refund"||path==="/admin/document"||path==="/admin/audit")return adminAccounting(request,env,origin);
   if(path==="/admin/dashboard"&&request.method==="GET")return response(await adminDashboard(env),200,origin);
   if(path==="/admin/audit-log"&&request.method==="GET"){
     const rows=(await env.DB.prepare("SELECT id,actor,action,entity_type,entity_id,before_json,after_json,request_id,created_at FROM audit_log ORDER BY created_at DESC LIMIT 100").all()).results;
