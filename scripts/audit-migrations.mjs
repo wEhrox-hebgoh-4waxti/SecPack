@@ -31,10 +31,10 @@ const duplicates = [...versions.entries()].filter(([, list]) => list.length > 1)
 const allSql = files.map(file => readFileSync(join(dir, file), "utf8")).join("\n");
 const requiredIndexes = [
   "idx_orders_request_id_unique",
-  "idx_inventory_request_id_unique",
-  "idx_financial_entries_request_id_unique",
-  "idx_audit_log_request_id_unique",
-  "idx_accounting_ledger_request_id_unique"
+  "idx_orders_request_id_unique",
+  "idx_inquiries_request_id_unique",
+  "idx_accounting_ledger_request_id_unique",
+  "idx_journal_request_id_unique"
 ];
 
 const baselineContracts = {
