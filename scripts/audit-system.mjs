@@ -64,12 +64,12 @@ for (const [path,action] of adminMutationContracts) {
   expect(worker.includes("action:\""+action+"\""), "Admin mutation is missing canonical audit action: "+action);
 }
 expect(worker.includes("async function secretEquals"), "Constant-time secret comparison helper missing.");
-expect(worker.includes("await secretEquals(got,"Bearer "+env[ADMIN_KEY])"), "Admin login must use constant-time secret verification.");
-expect(worker.includes("action:"ALERT_READ""), "Alert acknowledgement must be auditable.");
-expect(worker.includes("action:"DOCUMENT_CREATED""), "Document creation must be auditable.");
-expect(worker.includes("action:"DOCUMENT_SHARED""), "Document sharing must be auditable.");
-expect(worker.includes("action:"SUPPLY_CASE_CREATED""), "Supply-case creation must be auditable.");
-expect(worker.includes("action:"SUPPLY_MILESTONE_UPDATED""), "Supply-milestone updates must be auditable.");
+expect(worker.includes('await secretEquals(got,"Bearer "+env[ADMIN_KEY])'), "Admin login must use constant-time secret verification.");
+expect(worker.includes('action:"ALERT_READ"'), "Alert acknowledgement must be auditable.");
+expect(worker.includes('action:"DOCUMENT_CREATED"'), "Document creation must be auditable.");
+expect(worker.includes('action:"DOCUMENT_SHARED"'), "Document sharing must be auditable.");
+expect(worker.includes('action:"SUPPLY_CASE_CREATED"'), "Supply-case creation must be auditable.");
+expect(worker.includes('action:"SUPPLY_MILESTONE_UPDATED"'), "Supply-milestone updates must be auditable.");
 expect(worker.includes("__Host-sp_admin"), "Secure admin session cookie missing.");
 expect(worker.includes("SameSite=Strict"), "Strict admin session cookie missing.");
 expect(worker.includes('if(!origin||!ORIGINS.has(origin))'), "Origin allowlist gate missing.");
