@@ -69,6 +69,6 @@
 - [x] Operational audit flags for low stock, overdue orders, missing accounting records and negative cash/bank
 - [x] AI accounting operations review using aggregate data only
 - [x] Private document image capture with size-limited D1 storage
-- [ ] Offline queue security and reconciliation hardening; browser-local operational data must not become a second source of truth
+- [x] Browser-local operational queue removed for sensitive accounting/document mutations; D1 remains the only operational source of truth
 - [x] Installable/offline website shell
 - [ ] Payment gateway and server-side settlement webhook — intentionally pending
