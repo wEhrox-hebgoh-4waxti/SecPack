@@ -469,6 +469,38 @@ async function adminAccounting(request,env,origin){
     stm.push(await auditStatement(env,{action:"SUPPLY_COST_CREATED",entityType:"supply_cost",entityId:id,after:{category,amount_minor:amount,currency,status,account_id:accountId},requestId}));
     try{await env.DB.batch(stm);return response({ok:true,id},200,origin)}catch(_){return response({error:"Supply cost could not be recorded."},500,origin)}
   }
+  if(path==="/admin/supply-cost/pay"&&request.method==="POST"){
+    const b=await readJson(request),id=text(b.id,80),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(!id)return response({error:"Supply cost id is required."},400,origin);
+    if(requestId){
+      const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first();
+      if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);
+    }
+    const cost=await env.DB.prepare("SELECT * FROM supply_costs WHERE id=?1").bind(id).first();
+    if(!cost)return response({error:"Supply cost not found."},404,origin);
+    if(cost.status==="paid")return response({ok:true,id:cost.id,status:"paid",replayed:true},200,origin);
+    if(cost.status==="cancelled")return response({error:"Cancelled supply costs cannot be paid."},409,origin);
+    const paymentAccount=text(b.account_id,60)||text(cost.account_id,60)||"cash";
+    const now=new Date().toISOString();
+    const journal=await buildJournal(env,{referenceType:"supply_cost_payment",referenceId:id,description:"Supply cost payment · "+cost.description,currency:cost.currency,requestId,lines:[{accountId:"expense",side:"debit",amount:Number(cost.amount_minor)},{accountId:paymentAccount,side:"credit",amount:Number(cost.amount_minor)}]});
+    if(!journal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
+    const stm=[
+      env.DB.prepare("UPDATE supply_costs SET status='paid',paid_at=?1,account_id=?2,updated_at=?1 WHERE id=?3 AND status='planned'").bind(now,paymentAccount,id),
+      ...journal.statements,
+      await auditStatement(env,{action:"SUPPLY_COST_PAID",entityType:"supply_cost",entityId:id,before:{status:cost.status,paid_at:cost.paid_at||null},after:{status:"paid",paid_at:now,account_id:paymentAccount,amount_minor:Number(cost.amount_minor),currency:cost.currency},requestId})
+    ];
+    try{
+      await env.DB.batch(stm);
+      return response({ok:true,id,status:"paid",currency:cost.currency,total:minorToMoney(cost.amount_minor,cost.currency)},200,origin);
+    }catch(_){
+      if(requestId){
+        const prior=await env.DB.prepare("SELECT id,total_minor,currency FROM journal_transactions WHERE request_id=?1").bind(requestId).first().catch(()=>null);
+        if(prior)return response({ok:true,id:prior.id,total:minorToMoney(prior.total_minor,prior.currency),currency:prior.currency,replayed:true},200,origin);
+      }
+      return response({error:"Supply cost payment could not be recorded."},500,origin);
+    }
+  }
+
   if(path==="/admin/stock-receipt"&&request.method==="POST"){
     const b=await readJson(request),productId=text(b.product_id,50),qty=Number(b.quantity),currency=text(b.currency,8)||"USD",unitCost=moneyToMinor(b.unit_cost,currency),accountId=text(b.account_id,60)||"cash";
     if(!productId||!Number.isInteger(qty)||qty<1||unitCost===null||unitCost<=0)return response({error:"Invalid stock receipt."},400,origin);
