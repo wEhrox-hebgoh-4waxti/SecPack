@@ -587,8 +587,8 @@ async function adminAccounting(request,env,origin){
   if(path==="/admin/document/share"&&request.method==="POST"){
     const b=await readJson(request),id=text(b.id,80),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;if(!id)return response({error:"Document id required."},400,origin);
     if(requestId){
-      const prior=await env.DB.prepare("SELECT id,after_json FROM audit_log WHERE request_id=?1 AND action='DOCUMENT_SHARED' LIMIT 1").bind(requestId).first();
-      if(prior){let after={};try{after=JSON.parse(prior.after_json||"{}")}catch(_){};return response({ok:true,replayed:true,url:after.url||null,expires_at:after.expires_at||null},200,origin);}
+      const prior=await env.DB.prepare("SELECT id FROM audit_log WHERE request_id=?1 AND action='DOCUMENT_SHARED' LIMIT 1").bind(requestId).first();
+      if(prior)return response({error:"This document share request has already been processed. Generate a new share link if the original response was lost."},409,origin);
     }
     const doc=await env.DB.prepare("SELECT id FROM documents WHERE id=?1").bind(id).first();if(!doc)return response({error:"Document not found."},404,origin);
     const token=randomToken(),hash=await digest(token),expires=new Date(Date.now()+7*24*60*60*1000).toISOString();
@@ -596,7 +596,7 @@ async function adminAccounting(request,env,origin){
     try{
       await env.DB.batch([
         env.DB.prepare("UPDATE documents SET share_token_hash=?1,share_expires_at=?2 WHERE id=?3").bind(hash,expires,id),
-        await auditStatement(env,{action:"DOCUMENT_SHARED",entityType:"document",entityId:id,after:{url,expires_at:expires},requestId})
+        await auditStatement(env,{action:"DOCUMENT_SHARED",entityType:"document",entityId:id,after:{token_hash:hash,expires_at:expires},requestId})
       ]);
     }catch(_){return response({error:"Document share link could not be created."},500,origin);}
     return response({ok:true,url:"https://api.secpackco.com/document/share?token="+encodeURIComponent(token),expires_at:expires},200,origin);
