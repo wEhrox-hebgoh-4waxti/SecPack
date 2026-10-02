@@ -8,7 +8,8 @@
     "deploy": "npx wrangler deploy",
     "test:db": "npx wrangler d1 migrations apply DB --local && npx wrangler d1 execute DB --local --command=\"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('products','orders','accounts','journal_transactions','journal_lines','inventory_ledger','audit_log') ORDER BY name\"",
     "test:db:integrity": "npx wrangler d1 migrations apply DB --local && node scripts/test-db-integrity.mjs",
-    "audit:migrations": "node scripts/audit-migrations.mjs"
+    "audit:migrations": "node scripts/audit-migrations.mjs",
+    "audit:system": "node scripts/audit-system.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.102.0"
