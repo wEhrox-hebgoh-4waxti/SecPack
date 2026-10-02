@@ -57,7 +57,7 @@ expect(!/INSERT INTO financial_entries|UPDATE financial_entries|DELETE FROM fina
 expect(!/INSERT INTO accounting_ledger|UPDATE accounting_ledger|DELETE FROM accounting_ledger/i.test(worker), "Worker writes legacy accounting_ledger; Journal must be canonical.");
 expect(!/if\(path===["']\/admin\/accounting["']&&request\.method===["']GET["'][\s\S]{0,180}runAudit\(/i.test(worker), "GET /admin/accounting must remain read-only.");
 expect(worker.includes("journal_transactions") && worker.includes("journal_lines"), "Journal engine missing.");
-for (const trigger of ["prevent_order_item_cost_update","prevent_account_structure_update","prevent_orphan_order_item_insert","prevent_orphan_inventory_movement_insert","prevent_product_delete_with_history","prevent_invalid_supply_milestone_transition"]) expect(worker.includes(trigger), "Worker readiness contract missing trigger: "+trigger);
+for (const trigger of ["prevent_order_item_cost_update","prevent_account_structure_update","prevent_orphan_order_item_insert","prevent_orphan_inventory_movement_insert","prevent_product_delete_with_history","prevent_invalid_supply_milestone_transition","prevent_invalid_order_status_transition","prevent_invalid_payment_status_transition","prevent_invalid_inventory_movement_type"]) expect(worker.includes(trigger), "Worker readiness contract missing trigger: "+trigger);
 expect(worker.includes("await env.DB.batch"), "Business mutations are not using D1 batch transactions.");
 expect(worker.includes("stock_qty-reserved_qty>=?1"), "Reservation/sale paths must enforce available stock at the mutation boundary.");
 expect(worker.includes('if(next==="ready"&&order.payment_status!=="paid")'), "Ready order state must require confirmed payment.");
