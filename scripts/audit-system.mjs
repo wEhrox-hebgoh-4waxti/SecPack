@@ -7,6 +7,8 @@ const expect = (condition, message) => { if (!condition) fail.push(message); };
 
 const worker = read("worker/advisor.js");
 const smoke = read("scripts/smoke-live.mjs");
+const storeJs = read("assets/js/pages-store.js");
+const storeHtml = read("pages/store.html");
 const pkg = JSON.parse(read("package.json"));
 const architecture = read("SYSTEM-ARCHITECTURE.md");
 const ai = read("AI-ARCHITECTURE.md");
@@ -28,6 +30,8 @@ const readyStart = worker.indexOf(`if(url.pathname==="/ready"`);
 const healthBlock = healthStart >= 0 && readyStart > healthStart ? worker.slice(healthStart, readyStart) : "";
 expect(healthBlock && !healthBlock.includes("schemaReady("), "Health endpoint is coupled to readiness.");
 expect(worker.includes('SELECT id,name_en,name_fa,name_ar,unit FROM products'), "Public catalog contract is not minimal.");
+for (const field of ["unit_price","unit_price_minor","available_qty","stock_qty","reserved_qty","sold_qty","unit_cost_minor"]) expect(!new RegExp("\\b"+field+"\\b").test(storeJs), "Store frontend exposes internal field: "+field);
+expect(!/Current price|Available|Order total/.test(storeHtml), "Store HTML contains public pricing/inventory presentation.");
 for (const field of publicForbidden) {
   const catalogBlock = worker.match(/async function catalog\(env\)\{[\s\S]*?\n\}/)?.[0] || "";
   expect(!new RegExp("\\b"+field+"\\b").test(catalogBlock), "Public catalog exposes internal field: "+field);
