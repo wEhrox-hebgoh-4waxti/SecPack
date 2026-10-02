@@ -104,7 +104,9 @@ async function readJson(request,max=MAX_BODY){
   const raw=await request.text();if(raw.length>max)throw new Error("too_large");
   try{return JSON.parse(raw)}catch(_){throw new Error("invalid")}
 }
-async function ensureReady(env){return Boolean(env.DB&&env[KEY]);}
+function dbReady(env){return Boolean(env.DB);}
+function aiReady(env){return Boolean(env.DB&&env[KEY]);}
+async function ensureReady(env){return dbReady(env);}
 
 async function resolveAccount(env,accountId,currency){
   const raw=text(accountId,60);
@@ -164,7 +166,7 @@ async function schemaReady(env){
   if(!env.DB)return false;
   if(Date.now()-schemaReadiness.at<30000)return schemaReadiness.ok;
   try{
-    const required=["inquiries","products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines","supply_costs","documents","supply_cases","supply_milestones","audit_log","audit_flags","operational_settings","rate_limits"];
+    const required=["inquiries","admin_sessions","products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines","supply_costs","documents","supply_cases","supply_milestones","audit_log","audit_flags","operational_settings","rate_limits"];
     const tables=new Set(((await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results||[]).map(x=>x.name));
     if(required.some(x=>!tables.has(x))){schemaReadiness={at:Date.now(),ok:false};return false;}
     const requiredColumns={
@@ -718,7 +720,11 @@ async function handleAdvisor(request,env,origin){
 }
 
 export default {
-  async scheduled(_controller,env){if(!env.DB)return;try{await env.DB.prepare("DELETE FROM rate_limits WHERE window_start < ?1").bind(Date.now()-2*WINDOW_MS).run();await runAudit(env);}catch(_){}},
+  async scheduled(_controller,env){if(!env.DB)return;try{
+      await env.DB.prepare("DELETE FROM rate_limits WHERE window_start < ?1").bind(Date.now()-2*WINDOW_MS).run();
+      await env.DB.prepare("DELETE FROM admin_sessions WHERE expires_at < ?1 OR revoked_at IS NOT NULL").bind(new Date(Date.now()-24*60*60*1000).toISOString()).run();
+      await runAudit(env);
+    }catch(_){}},
   async fetch(request,env){
     const url=new URL(request.url);
 
