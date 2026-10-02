@@ -65,7 +65,8 @@ for (const [path,action] of adminMutationContracts) {
   expect(worker.includes(path), "Admin mutation route missing: "+path);
   expect(worker.includes("action:\""+action+"\""), "Admin mutation is missing canonical audit action: "+action);
 }
-expect(worker.includes("async function secretEquals"), "Constant-time secret comparison helper missing.");\nexpect(worker.includes("function dbReady") && worker.includes("function aiReady"), "Service readiness separation missing.");
+expect(worker.includes("async function secretEquals"), "Constant-time secret comparison helper missing.");
+expect(worker.includes("function dbReady") && worker.includes("function aiReady"), "Service readiness separation missing.");
 expect(worker.includes('return secretEquals(got,"Bearer "+expected);'), "Admin authorization must use constant-time secret verification.");
 expect(worker.includes('action:"ALERT_READ"'), "Alert acknowledgement must be auditable.");
 expect(worker.includes('action:"DOCUMENT_CREATED"'), "Document creation must be auditable.");
