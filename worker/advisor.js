@@ -244,7 +244,7 @@ async function createOrder(data,env,origin){
   const statements=[env.DB.prepare("INSERT INTO orders(id,order_no,request_id,customer_name,company,email,phone,destination,payment_method,status,payment_status,currency,subtotal,total,subtotal_minor,total_minor,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,'pending','unpaid',?10,?11,?11,?12,?12,?13,?14,?14)").bind(orderId,orderNo,data.requestId||null,data.name,data.company||null,data.email,data.phone||null,data.destination||null,data.payment||null,products[0]?.currency||"USD",minorToMoney(total,products[0]?.currency||"USD"),total,data.notes||null,now,now)];
   for(const x of lines){
     stockStatementIndexes.push(statements.length);
-    statements.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0").bind(x.qty,now,x.p.id));
+    statements.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0 AND stock_qty-reserved_qty>=?1").bind(x.qty,now,x.p.id));
     statements.push(env.DB.prepare("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor,unit_cost_minor) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)").bind(crypto.randomUUID(),orderId,x.p.id,x.p.name_en,x.p.unit,x.qty,minorToMoney(x.p.unit_price_minor,x.p.currency),minorToMoney(x.line,x.p.currency),x.p.unit_price_minor,x.line,Number(x.p.unit_cost_minor)));
     statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5,?6,?7)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,data.requestId||null,x.p.warehouse||"Gorgan",now));
   }
@@ -307,7 +307,7 @@ async function adminSale(request,env,origin){
   const cogsJournal=await buildJournal(env,{referenceType:"manual_cogs",referenceId:saleId,description:"COGS · In-person sale",currency:p.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"cogs",side:"debit",amount:costTotal},{accountId:"inventory",side:"credit",amount:costTotal}]});
   if(!journal||!cogsJournal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
   try{
-    const stm=[env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3 AND active=1").bind(qty,now,id),
+    const stm=[env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND stock_qty-reserved_qty>=?1").bind(qty,now,id),
       env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'SALE',?3,?4,?5,?6,?7,?8)").bind(crypto.randomUUID(),id,qty,saleId,"Manual / in-person sale",requestId||null,p.warehouse||"Gorgan",now),
       ...journal.statements,
       ...cogsJournal.statements,
@@ -328,6 +328,7 @@ async function adminOrderStatus(request,env,origin){
   if(order.status==="fulfilled"||order.status==="cancelled"||!allowedOrderTransition(order.status,next))return response({error:"Invalid order status transition."},409,origin);
   if(next==="cancelled"&&order.payment_status==="paid")return response({error:"A paid order requires a refund/reversal workflow before cancellation."},409,origin);
   if(next==="fulfilled"&&order.payment_status!=="paid")return response({error:"Payment must be confirmed before fulfillment."},409,origin);
+  if(next==="ready"&&order.payment_status!=="paid")return response({error:"Payment must be confirmed before an order is marked ready."},409,origin);
   const now=new Date().toISOString(),items=(await env.DB.prepare("SELECT * FROM order_items WHERE order_id=?1").bind(orderId).all()).results,stm=[];
   if(next==="cancelled"){
     for(const x of items){
@@ -553,6 +554,14 @@ async function adminAccounting(request,env,origin){
     if(order.payment_status!=="paid")return response({error:"Only paid orders can be refunded."},409,origin);
     const existing=await env.DB.prepare("SELECT id FROM journal_transactions WHERE reference_type='order_refund_payment' AND reference_id=?1 LIMIT 1").bind(orderId).first();if(existing)return response({error:"This order has already been refunded."},409,origin);
     const returnInventory=b.return_inventory===true,now=new Date().toISOString(),stm=[];
+    // A paid order that has not been fulfilled still owns reserved stock. Refund must release that reservation atomically.
+    if(order.status!=="fulfilled"){
+      const items=(await env.DB.prepare("SELECT product_id,quantity FROM order_items WHERE order_id=?1").bind(orderId).all()).results;
+      for(const x of items){
+        stm.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty-?1,updated_at=?2 WHERE id=?3 AND reserved_qty>=?1").bind(x.quantity,now,x.product_id));
+        stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'RELEASE',?3,?4,'Refund / reservation released',?5,?6,?7)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,(await env.DB.prepare("SELECT warehouse FROM products WHERE id=?1").bind(x.product_id).first())?.warehouse||"Gorgan",now));
+      }
+    }
     const saleReverse=await buildJournal(env,{referenceType:"order_refund_sale",referenceId:orderId,description:"Refund revenue · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":sale":null,lines:[{accountId:"income",side:"debit",amount:Number(order.total_minor)},{accountId:"receivables",side:"credit",amount:Number(order.total_minor)}]});
     const paymentReverse=await buildJournal(env,{referenceType:"order_refund_payment",referenceId:orderId,description:"Refund customer payment · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":payment":null,lines:[{accountId:"receivables",side:"debit",amount:Number(order.total_minor)},{accountId:"bank",side:"credit",amount:Number(order.total_minor)}]});
     if(!saleReverse||!paymentReverse)return response({error:"Refund accounts are not configured for this currency."},409,origin);
