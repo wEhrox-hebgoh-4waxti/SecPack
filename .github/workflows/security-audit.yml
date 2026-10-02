@@ -131,7 +131,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --exclude-dir=.git --exclude='security-audit.yml' --exclude='.gitignore' '\*\.[A-Za-z0-9.-]+' .; then
+          if grep -RInE --exclude-dir=.git --exclude='security-audit.yml' --exclude='.gitignore' --exclude='.gitattributes' '\*\.[A-Za-z0-9.-]+' .; then
             echo "Wildcard DNS reference detected; review for subdomain-takeover risk."
             exit 1
           fi
