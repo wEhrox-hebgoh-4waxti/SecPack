@@ -73,6 +73,9 @@ expect(worker.includes('action:"SUPPLY_CASE_CREATED"'), "Supply-case creation mu
 expect(worker.includes('action:"SUPPLY_MILESTONE_UPDATED"'), "Supply-milestone updates must be auditable.");
 expect(worker.includes("__Host-sp_admin"), "Secure admin session cookie missing.");
 expect(worker.includes("SameSite=Strict"), "Strict admin session cookie missing.");
+expect(worker.includes('"Cross-Origin-Opener-Policy":"same-origin"'), "COOP header missing.");
+expect(worker.includes('"Cross-Origin-Resource-Policy":"same-site"'), "CORP header missing.");
+expect(worker.includes('"X-Permitted-Cross-Domain-Policies":"none"'), "Cross-domain policy header missing.");
 expect(worker.includes('if(!origin||!ORIGINS.has(origin))'), "Origin allowlist gate missing.");
 expect(worker.includes('return response({ok:false,error:"Payment provider is not connected yet."},501'), "Payment webhook must remain disabled until payment integration is approved.");
 
