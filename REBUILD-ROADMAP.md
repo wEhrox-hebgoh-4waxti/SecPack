@@ -102,7 +102,7 @@ Every mutation must be covered for:
 
 **Phase 7 — Production security**
 - MFA/TOTP;
-- session rotation/revocation;
+- session rotation/revocation via server-backed admin sessions;
 - least-privilege Cloudflare credentials;
 - rate-limit hardening;
 - document/R2 decision;
@@ -482,7 +482,7 @@ Verify after every step:
 ### Still required
 1. Resolve Cloudflare D1 7403.
 2. Verify remote migration state.
-3. Verify remote schema/index/trigger state.
+3. Verify remote schema/index/trigger/session state.
 4. Run complete local and remote end-to-end business flow.
 5. Reconcile legacy accounting data.
 6. Complete route-by-route Admin security audit.
