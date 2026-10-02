@@ -69,8 +69,15 @@ function renderAccounting(d){
     const s=document.createElement("span");s.textContent=amoney(fromMinor(x.current_balance_minor,x.currency),x.currency);e.append(b,s);return e;
   }));
   const costs=a("accountingCosts");if(costs)costs.replaceChildren(...(d.costs||[]).slice(0,20).map(x=>{
-    const e=document.createElement("div");e.className="account-row";const s=document.createElement("span");s.textContent=x.category+" · "+x.description;
-    const b=document.createElement("b");b.textContent=amoney(fromMinor(x.amount_minor,x.currency),x.currency);e.append(s,b);return e;
+    const e=document.createElement("div");e.className="account-row";
+    const wrap=document.createElement("div"),s=document.createElement("span");s.textContent=x.category+" · "+x.description+" · "+(x.status||"");
+    const b=document.createElement("b");b.textContent=amoney(fromMinor(x.amount_minor,x.currency),x.currency);wrap.append(s,b);e.append(wrap);
+    if(x.status==="planned"){
+      const pay=document.createElement("button");pay.className="btn";pay.type="button";pay.textContent="ثبت پرداخت";
+      pay.onclick=async()=>{try{await accountingApi("/admin/supply-cost/pay",{request_id:crypto.randomUUID(),id:x.id});await loadAccounting();}catch(err){alert(err.message);}};
+      e.append(pay);
+    }
+    return e;
   }));
   window.SEC_PACK_ADMIN_PRODUCTS=d.products||window.SEC_PACK_ADMIN_PRODUCTS||[];
   const pl=a("profitLoss");if(pl)pl.replaceChildren(...(d.profitAndLoss||[]).map(x=>{const e=document.createElement("div");e.className="account-row";const p=Number(x.revenue_minor||0)-Number(x.cogs_minor||0)-Number(x.expenses_minor||0);e.append(Object.assign(document.createElement("span"),{textContent:"درآمد "+amoney(fromMinor(x.revenue_minor,x.currency),x.currency)+" · بهای تمام‌شده "+amoney(fromMinor(x.cogs_minor,x.currency),x.currency)+" · هزینه "+amoney(fromMinor(x.expenses_minor,x.currency),x.currency)}),Object.assign(document.createElement("b"),{textContent:"سود/زیان: "+amoney(fromMinor(p,x.currency),x.currency)}));return e;}));
