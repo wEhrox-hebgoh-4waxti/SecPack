@@ -29,6 +29,14 @@ for (const file of files) {
 
 const duplicates = [...versions.entries()].filter(([, list]) => list.length > 1);
 const allSql = files.map(file => readFileSync(join(dir, file), "utf8")).join("\n");
+const requiredIndexes = [
+  "idx_orders_request_id_unique",
+  "idx_inventory_request_id_unique",
+  "idx_financial_entries_request_id_unique",
+  "idx_audit_log_request_id_unique",
+  "idx_accounting_ledger_request_id_unique"
+];
+
 const baselineContracts = {
   products: ["unit_cost_minor", "warehouse"],
   orders: ["request_id"],
@@ -46,6 +54,13 @@ const baselineContracts = {
 console.log("SEC PACK migration audit");
 console.log(`Files: ${files.length}`);
 console.log(`Highest version: ${Math.max(0, ...versions.keys())}`);
+
+for (const indexName of requiredIndexes) {
+  if (!new RegExp("\\b" + indexName + "\\b", "i").test(allSql)) {
+    console.error(`ERROR: required idempotency index missing ${indexName}`);
+    process.exit(1);
+  }
+}
 
 for (const [table, columns] of Object.entries(baselineContracts)) {
   for (const column of columns) {
