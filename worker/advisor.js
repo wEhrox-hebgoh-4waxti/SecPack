@@ -620,8 +620,9 @@ async function adminAccounting(request,env,origin){
     const types=["factory_order","factory_payment","customs","transport","warehouse_receipt","ready_for_delivery"];
     const stm=[env.DB.prepare("INSERT INTO supply_cases(id,request_id,case_no,product_id,quantity,supplier,currency,purchase_total_minor,status,expected_date,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,'open',?9,?10,?11,?11)").bind(id,requestId,caseNo,productId,qty,text(b.supplier,160),currency,total,text(b.expected_date,30)||null,text(b.notes,500)||null,now)];
     for(const type of types)stm.push(env.DB.prepare("INSERT INTO supply_milestones(id,case_id,milestone_type,status,created_at,updated_at) VALUES(?1,?2,?3,'pending',?4,?4)").bind(crypto.randomUUID(),id,type,now));
-    await env.DB.batch(stm);
-    return response({ok:true,id,caseNo},200,origin);
+    stm.push(await auditStatement(env,{action:"SUPPLY_CASE_CREATED",entityType:"supply_case",entityId:id,after:{case_no:caseNo,product_id:productId,quantity:qty,supplier:text(b.supplier,160)||null,currency,purchase_total_minor:total},requestId}));
+    try{await env.DB.batch(stm);return response({ok:true,id,caseNo},200,origin)}
+    catch(_){return response({error:"Supply case could not be created."},500,origin)}
   }
   if(path==="/admin/supply-milestone"&&request.method==="POST"){
     const b=await readJson(request),id=text(b.id,80),status=text(b.status,20),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
@@ -629,11 +630,15 @@ async function adminAccounting(request,env,origin){
     if(!id||!["pending","in_progress","done","blocked"].includes(status))return response({error:"Invalid milestone."},400,origin);
     const now=new Date().toISOString();
     const m=await env.DB.prepare("SELECT * FROM supply_milestones WHERE id=?1").bind(id).first();if(!m)return response({error:"Milestone not found."},404,origin);
-    await env.DB.batch([
-      env.DB.prepare("UPDATE supply_milestones SET status=?1,completed_at=?2,reference_id=?3,notes=?4,request_id=COALESCE(request_id,?5),updated_at=?6 WHERE id=?7").bind(status,status==="done"?now:null,text(b.reference_id,100)||null,text(b.notes,500)||null,requestId,now,id),
-      env.DB.prepare("UPDATE supply_cases SET status=CASE WHEN ?1='done' AND ?2='ready_for_delivery' THEN 'ready_for_delivery' WHEN ?1='blocked' THEN 'blocked' ELSE status END,updated_at=?3 WHERE id=?4").bind(status,m.milestone_type,now,m.case_id)
-    ]);
-    return response({ok:true},200,origin);
+    if(m.status===status)return response({ok:true,replayed:true},200,origin);
+    try{
+      await env.DB.batch([
+        env.DB.prepare("UPDATE supply_milestones SET status=?1,completed_at=?2,reference_id=?3,notes=?4,request_id=COALESCE(request_id,?5),updated_at=?6 WHERE id=?7").bind(status,status==="done"?now:null,text(b.reference_id,100)||null,text(b.notes,500)||null,requestId,now,id),
+        env.DB.prepare("UPDATE supply_cases SET status=CASE WHEN ?1='done' AND ?2='ready_for_delivery' THEN 'ready_for_delivery' WHEN ?1='blocked' THEN 'blocked' ELSE status END,updated_at=?3 WHERE id=?4").bind(status,m.milestone_type,now,m.case_id),
+        await auditStatement(env,{action:"SUPPLY_MILESTONE_UPDATED",entityType:"supply_milestone",entityId:id,before:{status:m.status},after:{status,case_id:m.case_id,milestone_type:m.milestone_type},requestId})
+      ]);
+      return response({ok:true},200,origin);
+    }catch(_){return response({error:"Supply milestone could not be updated."},500,origin)}
   }
   if(path==="/admin/audit"&&request.method==="POST"){return response({flags:await runAudit(env)},200,origin);}
   if(path==="/admin/accounting/assistant"&&request.method==="POST"){
