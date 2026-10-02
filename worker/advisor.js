@@ -75,7 +75,7 @@ async function signSession(payload,env){
   return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 }
 async function verifySession(request,env){
-  const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\\s*)__Host-sp_admin=([^;]+)/);if(!m||!env[ADMIN_KEY]||!env.DB)return false;
+  const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\s*)__Host-sp_admin=([^;]+)/);if(!m||!env[ADMIN_KEY]||!env.DB)return false;
   const parts=decodeURIComponent(m[1]).split(".");if(parts.length!==3)return false;
   const sessionId=parts[0],ts=Number(parts[1]),sig=parts[2];
   if(!/^[0-9a-f-]{36}$/i.test(sessionId)||!Number.isFinite(ts)||Date.now()-ts>8*60*60*1000||Date.now()<ts-60000)return false;
@@ -676,7 +676,7 @@ async function adminRequest(request,env,origin){
     h.set("Set-Cookie",sessionCookie(payload+"."+sig));return new Response(JSON.stringify({ok:true}),{status:200,headers:h});
   }
   if(path==="/admin/logout"&&request.method==="POST"){
-    const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\\s*)__Host-sp_admin=([^;]+)/);
+    const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\s*)__Host-sp_admin=([^;]+)/);
     if(m){const parts=decodeURIComponent(m[1]).split(".");if(parts.length===3&&/^[0-9a-f-]{36}$/i.test(parts[0]))await env.DB.prepare("UPDATE admin_sessions SET revoked_at=?1 WHERE session_id=?2 AND revoked_at IS NULL").bind(new Date().toISOString(),parts[0]).run().catch(()=>{});}
     const h=response({ok:true},200,origin).headers;h.set("Set-Cookie","__Host-sp_admin=; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=Strict");return new Response(JSON.stringify({ok:true}),{status:200,headers:h});
   }
