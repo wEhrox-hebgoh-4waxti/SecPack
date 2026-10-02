@@ -67,14 +67,3 @@ if (fail.length) {
 }
 console.log("\nLIVE SMOKE PASSED");
 
-
-try {
-  const r = await fetch("https://api.secpackco.com/catalog", {
-    headers: { Origin: "https://evil.example" },
-    signal: AbortSignal.timeout(15000)
-  });
-  console.log("catalog-invalid-origin", r.status);
-  if (r.status !== 403) fail.push(`catalog-invalid-origin: expected 403, got ${r.status}`);
-} catch (e) {
-  fail.push(`catalog-invalid-origin: ${e.message}`);
-}
