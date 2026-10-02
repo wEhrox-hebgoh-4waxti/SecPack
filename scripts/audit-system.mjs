@@ -23,7 +23,10 @@ expect(!/ensureOperationsSchema|ALTER TABLE|CREATE TABLE|CREATE TRIGGER|DROP TRI
 expect(worker.includes("async function schemaReady"), "schemaReady() missing.");
 expect(worker.includes('url.pathname==="/ready"'), "Dedicated readiness endpoint missing.");
 expect(worker.includes('url.pathname==="/health"'), "Liveness endpoint missing.");
-expect(!/url\.pathname==="\/health"[\s\S]{0,1000}schemaReady\(/.test(worker), "Health endpoint is coupled to schema mutation/readiness.");
+const healthStart = worker.indexOf(`if(url.pathname==="/health"`);
+const readyStart = worker.indexOf(`if(url.pathname==="/ready"`);
+const healthBlock = healthStart >= 0 && readyStart > healthStart ? worker.slice(healthStart, readyStart) : "";
+expect(healthBlock && !healthBlock.includes("schemaReady("), "Health endpoint is coupled to readiness.");
 expect(worker.includes('SELECT id,name_en,name_fa,name_ar,unit FROM products'), "Public catalog contract is not minimal.");
 for (const field of publicForbidden) {
   const catalogBlock = worker.match(/async function catalog\(env\)\{[\s\S]*?\n\}/)?.[0] || "";
