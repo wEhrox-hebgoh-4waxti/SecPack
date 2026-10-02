@@ -3,13 +3,13 @@
 CREATE UNIQUE INDEX IF NOT EXISTS idx_inquiries_request_id_unique
 ON inquiries(request_id) WHERE request_id IS NOT NULL;
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_request_id_unique
+CREATE INDEX IF NOT EXISTS idx_inventory_request_id
 ON inventory_ledger(request_id) WHERE request_id IS NOT NULL;
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_financial_entries_request_id_unique
+CREATE INDEX IF NOT EXISTS idx_financial_entries_request_id
 ON financial_entries(request_id) WHERE request_id IS NOT NULL;
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_log_request_id_unique
+CREATE INDEX IF NOT EXISTS idx_audit_log_request_id
 ON audit_log(request_id) WHERE request_id IS NOT NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_accounting_ledger_request_id_unique
