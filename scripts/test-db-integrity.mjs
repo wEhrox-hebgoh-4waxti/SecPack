@@ -35,7 +35,14 @@ expectFailure("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity
 expectFailure("UPDATE products SET stock_qty=5 WHERE id='__integrity_test__';", "Expected stock-below-reservation guard did not fire.");
 run("UPDATE products SET stock_qty=4,reserved_qty=0,sold_qty=6 WHERE id='__integrity_test__';");
 expectFailure("UPDATE products SET sold_qty=-1 WHERE id='__integrity_test__';", "Expected negative-sold guard did not fire.");
+expectFailure("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,created_at) VALUES('orphan-movement','__missing_product__','SALE',1,datetime('now'));", "Expected orphan inventory guard did not fire.");
 run("UPDATE products SET stock_qty=9 WHERE id='__integrity_test__';");
+
+run("INSERT INTO orders(id,order_no,customer_name,email,currency,created_at,updated_at) VALUES('__integrity_order__','SP-INTEGRITY','Integrity','integrity@example.com','USD',datetime('now'),datetime('now'));");
+run("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor,unit_cost_minor) VALUES('__integrity_item__','__integrity_order__','paper','Integrity','unit',1,1,1,100,100,50);");
+expectFailure("UPDATE order_items SET unit_cost_minor=75 WHERE id='__integrity_item__';", "Expected historical order cost-basis guard did not fire.");
+run("DELETE FROM order_items WHERE id='__integrity_item__';");
+run("DELETE FROM orders WHERE id='__integrity_order__';");
 
 run("DELETE FROM products WHERE id='__integrity_test__';");
 console.log("D1 inventory integrity guards: PASS");
