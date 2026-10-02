@@ -59,6 +59,10 @@ expect(!/if\(path===["']\/admin\/accounting["']&&request\.method===["']GET["'][\
 expect(worker.includes("journal_transactions") && worker.includes("journal_lines"), "Journal engine missing.");
 for (const trigger of ["prevent_order_item_cost_update","prevent_account_structure_update","prevent_orphan_order_item_insert","prevent_orphan_inventory_movement_insert","prevent_product_delete_with_history","prevent_invalid_supply_milestone_transition"]) expect(worker.includes(trigger), "Worker readiness contract missing trigger: "+trigger);
 expect(worker.includes("await env.DB.batch"), "Business mutations are not using D1 batch transactions.");
+expect(worker.includes("stock_qty-reserved_qty>=?1"), "Reservation/sale paths must enforce available stock at the mutation boundary.");
+expect(worker.includes('if(next==="ready"&&order.payment_status!=="paid")'), "Ready order state must require confirmed payment.");
+expect(worker.includes("Refund / reservation released"), "Refund workflow must release reservations for unfulfilled paid orders.");
+
 expect(worker.includes("X-Idempotency-Key"), "Idempotency header support missing.");
 expect(worker.includes('if(!await webhookAuthorized(request,env))'), "Payment webhook authorization must be awaited.");
 for (const [path,action] of adminMutationContracts) {
