@@ -45,4 +45,23 @@ expectFailure("UPDATE order_items SET unit_cost_minor=75 WHERE id='__integrity_i
 run("DELETE FROM order_items WHERE id='__integrity_item__';");
 run("DELETE FROM orders WHERE id='__integrity_order__';");
 
-console.log("D1 inventory integrity guards: PASS");
+
+// Supply-chain milestone lifecycle guard.
+run("INSERT INTO supply_cases(id,case_no,quantity,currency,purchase_total_minor,status,created_at,updated_at) VALUES('__integrity_case__','SC-INTEGRITY',1,'USD',100,'open',datetime('now'),datetime('now'));");
+run("INSERT INTO supply_milestones(id,case_id,milestone_type,status,created_at,updated_at) VALUES('__integrity_milestone__','__integrity_case__','transport','pending',datetime('now'),datetime('now'));");
+run("UPDATE supply_milestones SET status='done' WHERE id='__integrity_milestone__';");
+expectFailure("UPDATE supply_milestones SET status='in_progress' WHERE id='__integrity_milestone__';", "Expected terminal supply-milestone guard did not fire.");
+run("DELETE FROM supply_milestones WHERE id='__integrity_milestone__';");
+run("DELETE FROM supply_cases WHERE id='__integrity_case__';");
+
+// Account structure becomes immutable after journal use.
+run("INSERT OR IGNORE INTO accounts(id,name,account_type,currency,current_balance_minor,active,created_at,updated_at) VALUES('__integrity_account__','Integrity Account','cash','USD',0,1,datetime('now'),datetime('now'));");
+run("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at) VALUES('__integrity_tx__','integrity','__integrity__','Integrity transaction','USD',100,NULL,datetime('now'));");
+run("INSERT INTO journal_lines(id,transaction_id,account_id,side,amount_minor,currency,created_at) VALUES('__integrity_line_a__','__integrity_tx__','__integrity_account__','debit',100,'USD',datetime('now'));");
+expectFailure("UPDATE accounts SET name='Tampered' WHERE id='__integrity_account__';", "Expected account-structure immutability guard did not fire.");
+run("DELETE FROM journal_lines WHERE id='__integrity_line_a__';");
+run("DELETE FROM journal_transactions WHERE id='__integrity_tx__';");
+run("DELETE FROM accounts WHERE id='__integrity_account__';");
+
+console.log("D1 domain integrity guards: PASS");
+
