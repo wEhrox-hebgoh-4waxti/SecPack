@@ -45,7 +45,7 @@ The root `wrangler.toml` is the single canonical Worker configuration. The obsol
 
 D1 uses versioned migrations under `migrations/`. The production binding is `DB`, database name `secpack-prod`, and the repository contains migrations 0001 and 0002.
 
-The deployment script applies unapplied remote D1 migrations before deploying the Worker. Cloudflare records applied migrations in D1 and rolls back a failed migration, so migrations remain versioned rather than being manually edited in production.
+The deployment gate applies unapplied remote D1 migrations before deploying the Worker. The real remote migration history must be readable before any historical migration is renamed or deleted. Production schema changes are migration-only.
 
 ## Administrative access
 
@@ -58,9 +58,9 @@ Repository-level configuration and security controls can be audited here. Live C
 
 ## Commerce operations
 The same Worker and D1 database also provide the operational commerce layer:
-- public catalog reads current active price and available stock;
+- public catalog exposes only product identity and unit information; pricing and inventory remain private;
 - online orders reserve stock immediately and create order, inventory and accounting records in one D1 batch;
-- operations can update price and physical stock counts from the private dashboard;
-- in-person sales use the same inventory and accounting ledger;
+- operations can update price and stock only through controlled business workflows in the private dashboard;
+- in-person sales use the same inventory engine and canonical double-entry Journal;
 - order status controls payment confirmation, preparation, fulfillment and cancellation;
 - new orders create unread operational alerts for the management dashboard.
