@@ -14,7 +14,134 @@ Every business mutation follows:
 
 D1 is the system of record. Journal transactions/lines are the accounting source of truth. Legacy accounting tables are compatibility only.
 
-## 1. Current repository baseline
+#
+
+## 0A. Whole-system reconstruction gate
+
+The repository is treated as one coupled system. No feature is considered complete because its local route works.
+
+### Dependency graph
+
+`Public UI → Public API contract → domain command → authorization → idempotency → D1 transaction → inventory → Journal → audit → projection/report → Admin UI → CI/CD → live smoke`
+
+### Canonical write rules
+
+- Products: master data only; physical stock changes only through stock-receipt/controlled adjustment commands.
+- Orders: order state is changed only through the order state machine.
+- Inventory: every physical movement creates exactly one immutable inventory-ledger record inside the same transaction.
+- Accounting: every financial event enters the canonical Journal; legacy accounting tables are never written by business commands.
+- Accounts: structural fields become immutable after financial use; balances change only through Journal commands.
+- Supply costs: status changes and payment are one business transaction with one Journal event.
+- Documents: metadata and authorization stay in D1; binary storage is bounded and isolated from public data.
+- Audit: every meaningful mutation records before/after business state without secrets or share tokens.
+- Public responses: explicit DTOs only; internal rows are never serialized directly.
+
+### Required test matrix
+
+Every mutation must be covered for:
+
+1. valid first execution;
+2. duplicate execution with the same idempotency key;
+3. concurrent/retry execution;
+4. invalid state transition;
+5. insufficient inventory;
+6. accounting-account mismatch;
+7. transaction rollback;
+8. audit creation;
+9. public-response minimization;
+10. authorization failure.
+
+### Rebuild phases and hard gates
+
+**Phase 1 — Repository truth**
+- inventory every route, table, migration, trigger, index, frontend caller and CI gate;
+- eliminate contradictory contracts;
+- make the system audit fail closed.
+
+**Phase 2 — Database truth**
+- reconcile remote D1 migration history;
+- verify tables/columns/indexes/triggers;
+- run SQLite quick-check and foreign-key checks;
+- freeze historical migration cleanup until reconciliation is proven.
+
+**Phase 3 — Domain engines**
+- Product master;
+- Customer/inquiry;
+- Order/reservation;
+- Payment confirmation;
+- Fulfillment/COGS;
+- Return/refund;
+- Stock receipt/weighted-average valuation;
+- Supply cost/payment;
+- Supply case/milestones;
+- Documents;
+- Accounting commands.
+
+**Phase 4 — Cross-domain invariants**
+- inventory/accounting atomicity;
+- Journal balance;
+- account-balance reconciliation;
+- historical cost;
+- idempotency;
+- audit;
+- state machines.
+
+**Phase 5 — API/Admin**
+- route-by-route authorization;
+- GET read-only guarantees;
+- explicit response DTOs;
+- business-language Admin workflows;
+- no direct mutation of historical quantities/costs/Journals.
+
+**Phase 6 — Public site**
+- privacy contract;
+- multilingual consistency;
+- form/order UX;
+- no internal fields in source/API/browser state;
+- CSP-compatible assets.
+
+**Phase 7 — Production security**
+- MFA/TOTP;
+- session rotation/revocation;
+- least-privilege Cloudflare credentials;
+- rate-limit hardening;
+- document/R2 decision;
+- observability without sensitive logging.
+
+**Phase 8 — Release**
+- static audits;
+- local D1;
+- end-to-end deterministic fixtures;
+- remote D1 reconciliation;
+- migration apply;
+- deploy;
+- live smoke;
+- post-deploy health/readiness.
+
+### Stop conditions
+
+The rebuild must stop rather than patch forward if any of these occur:
+- remote D1 state is unknown while a historical migration change is proposed;
+- a business command writes two competing canonical ledgers;
+- a mutation can partially commit inventory without its accounting/audit effect;
+- a public DTO contains internal commercial/operational fields;
+- a GET endpoint mutates state;
+- an idempotency replay can create a second business event;
+- a terminal state can be reopened without a compensating business command.
+
+### Current known defects found by whole-system audit
+
+- legacy `accounting_ledger` was still being written by the Journal engine despite being declared compatibility-only — corrected;
+- payment webhook authorization was invoked without awaiting its async verifier — corrected;
+- system audit contained an outdated admin-secret assertion — corrected;
+- migration audit referenced an incorrect historical index name — corrected;
+- live smoke checked invalid-origin behavior after an early failure exit and could therefore skip that security test — corrected;
+- historical migration prefixes remain unresolved until remote `d1_migrations` is readable;
+- complete deterministic end-to-end accounting/inventory tests remain required;
+- MFA/TOTP remains unimplemented.
+
+
+# 1. Current repository baseline
 
 - Repository: `wEhrox-hebgoh-4waxti/SecPack`
 - Worker: `secpack`
