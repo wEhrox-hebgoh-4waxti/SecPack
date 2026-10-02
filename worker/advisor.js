@@ -312,7 +312,7 @@ async function adminOrderStatus(request,env,origin){
   if(next==="fulfilled"){
     let cogsTotal=0;
     for(const x of items){
-      const p=await env.DB.prepare("SELECT currency FROM products WHERE id=?1").bind(x.product_id).first();
+      const p=await env.DB.prepare("SELECT currency,warehouse FROM products WHERE id=?1").bind(x.product_id).first();
       const costPerUnit=Number(x.unit_cost_minor||0);
       if(!p||p.currency!==order.currency||costPerUnit<=0)return response({error:"Historical inventory cost is not configured for one or more order items."},409,origin);
       const lineCost=safeMultiply(Number(x.quantity),costPerUnit);if(lineCost===null)return response({error:"Inventory cost is outside the supported accounting range."},409,origin);
