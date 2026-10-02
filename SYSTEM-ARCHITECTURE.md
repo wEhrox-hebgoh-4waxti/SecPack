@@ -114,7 +114,7 @@ Never expose publicly:
 - customs data
 - internal documents
 
-Admin authentication uses a server-side secret only to bootstrap a short-lived signed Secure/HttpOnly/SameSite session. The secret is never stored in browser storage.
+Admin authentication uses a server-side secret only to bootstrap a short-lived signed Secure/HttpOnly/SameSite session. Session IDs are server-revocable in D1; the secret is never stored in browser storage.
 
 ## 9. Schema authority
 
