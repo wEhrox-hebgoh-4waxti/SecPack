@@ -1,4 +1,4 @@
-// Canonical system contract: business mutations, security boundaries and schema readiness are enforced as one pipeline.\n// All cross-domain changes are gated by the repository-wide system audit.\nconst ORIGINS = new Set(["https://secpackco.com", "https://www.secpackco.com"]);
+// Canonical system contract: business mutations, security boundaries and schema readiness are enforced as one pipeline.\n// All cross-domain changes are gated by the repository-wide system audit.\n// Public store privacy is part of the same API contract.\nconst ORIGINS = new Set(["https://secpackco.com", "https://www.secpackco.com"]);
 const MAX_BODY = 16000;
 const MAX_QUESTION = 6000;
 const MODEL = "gpt-5.6-terra";
