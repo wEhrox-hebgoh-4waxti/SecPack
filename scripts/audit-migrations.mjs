@@ -29,11 +29,11 @@ for (const file of files) {
 
 const duplicates = [...versions.entries()].filter(([, list]) => list.length > 1);
 const allSql = files.map(file => readFileSync(join(dir, file), "utf8")).join("\n");
-const requiredIndexes = [
-  "idx_orders_request_id",
-  "idx_inquiries_request_id_unique",
-  "idx_accounting_ledger_request_id_unique",
-  "idx_journal_request_id_unique"
+const requiredUniqueIndexes = [
+  ["idx_orders_request_id_unique", "orders(request_id)"],
+  ["idx_inquiries_request_id_unique", "inquiries(request_id)"],
+  ["idx_accounting_ledger_request_id_unique", "accounting_ledger(request_id)"],
+  ["idx_journal_request_id_unique", "journal_transactions(request_id)"]
 ];
 
 const baselineContracts = {
@@ -54,9 +54,16 @@ console.log("SEC PACK migration audit");
 console.log(`Files: ${files.length}`);
 console.log(`Highest version: ${Math.max(0, ...versions.keys())}`);
 
-for (const indexName of requiredIndexes) {
+for (const [indexName, target] of requiredUniqueIndexes) {
+  const pattern = new RegExp("CREATE\\s+UNIQUE\\s+INDEX(?:\\s+IF\\s+NOT\\s+EXISTS)?\\s+" + indexName + "\\s+ON\\s+" + target.replace(/[()]/g, "\\for (const indexName of requiredIndexes) {
   if (!new RegExp("\\b" + indexName + "\\b", "i").test(allSql)) {
     console.error(`ERROR: required idempotency index missing ${indexName}`);
+    process.exit(1);
+  }
+}
+"), "i");
+  if (!pattern.test(allSql)) {
+    console.error(`ERROR: required UNIQUE idempotency index missing ${indexName} on ${target}`);
     process.exit(1);
   }
 }
