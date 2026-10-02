@@ -40,6 +40,26 @@ try {
   fail.push(`catalog-cors-preflight: ${e.message}`);
 }
 
+try {
+  const r = await fetch("https://api.secpackco.com/catalog", {
+    headers: { Origin: "https://evil.example" },
+    signal: AbortSignal.timeout(15000)
+  });
+  console.log("catalog-invalid-origin", r.status);
+  if (r.status !== 403) fail.push(`catalog-invalid-origin: expected 403, got ${r.status}`);
+} catch (e) {
+  fail.push(`catalog-invalid-origin: ${e.message}`);
+}
+
+try {
+  const r = await fetch("https://api.secpackco.com/health", { signal: AbortSignal.timeout(15000) });
+  if (r.headers.get("strict-transport-security") === null) fail.push("health: HSTS header missing");
+  if (r.headers.get("x-content-type-options") !== "nosniff") fail.push("health: X-Content-Type-Options missing");
+  if (r.headers.get("x-frame-options") !== "DENY") fail.push("health: X-Frame-Options missing");
+} catch (e) {
+  fail.push(`security-headers: ${e.message}`);
+}
+
 if (fail.length) {
   console.error("\nLIVE SMOKE FAILED");
   for (const x of fail) console.error("-", x);
