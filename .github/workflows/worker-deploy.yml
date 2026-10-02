@@ -42,6 +42,10 @@ jobs:
           node --check scripts/audit-migrations.mjs
           node --check scripts/smoke-live.mjs
           node --check scripts/test-db-integrity.mjs
+          node --check scripts/audit-system.mjs
+
+      - name: Audit whole system contract
+        run: npm run audit:system
 
       - name: Audit migration architecture
         run: npm run audit:migrations
