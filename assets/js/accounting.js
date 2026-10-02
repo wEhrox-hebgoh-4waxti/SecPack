@@ -1,3 +1,5 @@
+// Remove the retired sensitive offline queue so old browser copies do not remain after the security hardening.
+try{indexedDB.deleteDatabase("secpack-offline-v1");}catch(_){}
 const ACCOUNTING_API="https://api.secpackco.com";
 function a(id){return document.getElementById(id);}
 function amoney(v,c){const digits=["USD","EUR","GBP","AED","SAR","TRY"].includes(c)?2:0;return Number(v||0).toLocaleString("fa-IR",{maximumFractionDigits:digits})+" "+c;}
