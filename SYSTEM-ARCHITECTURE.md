@@ -159,7 +159,7 @@ The accounting engine performs the complex double-entry work automatically.
 
 ## 13. Documents
 
-Documents remain private. Share links use high-entropy random tokens, hashed storage and expiry. Large binary storage should move to R2 before document volume becomes material; D1 base64 is a transitional implementation.
+Documents remain private. Share links use high-entropy random tokens, hashed storage and expiry. Large binary storage should move to R2 before document volume becomes material; D1 base64 is a transitional implementation. Sensitive accounting/document mutations are not queued in browser storage.
 
 ## 14. CI/CD gate
 
