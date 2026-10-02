@@ -31,6 +31,7 @@ for (const field of publicForbidden) {
 }
 expect(!/INSERT INTO financial_entries|UPDATE financial_entries|DELETE FROM financial_entries/i.test(worker), "Worker writes legacy financial_entries; Journal must be canonical.");
 expect(worker.includes("journal_transactions") && worker.includes("journal_lines"), "Journal engine missing.");
+for (const trigger of ["prevent_order_item_cost_update","prevent_account_structure_update","prevent_orphan_order_item_insert","prevent_orphan_inventory_movement_insert","prevent_product_delete_with_history"]) expect(worker.includes(trigger), "Worker readiness contract missing trigger: "+trigger);
 expect(worker.includes("await env.DB.batch"), "Business mutations are not using D1 batch transactions.");
 expect(worker.includes("X-Idempotency-Key"), "Idempotency header support missing.");
 expect(worker.includes("__Host-sp_admin"), "Secure admin session cookie missing.");
