@@ -99,12 +99,21 @@ async function resolveAccount(env,accountId,currency){
   const raw=text(accountId,60);
   const exact=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(raw).first();
   if(exact)return exact;
-  const symbolic=["cash","bank","receivables","payable","payables","inventory","expense","income","cogs"];
-  if(symbolic.includes(raw)){
-    const candidate=raw+":"+currency;
-    const scoped=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(candidate).first();
-    if(scoped)return scoped;
-    if(currency==="USD")return await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(raw).first();
+  const aliases={payables:"payable"};
+  const canonical=aliases[raw]||raw;
+  const symbolic=["cash","bank","receivables","payable","inventory","expense","income","cogs"];
+  if(symbolic.includes(canonical)){
+    const candidates=canonical==="receivables"?["receivables","receivable"]: [canonical];
+    for(const base of candidates){
+      const scoped=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(base+":"+currency).first();
+      if(scoped)return scoped;
+    }
+    if(currency==="USD"){
+      for(const base of candidates){
+        const fallback=await env.DB.prepare("SELECT id,currency,account_type,active FROM accounts WHERE id=?1").bind(base).first();
+        if(fallback)return fallback;
+      }
+    }
   }
   return null;
 }
