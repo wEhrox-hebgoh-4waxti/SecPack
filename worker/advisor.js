@@ -75,12 +75,16 @@ async function signSession(payload,env){
   return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 }
 async function verifySession(request,env){
-  const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\s*)__Host-sp_admin=([^;]+)/);if(!m||!env[ADMIN_KEY])return false;
-  const parts=decodeURIComponent(m[1]).split(".");if(parts.length!==2)return false;
-  const payload=parts[0],sig=parts[1],ts=Number(payload);if(!Number.isFinite(ts)||Date.now()-ts>8*60*60*1000||Date.now()<ts-60000)return false;
+  const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\\s*)__Host-sp_admin=([^;]+)/);if(!m||!env[ADMIN_KEY]||!env.DB)return false;
+  const parts=decodeURIComponent(m[1]).split(".");if(parts.length!==3)return false;
+  const sessionId=parts[0],ts=Number(parts[1]),sig=parts[2];
+  if(!/^[0-9a-f-]{36}$/i.test(sessionId)||!Number.isFinite(ts)||Date.now()-ts>8*60*60*1000||Date.now()<ts-60000)return false;
+  const payload=sessionId+"."+String(ts);
   const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(env[ADMIN_KEY]),{name:"HMAC",hash:"SHA-256"},false,["verify"]);
   const bytes=Uint8Array.from(atob(sig.replace(/-/g,"+").replace(/_/g,"/")+"=="),c=>c.charCodeAt(0));
-  return crypto.subtle.verify("HMAC",key,bytes,new TextEncoder().encode(payload));
+  if(!await crypto.subtle.verify("HMAC",key,bytes,new TextEncoder().encode(payload)))return false;
+  const row=await env.DB.prepare("SELECT expires_at,revoked_at FROM admin_sessions WHERE session_id=?1").bind(sessionId).first().catch(()=>null);
+  return Boolean(row&&!row.revoked_at&&new Date(row.expires_at).getTime()>Date.now());
 }
 async function secretEquals(got,expected){
   if(typeof got!=="string"||typeof expected!=="string"||!expected)return false;
@@ -199,7 +203,7 @@ async function schemaReady(env){
 }
 
 async function handleForm(request,env,origin){
-  if(!await ensureReady(env))return response({error:"Form service is temporarily unavailable."},503,origin);
+  if(!dbReady(env))return response({error:"Form service is temporarily unavailable."},503,origin);
   const raw=await request.text();if(raw.length>MAX_BODY)return response({error:"Request too large."},413,origin);
   const limited=await rateLimit(env,request,"form",FORM_LIMIT);if(!limited.allowed)return response({error:"Too many requests. Please try again later."},limited.reason==="storage"?503:429,origin);
   const form=new URLSearchParams(raw);if(form.get("_gotcha"))return response({ok:true},202,origin);
@@ -708,7 +712,7 @@ async function adminRequest(request,env,origin){
 }
 
 async function handleAdvisor(request,env,origin){
-  if(!await ensureReady(env))return response({error:"Advisor service is temporarily unavailable."},503,origin);
+  if(!aiReady(env))return response({error:"Advisor service is temporarily unavailable."},503,origin);
   const limited=await rateLimit(env,request,"advisor",ADVISOR_LIMIT);if(!limited.allowed)return response({error:"Too many requests. Please try again later."},limited.reason==="storage"?503:429,origin);
   let body;try{body=await readJson(request)}catch(_){return response({error:"Invalid request."},400,origin)}
   const question=text(body.question,MAX_QUESTION);if(!question)return response({error:"Question is required."},400,origin);
