@@ -519,7 +519,7 @@ async function adminAccounting(request,env,origin){
     const weightedCost=Math.floor((weightedNum+receiptWeighted)/weightedDen);
     try{
       await env.DB.batch([env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,unit_cost_minor=?2,updated_at=?3 WHERE id=?4").bind(qty,weightedCost,now,productId),
-        env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RESTOCK',?3,?4,?5,?6,?7)").bind(crypto.randomUUID(),productId,qty,id,(text(b.note,240)||"Stock receipt")+" · Warehouse: Gorgan",requestId,now),
+        env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'RESTOCK',?3,?4,?5,?6,?7,?8)").bind(crypto.randomUUID(),productId,qty,id,text(b.note,240)||"Stock receipt",requestId,p.warehouse||"Gorgan",now),
         ...journal.statements,
         await auditStatement(env,{action:"STOCK_RECEIPT",entityType:"stock",entityId:id,after:{product_id:productId,quantity:qty,total_minor:total,currency},requestId})]);
       return response({ok:true,id,total:minorToMoney(total,currency),currency},200,origin);
