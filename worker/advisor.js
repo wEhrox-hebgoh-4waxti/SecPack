@@ -144,9 +144,9 @@ async function schemaReady(env){
   if(!env.DB)return false;
   if(Date.now()-schemaReadiness.at<30000)return schemaReadiness.ok;
   try{
-    const required=["products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines","supply_costs","documents","supply_cases","supply_milestones","audit_log","audit_flags","operational_settings","rate_limits"];
+    const required=["inquiries","products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines","supply_costs","documents","supply_cases","supply_milestones","audit_log","audit_flags","operational_settings","rate_limits"];
     const tables=new Set(((await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results||[]).map(x=>x.name));
-    if(required.some(x=>!tables.has(x)))return false;
+    if(required.some(x=>!tables.has(x))){schemaReadiness={at:Date.now(),ok:false};return false;}
     const requiredColumns={
       products:["unit_price_minor","unit_cost_minor","stock_qty","reserved_qty","sold_qty","warehouse"],
       orders:["request_id","total_minor"],
@@ -163,7 +163,7 @@ async function schemaReady(env){
     for(const [table,cols] of Object.entries(requiredColumns)){
       const info=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];
       const have=new Set(info.map(x=>x.name));
-      if(cols.some(x=>!have.has(x)))return false;
+      if(cols.some(x=>!have.has(x))){schemaReadiness={at:Date.now(),ok:false};return false;}
     }
     const requiredTriggers=["prevent_negative_stock","prevent_reserved_over_available","prevent_negative_sold","prevent_audit_update","prevent_audit_delete","prevent_financial_entry_update","prevent_financial_entry_delete","prevent_inventory_ledger_update","prevent_inventory_ledger_delete","prevent_accounting_ledger_update","prevent_accounting_ledger_delete","prevent_invalid_journal_line_insert","prevent_journal_tx_update","prevent_journal_tx_delete","prevent_journal_line_update","prevent_journal_line_delete"];
     const triggers=new Set(((await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='trigger'").all()).results||[]).map(x=>x.name));
@@ -204,7 +204,7 @@ async function createOrder(data,env,origin){
   if(clean.some(x=>!["paper","film","adhesive","packaging"].includes(x.id)||!Number.isInteger(x.qty)||x.qty<1||x.qty>100000))return response({error:"Invalid order items."},400,origin);
   if(!data.name||!validEmail(data.email))return response({error:"Please provide a valid name and email address."},400,origin);
   const ids=[...new Set(clean.map(x=>x.id))],products=[];
-  for(const id of ids){const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1 AND active=1").bind(id).first();if(!p||Number(p.unit_price_minor)<=0)return response({error:"One or more selected products are currently unavailable."},409,origin);products.push(p)}
+  for(const id of ids){const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1 AND active=1").bind(id).first();if(!p||Number(p.unit_price_minor)<=0||Number(p.unit_cost_minor)<=0)return response({error:"One or more selected products are currently unavailable."},409,origin);products.push(p)}
   if(data.requestId){
     const existing=await env.DB.prepare("SELECT id,order_no,total,total_minor,currency FROM orders WHERE request_id=?1").bind(data.requestId).first();
     if(existing)return response({ok:true,orderId:existing.id,orderNo:existing.order_no,status:"submitted"},202,origin);
@@ -219,8 +219,8 @@ async function createOrder(data,env,origin){
   for(const x of lines){
     stockStatementIndexes.push(statements.length);
     statements.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0").bind(x.qty,now,x.p.id));
-    statements.push(env.DB.prepare("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)").bind(crypto.randomUUID(),orderId,x.p.id,x.p.name_en,x.p.unit,x.qty,minorToMoney(x.p.unit_price_minor,x.p.currency),minorToMoney(x.line,x.p.currency),x.p.unit_price_minor,x.line));
-    statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5,?6)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,data.requestId||null,now));
+    statements.push(env.DB.prepare("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor,unit_cost_minor) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)").bind(crypto.randomUUID(),orderId,x.p.id,x.p.name_en,x.p.unit,x.qty,minorToMoney(x.p.unit_price_minor,x.p.currency),minorToMoney(x.line,x.p.currency),x.p.unit_price_minor,x.line,Number(x.p.unit_cost_minor)));
+    statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5,?6,?7)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,data.requestId||null,x.p.warehouse||"Gorgan",now));
   }
   const itemSummary=lines.map(x=>x.qty+" × "+x.p.name_en).join(", ");
   statements.push(env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'NEW_ORDER',?2,'New online order',?3,?4)").bind(crypto.randomUUID(),orderId,orderNo+" · "+data.name+" · "+itemSummary+" · destination: "+(data.destination||"not provided")+" · total "+minorToMoney(total,products[0]?.currency||"USD")+" "+(products[0]?.currency||"USD"),now));
@@ -282,7 +282,7 @@ async function adminSale(request,env,origin){
   if(!journal||!cogsJournal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
   try{
     const stm=[env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3 AND active=1").bind(qty,now,id),
-      env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'SALE',?3,?4,?5,?6,?7)").bind(crypto.randomUUID(),id,qty,saleId,"Manual / in-person sale",requestId||null,now),
+      env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'SALE',?3,?4,?5,?6,?7,?8)").bind(crypto.randomUUID(),id,qty,saleId,"Manual / in-person sale",requestId||null,p.warehouse||"Gorgan",now),
       ...journal.statements,
       ...cogsJournal.statements,
       env.DB.prepare("INSERT INTO alerts(id,type,reference_id,title,message,created_at) VALUES(?1,'SALE',?2,'In-person sale recorded',?3,?4)").bind(crypto.randomUUID(),saleId,qty+" × "+p.name_en+" sold",now),
@@ -306,19 +306,19 @@ async function adminOrderStatus(request,env,origin){
   if(next==="cancelled"){
     for(const x of items){
       stm.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty-?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
-      stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RELEASE',?3,?4,'Order cancelled',?5,?6)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,now));
+      stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'RELEASE',?3,?4,'Order cancelled',?5,?6,?7)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,(await env.DB.prepare("SELECT warehouse FROM products WHERE id=?1").bind(x.product_id).first())?.warehouse||"Gorgan",now));
     }
   }
   if(next==="fulfilled"){
     let cogsTotal=0;
     for(const x of items){
-      const p=await env.DB.prepare("SELECT unit_cost_minor,currency FROM products WHERE id=?1").bind(x.product_id).first();
-      if(!p||p.currency!==order.currency||Number(p.unit_cost_minor||0)<=0)return response({error:"Inventory cost is not configured for one or more products."},409,origin);
-      const lineCost=safeMultiply(Number(x.quantity),Number(p.unit_cost_minor));if(lineCost===null)return response({error:"Inventory cost is outside the supported accounting range."},409,origin);
+      const p=await env.DB.prepare("SELECT currency FROM products WHERE id=?1").bind(x.product_id).first();
+      const costPerUnit=Number(x.unit_cost_minor||0);
+      if(!p||p.currency!==order.currency||costPerUnit<=0)return response({error:"Historical inventory cost is not configured for one or more order items."},409,origin);
+      const lineCost=safeMultiply(Number(x.quantity),costPerUnit);if(lineCost===null)return response({error:"Inventory cost is outside the supported accounting range."},409,origin);
       cogsTotal+=lineCost;
-      stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
-      stm.push(env.DB.prepare("UPDATE order_items SET unit_cost_minor=(SELECT unit_cost_minor FROM products WHERE id=?1) WHERE order_id=?2 AND product_id=?1").bind(x.product_id,orderId));
-      stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'FULFILL',?3,?4,'Order fulfilled',?5,?6)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,now));
+      stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty-?1,reserved_qty=reserved_qty-?1,sold_qty=sold_qty+?1,updated_at=?2 WHERE id=?3 AND reserved_qty>=?1 AND stock_qty>=?1").bind(x.quantity,now,x.product_id));
+      stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'FULFILL',?3,?4,'Order fulfilled',?5,?6,?7)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,p.warehouse||"Gorgan",now));
     }
     const cogsJournal=await buildJournal(env,{referenceType:"order_cogs",referenceId:orderId,description:"COGS · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"cogs",side:"debit",amount:cogsTotal},{accountId:"inventory",side:"credit",amount:cogsTotal}]});
     if(!cogsJournal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
@@ -507,7 +507,7 @@ async function adminAccounting(request,env,origin){
         const cost=safeMultiply(Number(x.quantity),Number(x.unit_cost_minor||0));if(cost===null||cost<=0)return response({error:"Exact refund cost basis is unavailable for this fulfilled order."},409,origin);
         totalCost+=cost;
         stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,sold_qty=sold_qty-?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
-        stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,created_at) VALUES(?1,?2,'RETURN',?3,?4,'Refund / inventory returned',?5,?6)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,now));
+        stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'RETURN',?3,?4,'Refund / inventory returned',?5,?6,?7)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,(await env.DB.prepare("SELECT warehouse FROM products WHERE id=?1").bind(x.product_id).first())?.warehouse||"Gorgan",now));
       }
       const cogsReverse=await buildJournal(env,{referenceType:"order_refund_cogs",referenceId:orderId,description:"Reverse COGS · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"inventory",side:"debit",amount:totalCost},{accountId:"cogs",side:"credit",amount:totalCost}]});
       if(!cogsReverse)return response({error:"Refund COGS accounts are not configured."},409,origin);
@@ -641,20 +641,13 @@ export default {
       const bin=Uint8Array.from(atob(match[2]),c=>c.charCodeAt(0));
       return new Response(bin,{status:200,headers:{"Content-Type":match[1]||doc.mime_type||"image/jpeg","Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Content-Disposition":"inline"}});
     }
-    if(url.pathname==="/health"&&request.method==="GET"){try{
-      const required=["products","orders","order_items","inventory_ledger","accounting_ledger","alerts","accounts","financial_entries","journal_transactions","journal_lines","supply_costs","documents","supply_cases","supply_milestones","audit_log","audit_flags","operational_settings","rate_limits"];
-      const rows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results:[];
-      const tables=new Set(rows.map(x=>x.name));
-      const requiredColumns={products:["unit_price_minor","unit_cost_minor","stock_qty","reserved_qty","sold_qty"],orders:["request_id","total_minor"],order_items:["unit_price_minor","line_total_minor","unit_cost_minor"],inventory_ledger:["request_id"],financial_entries:["request_id"],supply_costs:["request_id"],documents:["request_id"],supply_cases:["request_id"],supply_milestones:["request_id"],accounts:["request_id"],audit_log:["request_id"]};
-      let columnsOk=Boolean(env.DB);
-      if(columnsOk)for(const [table,cols] of Object.entries(requiredColumns)){const info=(await env.DB.prepare("PRAGMA table_info("+table+")").all()).results||[];const have=new Set(info.map(x=>x.name));if(cols.some(x=>!have.has(x))){columnsOk=false;break;}}
-      const requiredTriggers=["prevent_negative_stock","prevent_reserved_over_available","prevent_negative_sold","prevent_audit_update","prevent_audit_delete","prevent_financial_entry_update","prevent_financial_entry_delete","prevent_inventory_ledger_update","prevent_inventory_ledger_delete","prevent_accounting_ledger_update","prevent_accounting_ledger_delete","prevent_invalid_journal_line_insert","prevent_journal_tx_update","prevent_journal_tx_delete","prevent_journal_line_update","prevent_journal_line_delete"];
-      const triggerRows=env.DB?(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='trigger'").all()).results||[];
-      const triggers=new Set(triggerRows.map(x=>x.name));
-      const triggersOk=requiredTriggers.every(x=>triggers.has(x));
-      const healthy=Boolean(env.DB)&&required.every(x=>tables.has(x))&&columnsOk&&triggersOk;
-      return response({ok:healthy,service:"secpack-api",database:Boolean(env.DB),commerceSchema:healthy,time:new Date().toISOString()},healthy?200:503,null);
-    }catch(_){return response({ok:false,service:"secpack-api",database:Boolean(env.DB),commerceSchema:false},503,null)}}
+    if(url.pathname==="/health"&&request.method==="GET"){
+      return response({ok:true,service:"secpack-api",database:Boolean(env.DB),time:new Date().toISOString()},200,null);
+    }
+    if(url.pathname==="/ready"&&request.method==="GET"){
+      const ready=await schemaReady(env);
+      return response({ok:ready,service:"secpack-api",database:Boolean(env.DB),commerceSchema:ready,time:new Date().toISOString()},ready?200:503,null);
+    }
     const origin=request.headers.get("Origin");
     if(!origin||!ORIGINS.has(origin))return response({error:"Origin not allowed."},403,origin);
     if(request.method==="OPTIONS")return response({},204,origin);
