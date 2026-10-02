@@ -68,6 +68,7 @@ expect(worker.includes('await secretEquals(got,"Bearer "+env[ADMIN_KEY])'), "Adm
 expect(worker.includes('action:"ALERT_READ"'), "Alert acknowledgement must be auditable.");
 expect(worker.includes('action:"DOCUMENT_CREATED"'), "Document creation must be auditable.");
 expect(worker.includes('action:"DOCUMENT_SHARED"'), "Document sharing must be auditable.");
+expect(!/action:"DOCUMENT_SHARED"[\s\S]{0,500}after:\{url[,:]/i.test(worker), "DOCUMENT_SHARED audit must not persist a raw share URL/token.");
 expect(worker.includes('action:"SUPPLY_CASE_CREATED"'), "Supply-case creation must be auditable.");
 expect(worker.includes('action:"SUPPLY_MILESTONE_UPDATED"'), "Supply-milestone updates must be auditable.");
 expect(worker.includes("__Host-sp_admin"), "Secure admin session cookie missing.");
