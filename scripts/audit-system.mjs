@@ -74,7 +74,9 @@ expect(worker.includes('action:"DOCUMENT_SHARED"'), "Document sharing must be au
 expect(!/action:"DOCUMENT_SHARED"[\s\S]{0,500}after:\{url[,:]/i.test(worker), "DOCUMENT_SHARED audit must not persist a raw share URL/token.");
 expect(worker.includes('action:"SUPPLY_CASE_CREATED"'), "Supply-case creation must be auditable.");
 expect(worker.includes('action:"SUPPLY_MILESTONE_UPDATED"'), "Supply-milestone updates must be auditable.");
-expect(worker.includes("__Host-sp_admin"), "Secure admin session cookie missing.");\nexpect(worker.includes("admin_sessions"), "Server-backed admin session store missing.");\nexpect(worker.includes("revoked_at"), "Admin session revocation missing.");
+expect(worker.includes("__Host-sp_admin"), "Secure admin session cookie missing.");
+expect(worker.includes("admin_sessions"), "Server-backed admin session store missing.");
+expect(worker.includes("revoked_at"), "Admin session revocation missing.");
 expect(worker.includes("SameSite=Strict"), "Strict admin session cookie missing.");
 expect(worker.includes('"Cross-Origin-Opener-Policy":"same-origin"'), "COOP header missing.");
 expect(worker.includes('"Cross-Origin-Resource-Policy":"same-site"'), "CORP header missing.");
