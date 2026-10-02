@@ -60,6 +60,6 @@ expectFailure("UPDATE accounts SET name='Tampered' WHERE id='"+accountId+"';", "
 // Journal rows are intentionally NOT deleted: append-only accounting is itself under test.
 // The local database is disposable and each CI run gets a fresh migration state.
 
-run("DELETE FROM products WHERE id='"+productId+"';");
+expectFailure("DELETE FROM products WHERE id='"+productId+"';", "Expected product-history deletion guard did not fire.");
 
 console.log("D1 domain integrity guards: PASS");
