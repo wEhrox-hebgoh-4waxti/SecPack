@@ -37,10 +37,18 @@ for (const field of publicForbidden) {
   expect(!new RegExp("\\b"+field+"\\b").test(catalogBlock), "Public catalog exposes internal field: "+field);
 }
 expect(!/INSERT INTO financial_entries|UPDATE financial_entries|DELETE FROM financial_entries/i.test(worker), "Worker writes legacy financial_entries; Journal must be canonical.");
+expect(!/if\(path===["']\/admin\/accounting["']&&request\.method===["']GET["'][\s\S]{0,180}runAudit\(/i.test(worker), "GET /admin/accounting must remain read-only.");
 expect(worker.includes("journal_transactions") && worker.includes("journal_lines"), "Journal engine missing.");
-for (const trigger of ["prevent_order_item_cost_update","prevent_account_structure_update","prevent_orphan_order_item_insert","prevent_orphan_inventory_movement_insert","prevent_product_delete_with_history"]) expect(worker.includes(trigger), "Worker readiness contract missing trigger: "+trigger);
+for (const trigger of ["prevent_order_item_cost_update","prevent_account_structure_update","prevent_orphan_order_item_insert","prevent_orphan_inventory_movement_insert","prevent_product_delete_with_history","prevent_invalid_supply_milestone_transition"]) expect(worker.includes(trigger), "Worker readiness contract missing trigger: "+trigger);
 expect(worker.includes("await env.DB.batch"), "Business mutations are not using D1 batch transactions.");
 expect(worker.includes("X-Idempotency-Key"), "Idempotency header support missing.");
+expect(worker.includes("async function secretEquals"), "Constant-time secret comparison helper missing.");
+expect(worker.includes("await secretEquals(got,"Bearer "+env[ADMIN_KEY])"), "Admin login must use constant-time secret verification.");
+expect(worker.includes("action:"ALERT_READ""), "Alert acknowledgement must be auditable.");
+expect(worker.includes("action:"DOCUMENT_CREATED""), "Document creation must be auditable.");
+expect(worker.includes("action:"DOCUMENT_SHARED""), "Document sharing must be auditable.");
+expect(worker.includes("action:"SUPPLY_CASE_CREATED""), "Supply-case creation must be auditable.");
+expect(worker.includes("action:"SUPPLY_MILESTONE_UPDATED""), "Supply-milestone updates must be auditable.");
 expect(worker.includes("__Host-sp_admin"), "Secure admin session cookie missing.");
 expect(worker.includes("SameSite=Strict"), "Strict admin session cookie missing.");
 expect(worker.includes('if(!origin||!ORIGINS.has(origin))'), "Origin allowlist gate missing.");
@@ -67,6 +75,7 @@ expect(smoke.includes(`name === "ready"`) && smoke.includes('commerceSchema'), "
 expect(!ai.includes("public catalog reads current active price and available stock"), "AI architecture contains stale public-price/stock claim.");
 expect(!launch.includes("public store reads only active products with a positive selling price"), "Launch checklist contains stale public-price claim.");
 expect(launch.includes("Payment gateway and server-side settlement webhook"), "Launch gate must explicitly keep payment integration pending.");
+expect(sql.includes("prevent_invalid_supply_milestone_transition"), "Supply milestone lifecycle guard missing.");
 
 const duplicates = new Map();
 for (const file of migrationFiles) {
