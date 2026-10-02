@@ -69,12 +69,15 @@ jobs:
       - name: Diagnose D1 control plane
         shell: bash
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
           echo "=== D1 metadata ==="
-          npx wrangler@4.145.0 d1 info secpack-prod --json
+          if ! npx wrangler@4.145.0 d1 info secpack-prod --json; then
+            echo "::error::D1 access is not authorized. The D1 CI token needs account-scoped D1 Edit (or D1 Write) permission for secpack-prod."
+            exit 1
+          fi
           echo "=== D1 read/query path ==="
           npx wrangler@4.145.0 d1 execute secpack-prod --remote --command="SELECT 1 AS ok"
           echo "=== D1 migration control path ==="
@@ -83,7 +86,7 @@ jobs:
       - name: Apply D1 migrations
         run: npx wrangler@4.145.0 d1 migrations apply secpack-prod --remote
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Deploy Worker
         run: npx wrangler@4.145.0 deploy --config wrangler.toml
