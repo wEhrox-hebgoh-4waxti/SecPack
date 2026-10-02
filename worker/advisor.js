@@ -25,6 +25,9 @@ function securityHeaders() {
   return {
     "Content-Type":"application/json; charset=UTF-8","Cache-Control":"no-store",
     "X-Content-Type-Options":"nosniff","X-Frame-Options":"DENY","Referrer-Policy":"no-referrer",
+    "X-Permitted-Cross-Domain-Policies":"none",
+    "Cross-Origin-Opener-Policy":"same-origin",
+    "Cross-Origin-Resource-Policy":"same-site",
     "Permissions-Policy":"camera=(), microphone=(), geolocation=(), payment=()",
     "Content-Security-Policy":"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
     "Strict-Transport-Security":"max-age=63072000; includeSubDomains; preload"
