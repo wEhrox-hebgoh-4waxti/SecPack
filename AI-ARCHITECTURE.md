@@ -49,7 +49,7 @@ The deployment gate applies unapplied remote D1 migrations before deploying the 
 
 ## Administrative access
 
-There is no public customer-data administration endpoint. Customer records are accessed through the protected Cloudflare/D1 administrative surface until a separately authenticated private SEC PACK admin application is introduced.
+There is no public customer-data administration endpoint. Customer records are accessed through the protected Cloudflare/D1 administrative surface; admin sessions are short-lived and server-revocable.
 
 ## Verification boundary
 
