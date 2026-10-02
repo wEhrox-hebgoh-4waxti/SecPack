@@ -1,183 +1,375 @@
-# SEC PACK — Whole-System Rebuild Roadmap
+# SEC PACK — Whole-System Rebuild Contract
 
-This roadmap is the operational continuation point for the project. It is intentionally cross-domain: no phase is complete until its dependent layers and regression gates pass.
+This is the canonical rebuild map for SEC PACK. Work is performed as one connected system, not as isolated patches.
 
-## Phase 0 — Freeze and observe
-- Freeze historical migrations through 0016.
-- Do not rename/delete duplicate historical migration files.
-- Read remote d1_migrations before any historical cleanup.
-- Keep production deployment blocked when remote D1 control-plane access is unavailable.
+## 0. Non-negotiable architecture
 
-## Phase 1 — System contract
-Status: IN PROGRESS / core gate installed.
+`Public Website → Worker API → D1 Source of Truth`
 
-Completed:
-- Canonical architecture contract.
-- Repository-wide system audit.
-- Migration-only schema authority.
-- Health/readiness separation.
-- Public API privacy contract.
-- Journal as canonical accounting source.
-- Cross-domain deployment gate.
+`Admin UI → Worker API → D1 Source of Truth`
 
-Remaining:
-- Expand audit to every admin mutation and every public route.
+Every business mutation follows:
 
-## Phase 2 — Database integrity
-Status: IN PROGRESS.
+`Business command → validation → authorization → idempotency → one D1 transaction → inventory/accounting effects → audit → minimal response`
 
-Completed:
-- Production integrity migration 0016.
-- Domain immutability migration 0017.
-- Relational integrity migration 0018.
-- Inventory protection triggers.
-- Journal protection triggers.
-- Historical order cost protection.
-- Account structural protection.
-- Legacy commerce orphan guards.
+D1 is the system of record. Journal transactions/lines are the accounting source of truth. Legacy accounting tables are compatibility only.
 
-Required verification:
-- Local D1 integrity suite.
-- PRAGMA quick_check.
-- PRAGMA foreign_key_check.
-- Journal balance invariants.
-- Inventory invariants.
-- Account balance reconciliation.
-- Remote schema comparison.
+## 1. Current repository baseline
 
-## Phase 3 — Remote D1 reconciliation
-Status: BLOCKED by Cloudflare control-plane authorization error 7403.
+- Repository: `wEhrox-hebgoh-4waxti/SecPack`
+- Worker: `secpack`
+- API: `api.secpackco.com`
+- D1: `secpack-prod`
+- Migration authority: `migrations/`
+- Runtime schema DDL: prohibited.
+- Public API: no price, cost, inventory, warehouse, margin, supplier route, customer records or accounting.
+- Admin: authenticated session only.
+- Payment gateway: deliberately disabled until a separate integration is approved.
 
-Sequence:
-1. D1 metadata.
-2. Remote SELECT 1.
-3. d1_migrations list.
-4. Schema/index/trigger inventory.
-5. Compare with repository.
-6. Apply only safe unapplied migrations.
-7. Re-run integrity checks.
+## 2. Schema strategy
 
-No migration renaming/deletion before this phase completes.
+Historical duplicate migration prefixes remain frozen until the real remote `d1_migrations` state is known.
 
-## Phase 4 — Domain engines
-Required canonical engines:
-- Product master data.
-- Inventory receipt/reservation/fulfillment/return.
-- Order state machine.
-- Payment state machine (business confirmation only until gateway exists).
-- Double-entry Journal.
-- Weighted-average cost.
-- Supply-cost state machine.
-- Supplier/supply-case milestones.
-- Refund/reversal engine.
+Known historical duplicate prefixes:
+- 0003
+- 0004
+- 0005
+- 0006
+- 0007
 
-Each engine must expose one business operation rather than raw table manipulation.
+Do not rename/delete them before remote reconciliation.
 
-## Phase 5 — Accounting reconciliation
-Remove remaining ambiguity between:
-- journal_transactions/journal_lines
-- accounting_ledger
-- financial_entries
+Current integrity sequence:
+- 0015 inventory invariants
+- 0016 production/idempotency integrity
+- 0017 domain immutability
+- 0018 relational integrity
+- 0019 supply-milestone lifecycle integrity
 
-Journal remains canonical. Legacy tables are read-only compatibility/projection until proven unnecessary and reconciled.
+Future schema changes are additive migrations only unless a controlled reconstruction is explicitly planned and tested.
 
-Required tests:
-- sale
-- payment
+## 3. Database invariants
+
+### Inventory
+- stock_qty >= 0
+- reserved_qty >= 0
+- reserved_qty <= stock_qty
+- sold_qty >= 0
+- order-item historical unit cost is immutable
+- product history prevents destructive deletion
+- orphan order items and inventory movements are rejected
+
+### Accounting
+- every Journal transaction has positive total
+- every Journal transaction balances: debit = credit = transaction total
+- Journal transactions/lines are immutable
+- account structure becomes immutable once used
+- account balances are updated only through the Journal engine
+- currency is isolated per account/journal
+- historical order cost is preserved
+
+### Supply chain
+- supply case owns its milestones
+- milestone state transitions are controlled by DB
+- terminal milestone states cannot be silently reopened
+- case status follows milestone progress
+- creation/update operations are atomic and auditable
+
+### Idempotency
+Idempotency is required for business mutations and is represented by request IDs/unique constraints where the operation is replay-sensitive.
+
+## 4. Domain engines
+
+The application is organized around business commands, not raw table edits:
+
+1. Product master
+2. Customer/inquiry intake
+3. Order creation
+4. Reservation
+5. Payment confirmation
+6. Fulfillment
+7. COGS
+8. Cancellation
+9. Return/refund
+10. Manual sale
+11. Stock receipt / weighted-average valuation
+12. Supply cost creation/payment
+13. Supply case/milestone control
+14. Document capture/share
+15. Accounting entry
+16. Audit/alerts
+
+Each command must have:
+- input contract
+- authorization rule
+- idempotency rule
+- transaction boundary
+- canonical accounting effect where applicable
+- canonical inventory effect where applicable
+- audit event
+- minimal response
+- regression test
+
+## 5. Accounting model
+
+Canonical:
+
+`Business Event → journal_transactions → journal_lines → account balances/reports`
+
+`accounting_ledger` is compatibility/projection only.
+
+`financial_entries` is legacy compatibility data and must not be written by the Worker.
+
+Required reconciliation before legacy removal:
+- opening balances
+- sales
+- payments
 - COGS
-- refund
-- expense
-- supplier cost
-- supplier payment
-- return
-- multi-currency separation
+- refunds
+- expenses
+- supply costs
+- supplier payments
+- multi-currency balances
 - trial balance
 
-## Phase 6 — Inventory reconciliation
+## 6. Inventory valuation
+
+Weighted-average cost is the current valuation policy.
+
+For every receipt:
+
+`new average cost = (old stock × old cost + received qty × received cost) / new stock`
+
+Order items snapshot the cost used for later COGS/refund calculations.
+
 Required tests:
-- multiple receipts
-- weighted average cost
+- first receipt
+- second receipt at different cost
 - reservation
-- concurrent/replayed reservation
 - fulfillment
 - cancellation
 - return
-- refund without physical return
+- refund without return
 - insufficient stock
-- negative stock prevention
+- replayed mutation
 
-## Phase 7 — API/security
-Audit every route:
-- authentication
-- authorization
-- method
-- origin
-- rate limit
-- payload size
-- input validation
-- idempotency
-- transaction boundary
-- response minimization
-- audit event
-- error behavior
+## 7. Order state machine
+
+Allowed business states are explicitly controlled:
+
+`pending → processing → paid → ready → fulfilled`
+
+and cancellation is allowed only where the payment/refund rules permit it.
+
+Payment confirmation creates:
+- sale recognition
+- receivable settlement
+
+Fulfillment creates:
+- physical stock reduction
+- reservation release
+- sold quantity increase
+- COGS
+
+Refund creates:
+- revenue reversal
+- payment reversal
+- optional physical return
+- optional COGS reversal when goods are returned
+
+No gateway settlement is assumed until the payment integration is enabled.
+
+## 8. Supply-chain state machine
+
+`factory_order → factory_payment → customs → transport → warehouse_receipt → ready_for_delivery`
+
+Each case owns its milestones. Each transition is atomic and audited.
+
+Supply costs use:
+`planned → paid | cancelled`
+
+Terminal states cannot be reopened.
+
+## 9. Security architecture
+
+Layers:
+
+1. HTTPS/HSTS
+2. strict CSP
+3. security headers
+4. exact Origin allowlist
+5. rate limiting
+6. payload limits
+7. prepared SQL statements
+8. authenticated admin session
+9. Secure/HttpOnly/SameSite=Strict `__Host-` cookie
+10. constant-time secret verification
+11. idempotency
+12. D1 transactional integrity
+13. immutable audit log
+14. response minimization
+15. expiring document share tokens
 
 Future hardening:
 - MFA/TOTP
-- stronger admin session rotation/revocation
-- dedicated D1 CI token with least privilege
-- document storage migration from D1 base64 to R2 when volume warrants it
+- session rotation/revocation
+- least-privilege dedicated D1 CI token
+- optional Cloudflare Access for Admin if operationally suitable
 
-## Phase 8 — Admin UX
-Admin must operate in business language:
-- receive stock
-- create sale
-- confirm payment
-- fulfill
-- cancel
-- refund
-- record supply cost
-- pay supply cost
-- review alerts
-- review accounting
+## 10. Document architecture
 
-The UI must not permit direct editing of immutable history.
+D1 stores metadata; document blobs currently use bounded image payloads.
 
-## Phase 9 — Public UX
-Public site:
-- no internal price
-- no inventory
-- no margins
-- no suppliers/routes/customs
-- no customer reads
-- no internal accounting
+The current upload is deliberately below D1's 2 MB row/string limit. When document volume grows, migrate blob storage to R2 while retaining metadata and authorization in D1.
 
-The public Supply Request Center submits requests without exposing commercial or stock data.
+Never expose document rows directly. Share links use random tokens, hashed server-side, with expiration.
 
-## Phase 10 — CI/CD and release
+## 11. Admin architecture
+
+Admin UI operates in business language:
+
+- Receive stock
+- Sell
+- Confirm payment
+- Fulfill
+- Cancel
+- Refund
+- Record supply cost
+- Pay supply cost
+- Manage supply case
+- Review documents
+- Review accounting
+- Review audit/alerts
+
+No direct editing of historical stock, cost basis, Journal history or used account structure.
+
+Every meaningful mutation must be:
+- authenticated
+- idempotent
+- transactional
+- auditable
+
+GET endpoints remain read-only.
+
+## 12. Public architecture
+
+Public pages may expose:
+- product identity/specification
+- public educational content
+- contact/supply request forms
+
+They must never expose:
+- internal price
+- purchase cost
+- inventory
+- reserved/sold quantities
+- margins
+- suppliers
+- routes/customs
+- customer records
+- accounting
+- internal documents
+
+## 13. CI/CD release gate
+
 Required order:
 
-system audit
-→ migration audit
-→ local database tests
-→ credentials
-→ Worker dry-run
-→ remote D1 access
-→ migration apply
-→ deploy
-→ live smoke
+`syntax → system contract → migration audit → local D1 integrity → Cloudflare auth → Worker dry-run → D1 metadata/query/migration diagnostics → migration apply → deploy → live smoke`
 
-Production deployment is blocked by any failed gate.
+A failed database-control-plane check blocks deployment.
 
-## Current concrete blockers
+## 14. Remote D1 reconciliation — current blocker
 
-1. Remote D1 control-plane error 7403.
-2. Full end-to-end commerce/accounting test has not yet been proven against the real remote database.
-3. Legacy accounting tables still exist and require reconciliation before removal.
-4. Admin route-by-route authorization audit remains.
-5. MFA/TOTP remains future hardening.
+Cloudflare D1 control-plane access previously returned error 7403.
+
+Until access is restored:
+1. do not rename historical migrations
+2. do not delete historical migrations
+3. do not assume remote schema state
+4. do not claim production deployment succeeded
+5. do not perform destructive reconciliation
+
+Once access works:
+
+`D1 info → SELECT 1 → migrations list → schema/index/trigger inventory → compare → apply → quick_check → foreign_key_check → smoke`
+
+Cloudflare documents D1 migration state and transactional migration behavior; use the real remote state as the authority before historical cleanup.
+
+## 15. Test pyramid
+
+### Static
+- JavaScript syntax
+- system contract
+- migration contract
+- public privacy contract
+
+### Local D1
+- quick_check
+- foreign_key_check
+- inventory guards
+- order cost immutability
+- account immutability
+- relational integrity
+- milestone state integrity
+- Journal balance
+
+### End-to-end
+`receipt → order → reserve → payment → fulfill → COGS → return → refund`
+
+Verify after every step:
+- stock
+- reserved
+- sold
+- average cost
+- Journal
+- balances
+- audit
+- idempotency
+
+### Live
+- health
+- readiness
+- public catalog privacy
+- public order response privacy
+- Admin authentication
+- critical mutation smoke tests without destructive production data
+
+## 16. Current work status
+
+### Completed
+- migration-only schema authority
+- health/readiness separation
+- public privacy contract
+- Journal reporting foundation
+- inventory guards
+- historical cost immutability
+- relational guards
+- supply milestone DB guard
+- audit-system contract
+- stronger mutation auditing
+- constant-time secret verification
+- read-only accounting GET
+- expanded local integrity suite
+- production deployment gate
+
+### Still required
+1. Resolve Cloudflare D1 7403.
+2. Verify remote migration state.
+3. Verify remote schema/index/trigger state.
+4. Run complete local and remote end-to-end business flow.
+5. Reconcile legacy accounting data.
+6. Complete route-by-route Admin security audit.
+7. Complete public/frontend compatibility audit.
+8. Add MFA/TOTP.
+9. Decide on R2 migration when document volume requires it.
+10. Only then perform historical migration cleanup.
 
 ## Rebuild rule
 
-Never solve a defect only at the layer where it appears. Trace it through:
+Never fix a defect only where it appears.
 
-domain → schema → transaction → API → security → Admin → accounting → inventory → audit → tests → deployment.
+Trace every change through:
+
+`business rule → domain model → schema → transaction → API → security → Admin → accounting → inventory → audit → tests → deployment`
+
+A change is not complete until its dependent layers remain coherent.
