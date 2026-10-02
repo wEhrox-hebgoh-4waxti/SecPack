@@ -21,9 +21,9 @@
 2. Put its real `database_id` in the canonical `wrangler.toml`.
 3. Configure the OpenAI API credential as a Cloudflare Secret.
 4. Configure a strong random `RATE_LIMIT_SALT` as a Cloudflare Secret (recommended; Worker safely falls back to the OpenAI secret until then).
-5. Confirm the remote `d1_migrations` history, then apply only unapplied migrations through CI.
-6. Verify the Worker custom domain `api.secpackco.com`.
-7. Verify HTTPS and HSTS at the production domain.
+5. Configure a dedicated `CLOUDFLARE_D1_API_TOKEN` with account-scoped D1 Edit (D1 Write) permission; keep it separate from the Worker deployment token.\n6. Confirm the remote `d1_migrations` history, then apply only unapplied migrations through CI.
+7. Verify the Worker custom domain `api.secpackco.com`.
+8. Verify HTTPS and HSTS at the production domain.
 
 ## Functional QA
 - Contact form submits successfully.
