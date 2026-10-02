@@ -42,3 +42,15 @@ WHEN NEW.quantity <= 0
 BEGIN
   SELECT RAISE(ABORT,'INVALID_INVENTORY_MOVEMENT');
 END;
+
+ 
+-- Supply costs are a small state machine: planned -> paid/cancelled; terminal states cannot be reopened.
+CREATE TRIGGER IF NOT EXISTS prevent_invalid_supply_cost_transition
+BEFORE UPDATE OF status ON supply_costs
+WHEN (OLD.status='paid' AND NEW.status<>'paid')
+  OR (OLD.status='cancelled' AND NEW.status<>'cancelled')
+  OR (OLD.status='planned' AND NEW.status NOT IN ('planned','paid','cancelled'))
+  OR (OLD.status NOT IN ('planned','paid','cancelled') AND NEW.status<>OLD.status)
+BEGIN
+  SELECT RAISE(ABORT,'INVALID_SUPPLY_COST_STATUS');
+END;
