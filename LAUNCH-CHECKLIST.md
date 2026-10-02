@@ -11,7 +11,7 @@
 - [x] Honeypot
 - [x] Duplicate request protection
 - [x] Rate limiting with hashed client identifiers
-- [x] Security headers
+- [x] Security headers\n- [x] Server-backed revocable admin sessions
 - [x] Versioned D1 migration files with frozen historical history and additive production hardening
 - [x] Canonical root Wrangler configuration
 - [x] Removed obsolete Worker Wrangler configuration
