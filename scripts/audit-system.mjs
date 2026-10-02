@@ -17,6 +17,23 @@ const migrationFiles = readdirSync("migrations").filter(x => x.endsWith(".sql"))
 const sql = migrationFiles.map(x => read(join("migrations", x))).join("\n");
 const publicForbidden = ["unit_price", "unit_price_minor", "unit_cost_minor", "stock_qty", "reserved_qty", "sold_qty", "warehouse"];
 
+const adminMutationContracts = [
+  ["/admin/product", "PRODUCT_UPDATED"],
+  ["/admin/sale", "MANUAL_SALE"],
+  ["/admin/order-status", "ORDER_STATUS_CHANGED"],
+  ["/admin/account", "ACCOUNT_CREATED"],
+  ["/admin/accounting/entry", "ACCOUNTING_ENTRY_POSTED"],
+  ["/admin/supply-cost", "SUPPLY_COST_CREATED"],
+  ["/admin/supply-cost/pay", "SUPPLY_COST_PAID"],
+  ["/admin/stock-receipt", "STOCK_RECEIPT"],
+  ["/admin/refund", "ORDER_REFUNDED"],
+  ["/admin/document", "DOCUMENT_CREATED"],
+  ["/admin/document/share", "DOCUMENT_SHARED"],
+  ["/admin/supply-case", "SUPPLY_CASE_CREATED"],
+  ["/admin/supply-milestone", "SUPPLY_MILESTONE_UPDATED"],
+  ["/admin/alerts/read", "ALERT_READ"]
+];
+
 console.log("SEC PACK system contract audit");
 console.log("Migration files:", migrationFiles.length);
 
@@ -42,6 +59,10 @@ expect(worker.includes("journal_transactions") && worker.includes("journal_lines
 for (const trigger of ["prevent_order_item_cost_update","prevent_account_structure_update","prevent_orphan_order_item_insert","prevent_orphan_inventory_movement_insert","prevent_product_delete_with_history","prevent_invalid_supply_milestone_transition"]) expect(worker.includes(trigger), "Worker readiness contract missing trigger: "+trigger);
 expect(worker.includes("await env.DB.batch"), "Business mutations are not using D1 batch transactions.");
 expect(worker.includes("X-Idempotency-Key"), "Idempotency header support missing.");
+for (const [path,action] of adminMutationContracts) {
+  expect(worker.includes(path), "Admin mutation route missing: "+path);
+  expect(worker.includes("action:\""+action+"\""), "Admin mutation is missing canonical audit action: "+action);
+}
 expect(worker.includes("async function secretEquals"), "Constant-time secret comparison helper missing.");
 expect(worker.includes("await secretEquals(got,"Bearer "+env[ADMIN_KEY])"), "Admin login must use constant-time secret verification.");
 expect(worker.includes("action:"ALERT_READ""), "Alert acknowledgement must be auditable.");
