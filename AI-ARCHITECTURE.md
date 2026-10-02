@@ -43,7 +43,7 @@ Web search is opt-in from the public advisor UI. The model is configured server-
 
 The root `wrangler.toml` is the single canonical Worker configuration. The obsolete `worker/wrangler.toml` must not be used.
 
-D1 uses versioned migrations under `migrations/`. The production binding is `DB`, database name `secpack-prod`, and the repository contains migrations 0001 and 0002.
+D1 uses versioned migrations under `migrations/`. The production binding is `DB`, database name `secpack-prod`, and the repository contains a versioned migration history; historical duplicate prefixes are frozen until remote `d1_migrations` state is inspected.
 
 The deployment gate applies unapplied remote D1 migrations before deploying the Worker. The real remote migration history must be readable before any historical migration is renamed or deleted. Production schema changes are migration-only.
 
