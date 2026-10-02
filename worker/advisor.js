@@ -79,14 +79,22 @@ async function verifySession(request,env){
   const bytes=Uint8Array.from(atob(sig.replace(/-/g,"+").replace(/_/g,"/")+"=="),c=>c.charCodeAt(0));
   return crypto.subtle.verify("HMAC",key,bytes,new TextEncoder().encode(payload));
 }
-function authorized(request,env){
+async function secretEquals(got,expected){
+  if(typeof got!=="string"||typeof expected!=="string"||!expected)return false;
+  const a=await digest(got),b=await digest(expected);
+  const ab=Uint8Array.from(a.match(/.{2}/g).map(x=>parseInt(x,16)));
+  const bb=Uint8Array.from(b.match(/.{2}/g).map(x=>parseInt(x,16)));
+  return crypto.subtle.timingSafeEqual(ab,bb);
+}
+async function authorized(request,env){
   const expected=env[ADMIN_KEY];if(!expected)return false;
   const got=request.headers.get("Authorization")||"";
-  return got==="Bearer "+expected;
+  return secretEquals(got,"Bearer "+expected);
 }
-function webhookAuthorized(request,env){
+async function webhookAuthorized(request,env){
   const expected=env[WEBHOOK_KEY];if(!expected)return false;
-  return (request.headers.get("Authorization")||"")==="Bearer "+expected;
+  const got=request.headers.get("Authorization")||"";
+  return secretEquals(got,"Bearer "+expected);
 }
 function sessionCookie(value){return "__Host-sp_admin="+encodeURIComponent(value)+"; Max-Age=28800; Path=/; Secure; HttpOnly; SameSite=Strict";}
 async function readJson(request,max=MAX_BODY){
@@ -363,7 +371,7 @@ function randomToken(){
 async function accountingSnapshot(env){
   const accounts=(await env.DB.prepare("SELECT id,name,account_type,currency,current_balance_minor,active,updated_at FROM accounts WHERE active=1 ORDER BY name").all()).results;
   const costs=(await env.DB.prepare("SELECT id,category,supplier,description,amount_minor,currency,status,due_date,paid_at,account_id,created_at FROM supply_costs ORDER BY created_at DESC LIMIT 80").all()).results;
-  const entries=(await env.DB.prepare("SELECT id,account_id,entry_type,amount_minor,currency,direction,reference_type,reference_id,description,created_at FROM financial_entries ORDER BY created_at DESC LIMIT 100").all()).results;
+  const entries=(await env.DB.prepare("SELECT jt.id,jt.reference_type,jt.reference_id,jt.description,jt.currency,jt.total_minor,jt.request_id,jt.created_at,COALESCE(SUM(CASE WHEN jl.side='debit' THEN jl.amount_minor ELSE 0 END),0) debit_minor,COALESCE(SUM(CASE WHEN jl.side='credit' THEN jl.amount_minor ELSE 0 END),0) credit_minor FROM journal_transactions jt LEFT JOIN journal_lines jl ON jl.transaction_id=jt.id GROUP BY jt.id ORDER BY jt.created_at DESC LIMIT 100").all()).results;
   const docs=(await env.DB.prepare("SELECT id,document_type,title,reference_type,reference_id,mime_type,size_bytes,notes,captured_offline,created_at FROM documents ORDER BY created_at DESC LIMIT 50").all()).results;
   const flags=(await env.DB.prepare("SELECT * FROM audit_flags WHERE is_resolved=0 ORDER BY CASE severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END,created_at DESC LIMIT 80").all()).results;
   const summary=(await env.DB.prepare("SELECT jt.currency,COALESCE(SUM(CASE WHEN a.account_type='income' AND jl.side='credit' THEN jl.amount_minor ELSE 0 END),0) sales_minor,COALESCE(SUM(CASE WHEN a.account_type IN ('cash','bank') AND jl.side='debit' AND jt.reference_type IN ('order_payment','manual_sale') THEN jl.amount_minor ELSE 0 END),0) payments_minor,COALESCE(SUM(CASE WHEN a.account_type='expense' AND jl.side='debit' THEN jl.amount_minor ELSE 0 END),0) expenses_minor,COALESCE(SUM(CASE WHEN a.account_type='cogs' AND jl.side='debit' THEN jl.amount_minor ELSE 0 END),0) cogs_minor FROM journal_transactions jt JOIN journal_lines jl ON jl.transaction_id=jt.id JOIN accounts a ON a.id=jl.account_id GROUP BY jt.currency").all()).results;
@@ -418,7 +426,6 @@ async function adminAccounting(request,env,origin){
   if(!(await verifySession(request,env)))return response({error:"Unauthorized."},401,origin);
   const path=new URL(request.url).pathname;
   if(path==="/admin/accounting"&&request.method==="GET"){
-    await runAudit(env);
     return response(await accountingSnapshot(env),200,origin);
   }
   if(path==="/admin/account"&&request.method==="POST"){
@@ -568,15 +575,30 @@ async function adminAccounting(request,env,origin){
     if(!title||!type||!dataUrl.startsWith("data:image/")||dataUrl.length>1450000)return response({error:"Document image is missing or too large."},400,origin);
     const mime=(dataUrl.match(/^data:([^;]+);base64,/)||[])[1]||"image/jpeg",id=crypto.randomUUID(),now=new Date().toISOString(),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
     if(requestId){const existing=await env.DB.prepare("SELECT id FROM documents WHERE request_id=?1").bind(requestId).first();if(existing)return response({ok:true,id:existing.id,replayed:true},200,origin);}
-    await env.DB.prepare("INSERT INTO documents(id,request_id,document_type,title,reference_type,reference_id,data_url,mime_type,size_bytes,notes,captured_offline,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)").bind(id,requestId,type,title,text(b.reference_type,40),text(b.reference_id,100),dataUrl,mime,Math.floor(dataUrl.length*0.75),text(b.notes,300),b.captured_offline?1:0,now).run();
-    return response({ok:true,id},202,origin);
+    try{
+      await env.DB.batch([
+        env.DB.prepare("INSERT INTO documents(id,request_id,document_type,title,reference_type,reference_id,data_url,mime_type,size_bytes,notes,captured_offline,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)").bind(id,requestId,type,title,text(b.reference_type,40),text(b.reference_id,100),dataUrl,mime,Math.floor(dataUrl.length*0.75),text(b.notes,300),b.captured_offline?1:0,now),
+        await auditStatement(env,{action:"DOCUMENT_CREATED",entityType:"document",entityId:id,after:{document_type:type,title,reference_type:text(b.reference_type,40)||null,reference_id:text(b.reference_id,100)||null,size_bytes:Math.floor(dataUrl.length*0.75)},requestId})
+      ]);
+      return response({ok:true,id},202,origin);
+    }catch(_){return response({error:"Document could not be saved."},500,origin);}
   }
 
   if(path==="/admin/document/share"&&request.method==="POST"){
-    const b=await readJson(request),id=text(b.id,80);if(!id)return response({error:"Document id required."},400,origin);
+    const b=await readJson(request),id=text(b.id,80),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;if(!id)return response({error:"Document id required."},400,origin);
+    if(requestId){
+      const prior=await env.DB.prepare("SELECT id,after_json FROM audit_log WHERE request_id=?1 AND action='DOCUMENT_SHARED' LIMIT 1").bind(requestId).first();
+      if(prior){let after={};try{after=JSON.parse(prior.after_json||"{}")}catch(_){};return response({ok:true,replayed:true,url:after.url||null,expires_at:after.expires_at||null},200,origin);}
+    }
     const doc=await env.DB.prepare("SELECT id FROM documents WHERE id=?1").bind(id).first();if(!doc)return response({error:"Document not found."},404,origin);
     const token=randomToken(),hash=await digest(token),expires=new Date(Date.now()+7*24*60*60*1000).toISOString();
-    await env.DB.prepare("UPDATE documents SET share_token_hash=?1,share_expires_at=?2 WHERE id=?3").bind(hash,expires,id).run();
+    const url="https://api.secpackco.com/document/share?token="+encodeURIComponent(token);
+    try{
+      await env.DB.batch([
+        env.DB.prepare("UPDATE documents SET share_token_hash=?1,share_expires_at=?2 WHERE id=?3").bind(hash,expires,id),
+        await auditStatement(env,{action:"DOCUMENT_SHARED",entityType:"document",entityId:id,after:{url,expires_at:expires},requestId})
+      ]);
+    }catch(_){return response({error:"Document share link could not be created."},500,origin);}
     return response({ok:true,url:"https://api.secpackco.com/document/share?token="+encodeURIComponent(token),expires_at:expires},200,origin);
   }
   if(path==="/admin/document"&&request.method==="GET"){
@@ -633,7 +655,7 @@ async function adminRequest(request,env,origin){
     const limited=await rateLimit(env,request,"admin-auth",10);
     if(!limited.allowed)return response({error:"Too many authentication attempts."},429,origin);
     const got=request.headers.get("Authorization")||"";
-    if(!env[ADMIN_KEY]||got!=="Bearer "+env[ADMIN_KEY])return response({error:"Unauthorized."},401,origin);
+    if(!await secretEquals(got,"Bearer "+env[ADMIN_KEY]))return response({error:"Unauthorized."},401,origin);
     const payload=String(Date.now()),sig=await signSession(payload,env),h=response({ok:true},200,origin).headers;
     h.set("Set-Cookie",sessionCookie(payload+"."+sig));return new Response(JSON.stringify({ok:true}),{status:200,headers:h});
   }
@@ -653,7 +675,25 @@ async function adminRequest(request,env,origin){
   if(path==="/admin/product"&&request.method==="POST")return adminProduct(request,env,origin);
   if(path==="/admin/sale"&&request.method==="POST")return adminSale(request,env,origin);
   if(path==="/admin/order-status"&&request.method==="POST")return adminOrderStatus(request,env,origin);
-  if(path==="/admin/alerts/read"&&request.method==="POST"){const b=await readJson(request);await env.DB.prepare("UPDATE alerts SET is_read=1 WHERE id=?1").bind(text(b.id,80)).run();return response({ok:true},200,origin)}
+  if(path==="/admin/alerts/read"&&request.method==="POST"){
+    const b=await readJson(request),id=text(b.id,80),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(!id)return response({error:"Alert id is required."},400,origin);
+    if(requestId){
+      const prior=await env.DB.prepare("SELECT id FROM audit_log WHERE request_id=?1 AND action='ALERT_READ' LIMIT 1").bind(requestId).first();
+      if(prior)return response({ok:true,replayed:true},200,origin);
+    }
+    const alert=await env.DB.prepare("SELECT id,is_read FROM alerts WHERE id=?1").bind(id).first();
+    if(!alert)return response({error:"Alert not found."},404,origin);
+    if(Number(alert.is_read)===1)return response({ok:true,replayed:true},200,origin);
+    const now=new Date().toISOString();
+    try{
+      await env.DB.batch([
+        env.DB.prepare("UPDATE alerts SET is_read=1 WHERE id=?1 AND is_read=0").bind(id),
+        await auditStatement(env,{action:"ALERT_READ",entityType:"alert",entityId:id,before:{is_read:0},after:{is_read:1},requestId})
+      ]);
+      return response({ok:true},200,origin);
+    }catch(_){return response({error:"Alert could not be updated."},500,origin)}
+  }
   return response({error:"Not found."},404,origin);
 }
 
