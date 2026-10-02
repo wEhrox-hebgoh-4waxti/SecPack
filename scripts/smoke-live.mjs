@@ -4,6 +4,7 @@ const checks = [
   ["advisor-page", "https://secpackco.com/pages/advisor.html"],
   ["catalog", "https://api.secpackco.com/catalog"],
   ["health", "https://api.secpackco.com/health"],
+  ["ready", "https://api.secpackco.com/ready"],
 ];
 
 const fail = [];
@@ -17,7 +18,8 @@ for (const [name, url] of checks) {
     const body = await r.text();
     console.log(name, r.status, r.headers.get("content-type") || "", body.slice(0, 120).replace(/\s+/g, " "));
     if (r.status < 200 || r.status >= 400) fail.push(`${name}: HTTP ${r.status}`);
-    if (name === "health" && (!body.includes('"ok":true') || !body.includes('"commerceSchema":true'))) fail.push(`health: unhealthy response ${body}`);
+    if (name === "health" && !body.includes('"ok":true')) fail.push(`health: unhealthy response ${body}`);
+    if (name === "ready" && (!body.includes('"ok":true') || !body.includes('"commerceSchema":true'))) fail.push(`ready: schema not ready ${body}`);
     if (name === "catalog" && /"(?:(?:unit_)?price(?:_minor)?|stock_qty|reserved_qty|sold_qty|unit_cost_minor|warehouse)"/.test(body)) {
       fail.push("catalog: public response contains internal commercial/inventory fields");
     }
