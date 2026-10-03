@@ -122,7 +122,7 @@ expect(launch.includes("Payment gateway and server-side settlement webhook"), "L
 expect(sql.includes("prevent_invalid_supply_milestone_transition"), "Supply milestone lifecycle guard missing.");
 expect(sql.includes("OLD.status='paid' AND NEW.status='cancelled' AND NEW.payment_status='refunded'"), "Refund state-machine boundary is missing.");
 expect(migrationFiles.includes("0022_refund_state_boundary.sql"), "Refund state-boundary migration missing.");
-expect(!/stock_qty-reserved_qty>=\\?1|reserved_qty>=\\?1 AND stock_qty>=\\?1/.test(worker), "Inventory mutations still rely on silent zero-row WHERE guards.");
+expect(!/stock_qty-reserved_qty>=\\?1|reserved_qty>=\\?1|sold_qty>=\\?1/.test(worker), "Inventory mutations still rely on silent zero-row WHERE guards.");
 
 const duplicates = new Map();
 for (const file of migrationFiles) {
