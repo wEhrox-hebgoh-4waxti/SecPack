@@ -18,6 +18,7 @@ async function api(path,opts={}){
   if(!r.ok){const e=new Error(d.error||"خطا");e.status=r.status;throw e;}
   return d;
 }
+window.secpackAdminApi=api;
 function el(tag,textValue){const e=document.createElement(tag);if(textValue!==undefined)e.textContent=String(textValue);return e;}
 function renderStats(d){
   const p=d.products.reduce((s,x)=>({stock:s.stock+Math.max(0,Number(x.stock_qty||0)-Number(x.reserved_qty||0)),res:s.res+Number(x.reserved_qty||0),sold:s.sold+Number(x.sold_qty||0)}),{stock:0,res:0,sold:0});

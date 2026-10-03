@@ -8,6 +8,8 @@ const expect = (condition, message) => { if (!condition) fail.push(message); };
 const worker = read("worker/advisor.js");
 const smoke = read("scripts/smoke-live.mjs");
 const storeJs = read("assets/js/pages-store.js");
+const adminJs = read("assets/js/admin.js");
+const accountingJs = read("assets/js/accounting.js");
 const storeHtml = read("pages/store.html");
 const pkg = JSON.parse(read("package.json"));
 const architecture = read("SYSTEM-ARCHITECTURE.md");
@@ -38,6 +40,10 @@ console.log("SEC PACK system contract audit");
 console.log("Migration files:", migrationFiles.length);
 
 expect(architecture.includes("Business command"), "SYSTEM-ARCHITECTURE.md is incomplete.");
+expect(adminJs.includes("window.secpackAdminApi=api"), "Admin API client must be exposed as the single authenticated client for dependent Admin modules.");
+expect(accountingJs.includes("const accountingApi=window.secpackAdminApi"), "Accounting module must use the shared Admin API client.");
+expect(!accountingJs.includes("queueItem("), "Sensitive accounting mutations must not use a browser replay queue.");
+
 expect(!/ensureOperationsSchema|ALTER TABLE|CREATE TABLE|CREATE TRIGGER|DROP TRIGGER/i.test(worker), "Runtime schema DDL/reconciler detected in Worker.");
 expect(worker.includes("async function schemaReady"), "schemaReady() missing.");
 expect(worker.includes('url.pathname==="/ready"'), "Dedicated readiness endpoint missing.");

@@ -1,6 +1,9 @@
-// Remove the retired sensitive offline queue so old browser copies do not remain after the security hardening.
+// Sensitive accounting/document mutations are online-only.
+// D1 is the only operational source of truth; no browser queue may replay financial or document commands.
 try{indexedDB.deleteDatabase("secpack-offline-v1");}catch(_){}
 const ACCOUNTING_API="https://api.secpackco.com";
+const accountingApi=window.secpackAdminApi;
+if(typeof accountingApi!=="function") throw new Error("SEC PACK Admin API client is not initialized.");
 function a(id){return document.getElementById(id);}
 function amoney(v,c){const digits=["USD","EUR","GBP","AED","SAR","TRY"].includes(c)?2:0;return Number(v||0).toLocaleString("fa-IR",{maximumFractionDigits:digits})+" "+c;}
 function fromMinor(v,c){return Number(v||0)/(["USD","EUR","GBP","AED","SAR","TRY"].includes(c)?100:1);}
@@ -77,12 +80,9 @@ async function loadSupplyCases(){
 async function loadAccounting(){try{const d=await accountingApi("/admin/accounting",null,"GET");renderAccounting(d);return d}catch(e){const x=a("accountingStatus");if(x)x.textContent=e.message;}}
 async function saveAccountingForm(form,path){
   const payload=Object.fromEntries(new FormData(form).entries());payload.request_id=crypto.randomUUID();
-  if(!navigator.onLine){await queueItem(path,payload);form.reset();a("accountingStatus").textContent="ثبت آفلاین شد و پس از اتصال همگام می‌شود.";return;}
-  try{await accountingApi(path,payload);form.reset();await loadAccounting();a("accountingStatus").textContent="ثبت شد و دفتر مالی به‌روزرسانی شد.";}
-  catch(e){
-    if(e.status===429||!e.status||e.status>=500){await queueItem(path,payload);a("accountingStatus").textContent="ارتباط قطع شد؛ مورد در صف آفلاین ذخیره شد.";}
-    else a("accountingStatus").textContent=e.message;
-  }
+  if(!navigator.onLine){a("accountingStatus").textContent="برای ثبت عملیات مالی، اتصال امن به سامانه لازم است.";return;}
+  try{await accountingApi(path,{method:"POST",body:JSON.stringify(payload)});form.reset();await loadAccounting();a("accountingStatus").textContent="ثبت شد و دفتر مالی به‌روزرسانی شد.";}
+  catch(e){a("accountingStatus").textContent=e.message||"ثبت عملیات انجام نشد."}
 }
 document.addEventListener("DOMContentLoaded",()=>{
   a("accountForm")?.addEventListener("submit",e=>{e.preventDefault();saveAccountingForm(e.currentTarget,"/admin/account");});
