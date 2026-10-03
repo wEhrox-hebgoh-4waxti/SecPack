@@ -1,4 +1,8 @@
-// Canonical system contract: business mutations, security boundaries and schema readiness are enforced as one pipeline.\n// All cross-domain changes are gated by the repository-wide system audit.\n// Public store privacy is part of the same API contract.\n// Integrity tests must exercise invariants without weakening production guards.\nconst ORIGINS = new Set(["https://secpackco.com", "https://www.secpackco.com"]);
+// Canonical system contract: business mutations, security boundaries and schema readiness are enforced as one pipeline.
+// All cross-domain changes are gated by the repository-wide system audit.
+// Public store privacy is part of the same API contract.
+// Integrity tests must exercise invariants without weakening production guards.
+const ORIGINS = new Set(["https://secpackco.com", "https://www.secpackco.com"]);
 const MAX_BODY = 16000;
 const MAX_QUESTION = 6000;
 const MODEL = "gpt-5.6-terra";
@@ -576,7 +580,14 @@ async function adminAccounting(request,env,origin){
       for(const x of items){
         const cost=safeMultiply(Number(x.quantity),Number(x.unit_cost_minor||0));if(cost===null||cost<=0)return response({error:"Exact refund cost basis is unavailable for this fulfilled order."},409,origin);
         totalCost+=cost;
-        const productState=await env.DB.prepare("SELECT stock_qty,unit_cost_minor,sold_qty FROM products WHERE id=?1").bind(x.product_id).first();\n        const currentStock=Number(productState?.stock_qty||0),currentCost=Number(productState?.unit_cost_minor||0),currentSold=Number(productState?.sold_qty||0);\n        const returnedQty=Number(x.quantity),returnedCost=Number(x.unit_cost_minor||0),newStock=currentStock+returnedQty;\n        const weightedValue=safeMultiply(currentStock,currentCost);\n        const returnedValue=safeMultiply(returnedQty,returnedCost);\n        if(weightedValue===null||returnedValue===null||newStock<=0)return response({error:"Inventory return valuation is outside the supported range."},409,origin);\n        const newAverageCost=Math.floor((weightedValue+returnedValue)/newStock);\n        stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,sold_qty=sold_qty-?1,unit_cost_minor=?2,updated_at=?3 WHERE id=?4 AND sold_qty>=?1 AND stock_qty>=0").bind(returnedQty,newAverageCost,now,x.product_id));
+        const productState=await env.DB.prepare("SELECT stock_qty,unit_cost_minor,sold_qty FROM products WHERE id=?1").bind(x.product_id).first();
+        const currentStock=Number(productState?.stock_qty||0),currentCost=Number(productState?.unit_cost_minor||0),currentSold=Number(productState?.sold_qty||0);
+        const returnedQty=Number(x.quantity),returnedCost=Number(x.unit_cost_minor||0),newStock=currentStock+returnedQty;
+        const weightedValue=safeMultiply(currentStock,currentCost);
+        const returnedValue=safeMultiply(returnedQty,returnedCost);
+        if(weightedValue===null||returnedValue===null||newStock<=0)return response({error:"Inventory return valuation is outside the supported range."},409,origin);
+        const newAverageCost=Math.floor((weightedValue+returnedValue)/newStock);
+        stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,sold_qty=sold_qty-?1,unit_cost_minor=?2,updated_at=?3 WHERE id=?4 AND sold_qty>=?1 AND stock_qty>=0").bind(returnedQty,newAverageCost,now,x.product_id));
         stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'RETURN',?3,?4,'Refund / inventory returned',?5,?6,?7)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,(await env.DB.prepare("SELECT warehouse FROM products WHERE id=?1").bind(x.product_id).first())?.warehouse||"Gorgan",now));
       }
       const cogsReverse=await buildJournal(env,{referenceType:"order_refund_cogs",referenceId:orderId,description:"Reverse COGS · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"inventory",side:"debit",amount:totalCost},{accountId:"cogs",side:"credit",amount:totalCost}]});
@@ -596,7 +607,8 @@ async function adminAccounting(request,env,origin){
     const b=await readJson(request,1550000),title=text(b.title,160),type=text(b.document_type,40),dataUrl=text(b.data_url,1450000);
     if(!title||!type||!dataUrl.startsWith("data:image/")||dataUrl.length>1450000)return response({error:"Document image is missing or too large."},400,origin);
     const mime=(dataUrl.match(/^data:([^;]+);base64,/)||[])[1]||"image/jpeg";
-    if(!["image/jpeg","image/png","image/webp"].includes(mime))return response({error:"Only JPEG, PNG and WebP documents are accepted."},400,origin);\n    const id=crypto.randomUUID(),now=new Date().toISOString(),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    if(!["image/jpeg","image/png","image/webp"].includes(mime))return response({error:"Only JPEG, PNG and WebP documents are accepted."},400,origin);
+    const id=crypto.randomUUID(),now=new Date().toISOString(),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
     if(requestId){const existing=await env.DB.prepare("SELECT id FROM documents WHERE request_id=?1").bind(requestId).first();if(existing)return response({ok:true,id:existing.id,replayed:true},200,origin);}
     try{
       await env.DB.batch([
@@ -735,7 +747,8 @@ async function handleAdvisor(request,env,origin){
   let body;try{body=await readJson(request)}catch(_){return response({error:"Invalid request."},400,origin)}
   const question=text(body.question,MAX_QUESTION);if(!question)return response({error:"Question is required."},400,origin);
   const language=["en","fa","ar"].includes(body.language)?body.language:"en",area=text(body.area,80)||"Other",depth=["practical","technical","commercial"].includes(body.depth)?body.depth:"practical",useWeb=body.useWeb===true;
-  const input=["Language: "+language,"Area: "+area,"Answer style: "+depth,"Current public information requested: "+(useWeb?"yes":"no"),"","User question:",question].join("\n");
+  const input=["Language: "+language,"Area: "+area,"Answer style: "+depth,"Current public information requested: "+(useWeb?"yes":"no"),"","User question:",question].join("
+");
   const payload={model:env.OPENAI_MODEL||MODEL,input:[{role:"system",content:[{type:"input_text",text:SYSTEM_PROMPT}]},{role:"user",content:[{type:"input_text",text:input}]}],max_output_tokens:1800};if(useWeb)payload.tools=[{type:"web_search"}];
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),25000);
   try{const upstream=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Authorization":"Bearer "+env[KEY],"Content-Type":"application/json"},body:JSON.stringify(payload),signal:controller.signal});if(!upstream.ok)return response({error:"Advisor service is temporarily unavailable."},502,origin);const result=await upstream.json(),answer=typeof result.output_text==="string"?result.output_text.trim():"";if(!answer)return response({error:"No advisor response was returned."},502,origin);return response({answer},200,origin)}catch(_){return response({error:"Advisor service is temporarily unavailable."},502,origin)}finally{clearTimeout(timer)}
