@@ -78,6 +78,9 @@ expect(worker.includes('return secretEquals(got,"Bearer "+expected);'), "Admin a
 expect(worker.includes('action:"ALERT_READ"'), "Alert acknowledgement must be auditable.");
 expect(worker.includes('action:"DOCUMENT_CREATED"'), "Document creation must be auditable.");
 expect(worker.includes('action:"DOCUMENT_SHARED"'), "Document sharing must be auditable.");
+expect(worker.includes('["image/jpeg","image/png","image/webp"]'), "Document uploads must be restricted to safe raster image formats.");
+expect(worker.includes("INSERT INTO supply_costs(id,request_id,category"), "Supply-cost persistence must retain request_id at the mutation boundary.");
+expect(worker.includes("function paymentAccountId(order)"), "Order payment/refund accounting must resolve the payment account consistently.");
 expect(!/action:"DOCUMENT_SHARED"[\s\S]{0,500}after:\{url[,:]/i.test(worker), "DOCUMENT_SHARED audit must not persist a raw share URL/token.");
 expect(worker.includes('action:"SUPPLY_CASE_CREATED"'), "Supply-case creation must be auditable.");
 expect(worker.includes('action:"SUPPLY_MILESTONE_UPDATED"'), "Supply-milestone updates must be auditable.");
