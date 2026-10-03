@@ -45,10 +45,10 @@ run("UPDATE products SET stock_qty=9 WHERE id='"+productId+"';");
 run("INSERT INTO orders(id,order_no,customer_name,email,currency,created_at,updated_at) VALUES('"+orderId+"','"+orderNo+"','Integrity','integrity@example.com','USD',datetime('now'),datetime('now'));");
 expectFailure("UPDATE orders SET status='ready' WHERE id='"+orderId+"';", "Expected unpaid order -> ready transition guard did not fire.");
 run("UPDATE orders SET status='paid',payment_status='paid' WHERE id='"+orderId+"';");
-run("UPDATE orders SET status='ready' WHERE id='"+orderId+"';");
 expectFailure("UPDATE orders SET status='fulfilled' WHERE id='"+orderId+"';", "Expected paid -> fulfilled shortcut guard did not fire.");
 expectFailure("UPDATE orders SET status='cancelled' WHERE id='"+orderId+"';", "Expected paid -> cancelled without refund guard did not fire.");
-run("UPDATE orders SET status='cancelled',payment_status='refunded' WHERE id='"+orderId+"';");
+run("UPDATE orders SET status='ready' WHERE id='"+orderId+"';");
+run("UPDATE orders SET status='fulfilled' WHERE id='"+orderId+"';");
 expectFailure("UPDATE orders SET payment_status='unpaid' WHERE id='"+orderId+"';", "Expected paid -> unpaid payment transition guard did not fire.");
 
 run("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor,unit_cost_minor) VALUES('"+itemId+"','"+orderId+"','paper','Integrity','unit',1,1,1,100,100,50);");
