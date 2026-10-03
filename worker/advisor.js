@@ -184,7 +184,8 @@ async function schemaReady(env){
     if(required.some(x=>!tables.has(x))){schemaReadiness={at:Date.now(),ok:false};return false;}
     const requiredColumns={
       products:["unit_price_minor","unit_cost_minor","stock_qty","reserved_qty","sold_qty","warehouse"],
-      orders:["request_id","total_minor"],\n      journal_transactions:["status"],
+      orders:["request_id","total_minor"],
+      journal_transactions:["status"],
       order_items:["unit_price_minor","line_total_minor","unit_cost_minor"],
       inventory_ledger:["request_id","warehouse"],
       financial_entries:["request_id"],
