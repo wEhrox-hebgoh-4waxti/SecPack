@@ -40,7 +40,7 @@ document.getElementById("buyButton")?.addEventListener("click",async()=>{
     if(!result?.ok)throw new Error();
     const box=document.createElement("div");box.className="quote";
     const p=document.createElement("p");p.textContent=lang().orderOk;
-    const ref=document.createElement("strong");ref.textContent=lang().ref+": "+(result.result?.orderNo||result.result?.orderId||"");
+    const ref=document.createElement("strong");ref.textContent=lang().ref+": "+(result.result?.orderNo||"");
     box.append(p,ref);resultBox.replaceChildren(box);
   }catch(_){
     if(resultBox)resultBox.textContent=lang().failed;
