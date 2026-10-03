@@ -1,5 +1,26 @@
 # SEC PACK — Whole-System Rebuild Contract
 
+## Latest reconstruction pass — 2026-10-03
+
+This pass treats inventory, order state, refund accounting, public DTOs, migration authority and CI gates as one dependency graph.
+
+### Cross-domain corrections now committed
+- Inventory mutations no longer depend on conditional UPDATE predicates that can silently affect zero rows while a later ledger INSERT succeeds; DB invariant triggers are now the transaction boundary.
+- Paid-order refund is explicitly represented as the only legal database transition from `paid` to `cancelled`, and it must simultaneously set `payment_status='refunded'`.
+- Refund reservation release and fulfilled-order return use DB invariant triggers rather than silent zero-row guards.
+- Public order replay responses are restricted to the same minimal DTO as first submission; commercial total/currency are never returned by the public replay path.
+- Local integrity tests now cover reservation overflow and paid-order cancellation/refund boundaries.
+- System audit now fails if legacy inventory zero-row guard patterns or the refund boundary migration disappear.
+- Local secret/development artifacts are explicitly excluded from Git via `.dev.vars*`, Wrangler state and local build/test outputs.
+
+### Current release blockers
+1. Remote D1 control-plane authorization must be restored with a dedicated GitHub secret `CLOUDFLARE_D1_API_TOKEN` having Account → D1 Edit (D1 Write) for the SEC PACK account.
+2. After D1 access is restored, remote `d1_migrations` must be reconciled before any historical migration rename/delete.
+3. CI must pass system audit, migration audit, local integrity, remote migration verification, deployment and live smoke before production is considered operational.
+4. End-to-end production-safe validation remains required for receipt → order → reserve → payment confirmation → fulfillment → COGS → return/refund.
+5. MFA/TOTP remains a post-core security hardening step and is not claimed as implemented.
+
+
 This is the canonical rebuild map for SEC PACK. Work is performed as one connected system, not as isolated patches.
 
 ## 0. Non-negotiable architecture
