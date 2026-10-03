@@ -14,3 +14,14 @@ data/internal/
 *.sqlite
 *.db
 .DS_Store
+
+# Wrangler local secret files
+.dev.vars
+.dev.vars.*
+.wrangler/
+node_modules/
+coverage/
+dist/
+.tmp/
+tmp/
+*.log
