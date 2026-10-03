@@ -88,6 +88,9 @@ expect(worker.includes("function paymentAccountId(order)"), "Order payment/refun
 expect(!/action:"DOCUMENT_SHARED"[\s\S]{0,500}after:\{url[,:]/i.test(worker), "DOCUMENT_SHARED audit must not persist a raw share URL/token.");
 expect(worker.includes('action:"SUPPLY_CASE_CREATED"'), "Supply-case creation must be auditable.");
 expect(worker.includes('action:"SUPPLY_MILESTONE_UPDATED"'), "Supply-milestone updates must be auditable.");
+expect(/path===\"\/admin\/dashboard\"&&request\.method===\"GET\"\)[\s\S]{0,220}verifySession\(request,env\)/.test(worker), "Admin dashboard must be authenticated at the router boundary.");
+expect(/path===\"\/admin\/audit-log\"&&request\.method===\"GET\"[\s\S]{0,220}verifySession\(request,env\)/.test(worker), "Admin audit-log must be authenticated at the router boundary.");
+expect(/path===\"\/admin\/alerts\/read\"&&request\.method===\"POST\"\)[\s\S]{0,220}verifySession\(request,env\)/.test(worker), "Admin alert mutation must be authenticated at the router boundary.");
 expect(worker.includes("__Host-sp_admin"), "Secure admin session cookie missing.");
 expect(worker.includes("admin_sessions"), "Server-backed admin session store missing.");
 expect(worker.includes("revoked_at"), "Admin session revocation missing.");
