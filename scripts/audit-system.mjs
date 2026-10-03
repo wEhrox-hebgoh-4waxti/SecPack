@@ -43,6 +43,7 @@ expect(architecture.includes("Business command"), "SYSTEM-ARCHITECTURE.md is inc
 expect(adminJs.includes("window.secpackAdminApi=api"), "Admin API client must be exposed as the single authenticated client for dependent Admin modules.");
 expect(accountingJs.includes("const accountingApi=window.secpackAdminApi"), "Accounting module must use the shared Admin API client.");
 expect(!accountingJs.includes("queueItem("), "Sensitive accounting mutations must not use a browser replay queue.");
+expect(!(accountingJs.match(/accountingApi\("\/admin/g)||[]).length, "Accounting UI must route Admin calls through typed adminGet/adminPost wrappers.");
 
 expect(!/ensureOperationsSchema|ALTER TABLE|CREATE TABLE|CREATE TRIGGER|DROP TRIGGER/i.test(worker), "Runtime schema DDL/reconciler detected in Worker.");
 expect(worker.includes("async function schemaReady"), "schemaReady() missing.");
