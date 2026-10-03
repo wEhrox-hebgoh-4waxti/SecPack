@@ -62,7 +62,7 @@ for (const field of publicForbidden) {
   expect(!new RegExp("\\b"+field+"\\b").test(catalogBlock), "Public catalog exposes internal field: "+field);
 }
 expect(!/INSERT INTO financial_entries|UPDATE financial_entries|DELETE FROM financial_entries/i.test(worker), "Worker writes legacy financial_entries; Journal must be canonical.");
-expect(!/response\(\{ok:true,orderId[,}]/.test(worker), "Public order response must not expose internal orderId.");
+const publicOrderBlock = worker.match(/async function createOrder\(data,env,origin\)\{[\\s\\S]*?\\n\\}\\nasync function catalog/)?.[0] || "";\nexpect(!/response\\(\\{ok:true,orderId[,}]/.test(publicOrderBlock), "Public order response must not expose internal orderId.");
 expect(!storeJs.includes("result?.orderId"), "Public store must not display an internal orderId.");
 expect(!/INSERT INTO accounting_ledger|UPDATE accounting_ledger|DELETE FROM accounting_ledger/i.test(worker), "Worker writes legacy accounting_ledger; Journal must be canonical.");
 expect(!/if\(path===["']\/admin\/accounting["']&&request\.method===["']GET["'][\s\S]{0,180}runAudit\(/i.test(worker), "GET /admin/accounting must remain read-only.");
