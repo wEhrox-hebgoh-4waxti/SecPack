@@ -712,8 +712,12 @@ async function adminRequest(request,env,origin){
     return response({error:"Unauthorized."},limited.allowed?401:429,origin);
   }
 if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/refund"||path==="/admin/document"||path==="/admin/audit"||path==="/admin/supply-cases"||path==="/admin/supply-case"||path==="/admin/supply-milestone")return adminAccounting(request,env,origin);
-  if(path==="/admin/dashboard"&&request.method==="GET")return response(await adminDashboard(env),200,origin);
+  if(path==="/admin/dashboard"&&request.method==="GET"){
+    if(!(await verifySession(request,env)))return response({error:"Unauthorized."},401,origin);
+    return response(await adminDashboard(env),200,origin);
+  }
   if(path==="/admin/audit-log"&&request.method==="GET"){
+    if(!(await verifySession(request,env)))return response({error:"Unauthorized."},401,origin);
     const rows=(await env.DB.prepare("SELECT id,actor,action,entity_type,entity_id,before_json,after_json,request_id,created_at FROM audit_log ORDER BY created_at DESC LIMIT 100").all()).results;
     return response({entries:rows},200,origin);
   }
@@ -721,6 +725,7 @@ if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin
   if(path==="/admin/sale"&&request.method==="POST")return adminSale(request,env,origin);
   if(path==="/admin/order-status"&&request.method==="POST")return adminOrderStatus(request,env,origin);
   if(path==="/admin/alerts/read"&&request.method==="POST"){
+    if(!(await verifySession(request,env)))return response({error:"Unauthorized."},401,origin);
     const b=await readJson(request),id=text(b.id,80),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
     if(!id)return response({error:"Alert id is required."},400,origin);
     if(requestId){
