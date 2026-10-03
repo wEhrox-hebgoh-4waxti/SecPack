@@ -126,7 +126,7 @@ Worker request handling must never execute:
 - CREATE TRIGGER
 - DROP TRIGGER
 
-The duplicate historical migration prefixes are frozen until the real remote D1 migration history is inspected. They must not be renamed or deleted blindly.
+The duplicate historical migration prefixes are frozen until the real remote D1 migration history is inspected. Current known duplicates are 0003–0007 and 0018. They must not be renamed or deleted blindly.
 
 ## 10. Idempotency
 
