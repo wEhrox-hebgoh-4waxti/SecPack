@@ -244,10 +244,18 @@ async function createOrder(data,env,origin){
   let parsed;
   try{parsed=JSON.parse(data.items||"[]")}catch(_){return response({error:"Invalid order items."},400,origin)}
   if(!Array.isArray(parsed)||!parsed.length||parsed.length>20)return response({error:"Invalid order items."},400,origin);
-  const clean=parsed.map(x=>({id:text(x?.id,40),qty:Number(x?.qty)}));
-  if(clean.some(x=>!["paper","film","adhesive","packaging"].includes(x.id)||!Number.isInteger(x.qty)||x.qty<1||x.qty>100000))return response({error:"Invalid order items."},400,origin);
+  const requested=new Map();
+  for(const raw of parsed){
+    const id=text(raw?.id,40),qty=Number(raw?.qty);
+    if(!/^[A-Za-z0-9_-]{1,40}$/.test(id)||!Number.isInteger(qty)||qty<1||qty>100000)return response({error:"Invalid order items."},400,origin);
+    const next=(requested.get(id)||0)+qty;
+    if(!Number.isSafeInteger(next)||next>100000)return response({error:"Invalid order items."},400,origin);
+    requested.set(id,next);
+  }
+  const clean=[...requested].map(([id,qty])=>({id,qty}));
+  if(!clean.length||clean.length>20)return response({error:"Invalid order items."},400,origin);
   if(!data.name||!validEmail(data.email))return response({error:"Please provide a valid name and email address."},400,origin);
-  const ids=[...new Set(clean.map(x=>x.id))],products=[];
+  const ids=clean.map(x=>x.id),products=[];
   for(const id of ids){const p=await env.DB.prepare("SELECT * FROM products WHERE id=?1 AND active=1").bind(id).first();if(!p||Number(p.unit_price_minor)<=0||Number(p.unit_cost_minor)<=0)return response({error:"One or more selected products are currently unavailable."},409,origin);products.push(p)}
   if(data.requestId){
     const existing=await env.DB.prepare("SELECT id,order_no,total,total_minor,currency FROM orders WHERE request_id=?1").bind(data.requestId).first();
