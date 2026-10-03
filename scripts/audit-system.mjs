@@ -66,7 +66,7 @@ expect(worker.includes('path==="/admin/supply-case"&&request.method==="POST"') &
 expect(worker.includes('path==="/admin/supply-cases"&&request.method==="GET"'), "Supply-chain read route is not implemented.");
 expect(/if\(path\.startsWith\("\/admin\/accounting"\)[\s\S]*path===\"\/admin\/supply-cases\"/.test(worker), "Supply-chain routes are not connected to the authenticated admin handler.");
 expect(worker.includes("await env.DB.batch"), "Business mutations are not using D1 batch transactions.");
-expect(worker.includes("stock_qty-reserved_qty>=?1"), "Reservation/sale paths must enforce available stock at the mutation boundary.");
+expect(!worker.includes("stock_qty-reserved_qty>=?1"), "Inventory availability must be enforced by DB invariants, not silent zero-row UPDATE guards.");
 expect(worker.includes('if(next==="ready"&&order.payment_status!=="paid")'), "Ready order state must require confirmed payment.");
 expect(worker.includes("Refund / reservation released"), "Refund workflow must release reservations for unfulfilled paid orders.");
 
