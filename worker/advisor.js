@@ -267,7 +267,7 @@ async function createOrder(data,env,origin){
   }catch(e){
     if(data.requestId){
       const existing=await env.DB.prepare("SELECT id,order_no,total_minor,currency FROM orders WHERE request_id=?1").bind(data.requestId).first();
-      if(existing)return response({ok:true,orderId:existing.id,orderNo:existing.order_no,total:minorToMoney(existing.total_minor,existing.currency),currency:existing.currency},202,origin);
+      if(existing)return response({ok:true,orderId:existing.id,orderNo:existing.order_no,status:"submitted"},202,origin);
     }
     return response({error:String(e).toLowerCase().includes("insufficient_stock")||String(e).toLowerCase().includes("stock")?"Insufficient stock for one or more products.":"Order could not be created."},409,origin)
   }
