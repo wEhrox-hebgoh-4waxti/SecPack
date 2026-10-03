@@ -123,6 +123,9 @@ expect(sql.includes("prevent_invalid_supply_milestone_transition"), "Supply mile
 expect(sql.includes("OLD.status='paid' AND NEW.status='cancelled' AND NEW.payment_status='refunded'"), "Refund state-machine boundary is missing.");
 expect(migrationFiles.includes("0022_refund_state_boundary.sql"), "Refund state-boundary migration missing.");
 expect(!/stock_qty-reserved_qty>=\\?1|reserved_qty>=\\?1|sold_qty>=\\?1/.test(worker), "Inventory mutations still rely on silent zero-row WHERE guards.");
+expect(!/stockStatementIndexes/.test(worker), "Obsolete inventory statement-index bookkeeping remains.");
+for (const index of ["idx_journal_order_sale_unique","idx_journal_order_payment_unique","idx_journal_order_cogs_unique","idx_journal_manual_sale_unique","idx_journal_manual_cogs_unique","idx_journal_order_refund_sale_unique","idx_journal_order_refund_payment_unique","idx_journal_order_refund_cogs_unique","idx_journal_stock_receipt_unique","idx_journal_supply_cost_unique","idx_journal_supply_cost_payment_unique","idx_journal_opening_balance_unique","idx_inventory_business_event_unique"]) expect(sql.includes(index), "Business-event uniqueness index missing: "+index);
+expect(sql.includes("prevent_account_balance_tamper"), "Account balance reconciliation guard missing.");
 
 const duplicates = new Map();
 for (const file of migrationFiles) {
