@@ -184,6 +184,7 @@ Known historical duplicate prefixes:
 - 0005
 - 0006
 - 0007
+- 0018
 
 Do not rename/delete them before remote reconciliation.
 
