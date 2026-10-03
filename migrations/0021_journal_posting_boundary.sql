@@ -22,6 +22,13 @@ BEGIN
   SELECT RAISE(ABORT,'JOURNAL_IMMUTABLE_OR_UNBALANCED');
 END;
 
+CREATE TRIGGER prevent_journal_direct_post
+BEFORE INSERT ON journal_transactions
+WHEN NEW.status='posted'
+BEGIN
+  SELECT RAISE(ABORT,'JOURNAL_MUST_START_DRAFT');
+END;
+
 CREATE TRIGGER prevent_journal_post_without_lines
 BEFORE UPDATE OF status ON journal_transactions
 WHEN OLD.status='draft' AND NEW.status='posted'
