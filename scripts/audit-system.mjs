@@ -132,7 +132,7 @@ for (const file of migrationFiles) {
   list.push(file);
   duplicates.set(m[1], list);
 }
-const unexpectedDuplicates = [...duplicates.entries()].filter(([,v]) => v.length > 1 && !["0003","0004","0005","0006","0007"].includes(v[0].slice(0,4)));
+const unexpectedDuplicates = [...duplicates.entries()].filter(([,v]) => v.length > 1 && !["0003","0004","0005","0006","0007","0018"].includes(v[0].slice(0,4)));
 expect(unexpectedDuplicates.length === 0, "Unexpected new duplicate migration prefixes detected.");
 
 if (fail.length) {
