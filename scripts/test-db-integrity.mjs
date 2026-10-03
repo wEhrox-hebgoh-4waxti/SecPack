@@ -27,7 +27,8 @@ const expectFailure = (sql, message) => {
 };
 
 run("PRAGMA quick_check;");
-const fk=run("PRAGMA foreign_keys;");\nif(!fk.includes("1")) throw new Error("SQLite foreign-key enforcement is disabled.");
+const fk=run("PRAGMA foreign_keys;");
+if(!fk.includes("1")) throw new Error("SQLite foreign-key enforcement is disabled.");
 
 run("INSERT INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,unit_cost_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('"+productId+"','Integrity Test','تست','اختبار','unit','USD',1,100,50,10,0,0,'TEST',1,datetime('now'));");
 run("UPDATE products SET reserved_qty=6 WHERE id='"+productId+"';");
