@@ -57,6 +57,8 @@ expect(!/INSERT INTO financial_entries|UPDATE financial_entries|DELETE FROM fina
 expect(!/INSERT INTO accounting_ledger|UPDATE accounting_ledger|DELETE FROM accounting_ledger/i.test(worker), "Worker writes legacy accounting_ledger; Journal must be canonical.");
 expect(!/if\(path===["']\/admin\/accounting["']&&request\.method===["']GET["'][\s\S]{0,180}runAudit\(/i.test(worker), "GET /admin/accounting must remain read-only.");
 expect(worker.includes("journal_transactions") && worker.includes("journal_lines"), "Journal engine missing.");
+expect(worker.includes('journal_transactions:["status"]'), "Journal posting readiness contract missing.");
+for (const trigger of ["prevent_journal_direct_post","prevent_journal_post_without_lines"]) expect(sql.includes(trigger), "Journal posting trigger missing: "+trigger);
 for (const trigger of ["prevent_order_item_cost_update","prevent_account_structure_update","prevent_orphan_order_item_insert","prevent_orphan_inventory_movement_insert","prevent_product_delete_with_history","prevent_invalid_supply_milestone_transition","prevent_invalid_order_status_transition","prevent_invalid_payment_status_transition","prevent_invalid_inventory_movement_type"]) expect(worker.includes(trigger), "Worker readiness contract missing trigger: "+trigger);
 expect(worker.includes('path==="/admin/supply-case"&&request.method==="POST"') && worker.includes('path==="/admin/supply-milestone"&&request.method==="POST"'), "Supply-chain mutation routes are not implemented.");
 expect(worker.includes('path==="/admin/supply-cases"&&request.method==="GET"'), "Supply-chain read route is not implemented.");
