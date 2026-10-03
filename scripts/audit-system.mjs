@@ -47,6 +47,8 @@ const readyStart = worker.indexOf(`if(url.pathname==="/ready"`);
 const healthBlock = healthStart >= 0 && readyStart > healthStart ? worker.slice(healthStart, readyStart) : "";
 expect(healthBlock && !healthBlock.includes("schemaReady("), "Health endpoint is coupled to readiness.");
 expect(worker.includes('SELECT id,name_en,name_fa,name_ar,unit FROM products'), "Public catalog contract is not minimal.");
+const createOrderBlock = worker.match(/async function createOrder\([\\s\\S]*?\n\}/)?.[0] || "";
+expect(!/response\(\{ok:true,orderId:existing\.id,orderNo:existing\.order_no,total:|currency:existing\.currency/.test(createOrderBlock), "Public order replay response exposes commercial totals/currency.");
 for (const field of ["unit_price","unit_price_minor","available_qty","stock_qty","reserved_qty","sold_qty","unit_cost_minor"]) expect(!new RegExp("\\b"+field+"\\b").test(storeJs), "Store frontend exposes internal field: "+field);
 expect(!/Current price|Available|Order total/.test(storeHtml), "Store HTML contains public pricing/inventory presentation.");
 for (const field of publicForbidden) {
