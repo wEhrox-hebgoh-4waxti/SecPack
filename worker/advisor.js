@@ -156,7 +156,7 @@ async function buildJournal(env,{referenceType,referenceId,description,currency,
   const credit=normalized.filter(x=>x.side==="credit").reduce((s,x)=>s+x.amount,0);
   if(!Number.isSafeInteger(debit)||debit!==credit)return null;
   const rows=normalized.map(x=>x.account);  const txId=crypto.randomUUID(),now=new Date().toISOString(),stm=[
-    env.DB.prepare("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)").bind(txId,text(referenceType,40),text(referenceId,100),text(description,300),currency,debit,requestId||null,now)
+    env.DB.prepare("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at,status) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,'draft')").bind(txId,text(referenceType,40),text(referenceId,100),text(description,300),currency,debit,requestId||null,now)
   ];
   for(const x of normalized){
     const lineId=crypto.randomUUID();
@@ -164,7 +164,8 @@ async function buildJournal(env,{referenceType,referenceId,description,currency,
     const row=x.account, normal=["cash","bank","receivable","inventory","expense","cogs"].includes(row.account_type)?"debit":"credit",delta=x.side===normal?x.amount:-x.amount;
     stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id=?3").bind(delta,now,x.accountId));
   }
-  // Canonical accounting writes stop at the Journal. Legacy accounting_ledger is read-only compatibility data.
+  // Post only after every immutable line and balance update has been queued. The DB trigger proves balance before allowing draft -> posted.
+  stm.push(env.DB.prepare("UPDATE journal_transactions SET status='posted' WHERE id=?1 AND status='draft'").bind(txId));
   return {txId,statements:stm};
 }
 
@@ -183,7 +184,7 @@ async function schemaReady(env){
     if(required.some(x=>!tables.has(x))){schemaReadiness={at:Date.now(),ok:false};return false;}
     const requiredColumns={
       products:["unit_price_minor","unit_cost_minor","stock_qty","reserved_qty","sold_qty","warehouse"],
-      orders:["request_id","total_minor"],
+      orders:["request_id","total_minor"],\n      journal_transactions:["status"],
       order_items:["unit_price_minor","line_total_minor","unit_cost_minor"],
       inventory_ledger:["request_id","warehouse"],
       financial_entries:["request_id"],
