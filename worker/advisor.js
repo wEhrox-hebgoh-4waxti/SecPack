@@ -595,7 +595,7 @@ async function adminAccounting(request,env,origin){
   if(path==="/admin/document"&&request.method==="POST"){
     const b=await readJson(request,1550000),title=text(b.title,160),type=text(b.document_type,40),dataUrl=text(b.data_url,1450000);
     if(!title||!type||!dataUrl.startsWith("data:image/")||dataUrl.length>1450000)return response({error:"Document image is missing or too large."},400,origin);
-    const mime=(dataUrl.match(/^data:([^;]+);base64,/)||[])[1]||"image/jpeg",id=crypto.randomUUID(),now=new Date().toISOString(),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
+    const mime=(dataUrl.match(/^data:([^;]+);base64,/)||[])[1]||"image/jpeg";\n    if(!["image/jpeg","image/png","image/webp"].includes(mime))return response({error:"Only JPEG, PNG and WebP documents are accepted."},400,origin);\n    const id=crypto.randomUUID(),now=new Date().toISOString(),requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
     if(requestId){const existing=await env.DB.prepare("SELECT id FROM documents WHERE request_id=?1").bind(requestId).first();if(existing)return response({ok:true,id:existing.id,replayed:true},200,origin);}
     try{
       await env.DB.batch([
