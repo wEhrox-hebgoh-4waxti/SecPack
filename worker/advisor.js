@@ -568,7 +568,7 @@ async function adminAccounting(request,env,origin){
     if(order.status!=="fulfilled"){
       const items=(await env.DB.prepare("SELECT product_id,quantity FROM order_items WHERE order_id=?1").bind(orderId).all()).results;
       for(const x of items){
-        stm.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty-?1,updated_at=?2 WHERE id=?3 AND reserved_qty>=?1").bind(x.quantity,now,x.product_id));
+        stm.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty-?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
         stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'RELEASE',?3,?4,'Refund / reservation released',?5,?6,?7)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,(await env.DB.prepare("SELECT warehouse FROM products WHERE id=?1").bind(x.product_id).first())?.warehouse||"Gorgan",now));
       }
     }
