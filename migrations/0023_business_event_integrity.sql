@@ -71,7 +71,7 @@ WHEN NEW.current_balance_minor <> (
     END
   ),0)
   FROM journal_lines jl
-  JOIN journal_transactions jt ON jt.id=jl.transaction_id AND jt.status='posted'
+  JOIN journal_transactions jt ON jt.id=jl.transaction_id
   JOIN accounts a ON a.id=jl.account_id
   WHERE jl.account_id=OLD.id AND jl.currency=OLD.currency
 )
