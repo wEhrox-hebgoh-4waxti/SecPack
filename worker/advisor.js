@@ -166,11 +166,14 @@ async function buildJournal(env,{referenceType,referenceId,description,currency,
   for(const x of normalized){
     const lineId=crypto.randomUUID();
     stm.push(env.DB.prepare("INSERT INTO journal_lines(id,transaction_id,account_id,side,amount_minor,currency,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7)").bind(lineId,txId,x.accountId,x.side,x.amount,currency,now));
+  }
+  // Posting is the accounting boundary. Account balances are updated only after the
+  // Journal transaction is posted, so draft rows can never become a balance source.
+  stm.push(env.DB.prepare("UPDATE journal_transactions SET status='posted' WHERE id=?1 AND status='draft'").bind(txId));
+  for(const x of normalized){
     const row=x.account, normal=["cash","bank","receivable","inventory","expense","cogs"].includes(row.account_type)?"debit":"credit",delta=x.side===normal?x.amount:-x.amount;
     stm.push(env.DB.prepare("UPDATE accounts SET current_balance_minor=current_balance_minor+?1,updated_at=?2 WHERE id=?3").bind(delta,now,x.accountId));
   }
-  // Post only after every immutable line and balance update has been queued. The DB trigger proves balance before allowing draft -> posted.
-  stm.push(env.DB.prepare("UPDATE journal_transactions SET status='posted' WHERE id=?1 AND status='draft'").bind(txId));
   return {txId,statements:stm};
 }
 

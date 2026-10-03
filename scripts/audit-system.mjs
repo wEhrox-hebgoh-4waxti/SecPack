@@ -135,6 +135,8 @@ expect(!/stock_qty-reserved_qty>=\\?1|reserved_qty>=\\?1|sold_qty>=\\?1/.test(wo
 expect(!/stockStatementIndexes/.test(worker), "Obsolete inventory statement-index bookkeeping remains.");
 for (const index of ["idx_journal_order_sale_unique","idx_journal_order_payment_unique","idx_journal_order_cogs_unique","idx_journal_manual_sale_unique","idx_journal_manual_cogs_unique","idx_journal_order_refund_sale_unique","idx_journal_order_refund_payment_unique","idx_journal_order_refund_cogs_unique","idx_journal_stock_receipt_unique","idx_journal_supply_cost_unique","idx_journal_supply_cost_payment_unique","idx_journal_opening_balance_unique","idx_inventory_business_event_unique"]) expect(sql.includes(index), "Business-event uniqueness index missing: "+index);
 expect(sql.includes("prevent_account_balance_tamper"), "Account balance reconciliation guard missing.");
+expect(sql.includes("WHERE jt.status='posted'"), "Account balance reconciliation must use posted Journal history only.");
+expect(migrationFiles.includes("0024_posted_journal_balance_boundary.sql"), "Posted-Journal balance boundary migration missing.");
 
 const duplicates = new Map();
 for (const file of migrationFiles) {
