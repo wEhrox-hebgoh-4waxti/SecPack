@@ -83,16 +83,21 @@ async function signSession(payload,env){
   return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 }
 async function verifySession(request,env){
-  const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\s*)__Host-sp_admin=([^;]+)/);if(!m||!env[ADMIN_KEY]||!env.DB)return false;
-  const parts=decodeURIComponent(m[1]).split(".");if(parts.length!==3)return false;
-  const sessionId=parts[0],ts=Number(parts[1]),sig=parts[2];
-  if(!/^[0-9a-f-]{36}$/i.test(sessionId)||!Number.isFinite(ts)||Date.now()-ts>8*60*60*1000||Date.now()<ts-60000)return false;
-  const payload=sessionId+"."+String(ts);
-  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(env[ADMIN_KEY]),{name:"HMAC",hash:"SHA-256"},false,["verify"]);
-  const bytes=Uint8Array.from(atob(sig.replace(/-/g,"+").replace(/_/g,"/")+"=="),c=>c.charCodeAt(0));
-  if(!await crypto.subtle.verify("HMAC",key,bytes,new TextEncoder().encode(payload)))return false;
-  const row=await env.DB.prepare("SELECT expires_at,revoked_at FROM admin_sessions WHERE session_id=?1").bind(sessionId).first().catch(()=>null);
-  return Boolean(row&&!row.revoked_at&&new Date(row.expires_at).getTime()>Date.now());
+  try{
+    const cookie=request.headers.get("Cookie")||"",m=cookie.match(/(?:^|;\s*)__Host-sp_admin=([^;]+)/);
+    if(!m||!env[ADMIN_KEY]||!env.DB)return false;
+    const parts=decodeURIComponent(m[1]).split(".");if(parts.length!==3)return false;
+    const sessionId=parts[0],ts=Number(parts[1]),sig=parts[2];
+    if(!/^[0-9a-f-]{36}$/i.test(sessionId)||!Number.isFinite(ts)||Date.now()-ts>8*60*60*1000||Date.now()<ts-60000)return false;
+    const payload=sessionId+"."+String(ts);
+    const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(env[ADMIN_KEY]),{name:"HMAC",hash:"SHA-256"},false,["verify"]);
+    const normalized=sig.replace(/-/g,"+").replace(/_/g,"/");
+    const padded=normalized+"=".repeat((4-normalized.length%4)%4);
+    const bytes=Uint8Array.from(atob(padded),c=>c.charCodeAt(0));
+    if(!await crypto.subtle.verify("HMAC",key,bytes,new TextEncoder().encode(payload)))return false;
+    const row=await env.DB.prepare("SELECT expires_at,revoked_at FROM admin_sessions WHERE session_id=?1").bind(sessionId).first().catch(()=>null);
+    return Boolean(row&&!row.revoked_at&&new Date(row.expires_at).getTime()>Date.now());
+  }catch(_){return false}
 }
 async function secretEquals(got,expected){
   if(typeof got!=="string"||typeof expected!=="string"||!expected)return false;
