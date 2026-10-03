@@ -288,7 +288,7 @@ async function adminProduct(request,env,origin){
   const now=new Date().toISOString();
   const before={stock_qty:Number(p.stock_qty||0),reserved_qty:Number(p.reserved_qty||0)};
   const stm=[env.DB.prepare("UPDATE products SET unit_price=?1,unit_price_minor=?2,currency=?3,active=?4,updated_at=?5 WHERE id=?6").bind(minorToMoney(priceMinor,currency),priceMinor,currency,b.active===false?0:1,now,id)];
-  stm.push(await auditStatement(env,{action:"PRODUCT_UPDATED",entityType:"product",entityId:id,before,after:{currency,unit_price_minor:priceMinor,stock_qty:stock,active:b.active!==false}}));
+  stm.push(await auditStatement(env,{action:"PRODUCT_UPDATED",entityType:"product",entityId:id,before,after:{currency,unit_price_minor:priceMinor,stock_qty:stock,active:b.active!==false},requestId}));
   await env.DB.batch(stm);return response({ok:true},200,origin);
 }
 async function adminSale(request,env,origin){
@@ -693,7 +693,7 @@ async function adminRequest(request,env,origin){
     const limited=await rateLimit(env,request,"admin-auth",10);
     return response({error:"Unauthorized."},limited.allowed?401:429,origin);
   }
-if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/refund"||path==="/admin/document"||path==="/admin/audit")return adminAccounting(request,env,origin);
+if(path.startsWith("/admin/accounting")||path==="/admin/account"||path==="/admin/supply-cost"||path==="/admin/stock-receipt"||path==="/admin/refund"||path==="/admin/document"||path==="/admin/audit"||path==="/admin/supply-cases"||path==="/admin/supply-case"||path==="/admin/supply-milestone")return adminAccounting(request,env,origin);
   if(path==="/admin/dashboard"&&request.method==="GET")return response(await adminDashboard(env),200,origin);
   if(path==="/admin/audit-log"&&request.method==="GET"){
     const rows=(await env.DB.prepare("SELECT id,actor,action,entity_type,entity_id,before_json,after_json,request_id,created_at FROM audit_log ORDER BY created_at DESC LIMIT 100").all()).results;
