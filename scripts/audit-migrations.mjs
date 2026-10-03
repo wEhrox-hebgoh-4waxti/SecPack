@@ -39,6 +39,7 @@ const baselineContracts = {
   documents: ["request_id"],
   supply_cases: ["request_id"],
   supply_milestones: ["request_id"],
+  journal_transactions: ["status"],
   admin_sessions: ["session_id","expires_at","revoked_at"]
 };
 
