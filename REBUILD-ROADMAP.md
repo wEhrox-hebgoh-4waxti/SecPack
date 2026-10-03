@@ -17,7 +17,8 @@ This pass treats inventory, order state, refund accounting, public DTOs, migrati
 - Local secret/development artifacts are explicitly excluded from Git via `.dev.vars*`, Wrangler state and local build/test outputs.
 
 ### Current release blockers
-1. Remote D1 control-plane authorization must be restored with a dedicated GitHub secret `CLOUDFLARE_D1_API_TOKEN` having Account → D1 Edit (D1 Write) for the SEC PACK account.
+- Latest CI verification: syntax, system contract, migration audit, local D1 migrations/integrity, Cloudflare authentication and Worker dry-run all pass; the release gate stops only because `CLOUDFLARE_D1_API_TOKEN` is empty.
+1. Remote D1 control-plane authorization must be restored with the GitHub secret `CLOUDFLARE_D1_API_TOKEN`; the latest CI run proves this secret is currently empty, while the existing Worker deployment token is valid for Worker deployment but is not sufficient for D1 control-plane access.
 2. After D1 access is restored, remote `d1_migrations` must be reconciled before any historical migration rename/delete.
 3. CI must pass system audit, migration audit, local integrity, remote migration verification, deployment and live smoke before production is considered operational.
 4. End-to-end production-safe validation remains required for receipt → order → reserve → payment confirmation → fulfillment → COGS → return/refund.
