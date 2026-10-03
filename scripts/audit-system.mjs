@@ -58,6 +58,9 @@ expect(!/INSERT INTO accounting_ledger|UPDATE accounting_ledger|DELETE FROM acco
 expect(!/if\(path===["']\/admin\/accounting["']&&request\.method===["']GET["'][\s\S]{0,180}runAudit\(/i.test(worker), "GET /admin/accounting must remain read-only.");
 expect(worker.includes("journal_transactions") && worker.includes("journal_lines"), "Journal engine missing.");
 for (const trigger of ["prevent_order_item_cost_update","prevent_account_structure_update","prevent_orphan_order_item_insert","prevent_orphan_inventory_movement_insert","prevent_product_delete_with_history","prevent_invalid_supply_milestone_transition","prevent_invalid_order_status_transition","prevent_invalid_payment_status_transition","prevent_invalid_inventory_movement_type"]) expect(worker.includes(trigger), "Worker readiness contract missing trigger: "+trigger);
+expect(worker.includes('path==="/admin/supply-case"&&request.method==="POST"') && worker.includes('path==="/admin/supply-milestone"&&request.method==="POST"'), "Supply-chain mutation routes are not implemented.");
+expect(worker.includes('path==="/admin/supply-cases"&&request.method==="GET"'), "Supply-chain read route is not implemented.");
+expect(/if\(path\.startsWith\("\/admin\/accounting"\)[\s\S]*path===\"\/admin\/supply-cases\"/.test(worker), "Supply-chain routes are not connected to the authenticated admin handler.");
 expect(worker.includes("await env.DB.batch"), "Business mutations are not using D1 batch transactions.");
 expect(worker.includes("stock_qty-reserved_qty>=?1"), "Reservation/sale paths must enforce available stock at the mutation boundary.");
 expect(worker.includes('if(next==="ready"&&order.payment_status!=="paid")'), "Ready order state must require confirmed payment.");
