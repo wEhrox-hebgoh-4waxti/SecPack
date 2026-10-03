@@ -538,3 +538,45 @@ Trace every change through:
 `business rule → domain model → schema → transaction → API → security → Admin → accounting → inventory → audit → tests → deployment`
 
 A change is not complete until its dependent layers remain coherent.
+
+
+## Current system-wide invariants — 2026-10-03
+
+### Accounting boundary
+- `journal_transactions + journal_lines` are the canonical accounting source.
+- Only `status='posted'` Journal transactions participate in account-balance reconciliation and accounting reports.
+- `current_balance_minor` is a projection and must reconcile to posted Journal history.
+- Draft Journal rows are transient transaction state and never a balance source.
+- `accounting_ledger` and `financial_entries` are compatibility/legacy structures; application code must not write them as accounting truth.
+
+### Inventory boundary
+- Physical stock changes only through controlled business operations such as stock receipt, fulfillment, return, and controlled adjustment.
+- Public orders are normalized by product ID before reservation.
+- Product master data, not hard-coded frontend lists, defines active public products.
+- Historical order-item cost basis is immutable.
+
+### Admin API boundary
+- Admin browser modules use one authenticated API client.
+- Accounting UI uses explicit GET/POST wrappers; no browser-side mutation queue or offline replay exists for financial/document operations.
+- Mutation requests carry idempotency keys where replay safety is required.
+
+### Public API boundary
+- Public DTOs are allowlists, not serialized internal records.
+- Public catalog exposes only product identity/localized names/unit.
+- Public order responses expose the commercial order reference and status, not internal database identifiers or financial totals.
+- Internal pricing, cost, inventory, accounting, supplier, logistics and customer data remain server-side.
+
+### Release boundary
+- Schema changes are migration-only.
+- Worker runtime never performs DDL.
+- CI must pass system-contract, migration, local D1 integrity and syntax gates before production deployment.
+- Production D1 migration access uses a dedicated Cloudflare token with D1 Edit/D1 Write permission; deployment remains fail-closed if that control-plane access is unavailable.
+- Worker deployment contains the live smoke test; redundant production-smoke workflow was removed.
+
+### Remaining operational gate
+1. Resolve the dedicated D1 control-plane authorization failure (Cloudflare 7403).
+2. Verify remote `d1_migrations`, schema, indexes, triggers, `PRAGMA quick_check`, and `PRAGMA foreign_key_check`.
+3. Apply migrations only after remote state is known.
+4. Run the full receipt → order → reserve → payment → fulfill → COGS → return → refund scenario.
+5. Verify production public/API/Admin behavior.
+6. Then perform migration canonicalization and final MFA/security hardening.
