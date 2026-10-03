@@ -245,7 +245,7 @@ async function createOrder(data,env,origin){
     const existing=await env.DB.prepare("SELECT id,order_no,total,total_minor,currency FROM orders WHERE request_id=?1").bind(data.requestId).first();
     if(existing)return response({ok:true,orderId:existing.id,orderNo:existing.order_no,status:"submitted"},202,origin);
   }
-  const map=new Map(products.map(p=>[p.id,p])),stockStatementIndexes=[],orderId=crypto.randomUUID(),orderNo="SP-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+orderId.slice(0,6).toUpperCase(),now=new Date().toISOString();
+  const map=new Map(products.map(p=>[p.id,p])),orderId=crypto.randomUUID(),orderNo="SP-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+orderId.slice(0,6).toUpperCase(),now=new Date().toISOString();
   if(new Set(products.map(p=>p.currency)).size!==1)return response({error:"Selected products must use the same currency."},409,origin);
   const lines=clean.map(x=>{const p=map.get(x.id),line=safeMultiply(x.qty,Number(p.unit_price_minor));return{p,qty:x.qty,line}});
   if(lines.some(x=>x.line===null))return response({error:"Order value is outside the supported accounting range."},400,origin);
