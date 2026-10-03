@@ -50,6 +50,9 @@ A failed batch must leave no partial business state.
 
 ## 4. Accounting invariants
 
+- Canonical business events are unique at the database boundary, so a retry with a different idempotency key cannot create a duplicate financial event.
+- `current_balance_minor` must reconcile to Journal history; direct balance tampering is rejected by D1.
+
 - Every journal transaction is balanced: debit total = credit total = transaction total.
 - Journal transactions and lines are immutable.
 - Historical order-item cost is immutable.
