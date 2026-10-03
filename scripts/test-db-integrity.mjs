@@ -29,6 +29,8 @@ const expectFailure = (sql, message) => {
 run("PRAGMA quick_check;");
 const fk=run("PRAGMA foreign_keys;");
 if(!fk.includes("1")) throw new Error("SQLite foreign-key enforcement is disabled.");
+const fkCheck=run("PRAGMA foreign_key_check;");
+if(!/^\\s*(?:ok)?\\s*$/.test(fkCheck)) throw new Error("SQLite foreign-key check failed: "+fkCheck);
 
 run("INSERT INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,unit_cost_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('"+productId+"','Integrity Test','تست','اختبار','unit','USD',1,100,50,10,0,0,'TEST',1,datetime('now'));");
 run("UPDATE products SET reserved_qty=6 WHERE id='"+productId+"';");
@@ -71,6 +73,8 @@ expectFailure("UPDATE journal_transactions SET status='posted' WHERE id='"+txId+
 const creditLineId="__integrity_credit_"+suffix;
 run("INSERT INTO journal_lines(id,transaction_id,account_id,side,amount_minor,currency,created_at) VALUES('"+creditLineId+"','"+txId+"','"+accountId+"','credit',100,'USD',datetime('now'));");
 run("UPDATE journal_transactions SET status='posted' WHERE id='"+txId+"' AND status='draft';");
+expectFailure("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at,status) VALUES('__integrity_duplicate_tx_"+suffix+"','integrity','"+suffix+"','Duplicate event','USD',100,NULL,datetime('now'),'draft');", "Expected duplicate business-event Journal guard did not fire.");
+expectFailure("UPDATE accounts SET current_balance_minor=999999 WHERE id='"+accountId+"';", "Expected account-balance reconciliation guard did not fire.");
 expectFailure("UPDATE accounts SET name='Tampered' WHERE id='"+accountId+"';", "Expected account-structure immutability guard did not fire.");
 
 // Journal rows are intentionally NOT deleted: append-only accounting is itself under test.
