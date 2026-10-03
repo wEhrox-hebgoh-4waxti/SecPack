@@ -66,14 +66,14 @@ run("DELETE FROM supply_milestones WHERE id='"+milestoneId+"';");
 run("DELETE FROM supply_cases WHERE id='"+caseId+"';");
 
 run("INSERT INTO accounts(id,name,account_type,currency,current_balance_minor,active,created_at,updated_at) VALUES('"+accountId+"','Integrity Account','cash','USD',0,1,datetime('now'),datetime('now'));");
-expectFailure("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at) VALUES('"+txId+"','integrity','"+suffix+"','Integrity transaction','USD',100,NULL,datetime('now'));", "Expected direct posted Journal insertion to be blocked.");
+expectFailure("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at) VALUES('"+txId+"','manual_sale','"+suffix+"','Integrity transaction','USD',100,NULL,datetime('now'));", "Expected direct posted Journal insertion to be blocked.");
 run("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at,status) VALUES('"+txId+"','integrity','"+suffix+"','Integrity transaction','USD',100,NULL,datetime('now'),'draft');");
 run("INSERT INTO journal_lines(id,transaction_id,account_id,side,amount_minor,currency,created_at) VALUES('"+lineId+"','"+txId+"','"+accountId+"','debit',100,'USD',datetime('now'));");
 expectFailure("UPDATE journal_transactions SET status='posted' WHERE id='"+txId+"';", "Expected unbalanced Journal posting guard did not fire.");
 const creditLineId="__integrity_credit_"+suffix;
 run("INSERT INTO journal_lines(id,transaction_id,account_id,side,amount_minor,currency,created_at) VALUES('"+creditLineId+"','"+txId+"','"+accountId+"','credit',100,'USD',datetime('now'));");
 run("UPDATE journal_transactions SET status='posted' WHERE id='"+txId+"' AND status='draft';");
-expectFailure("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at,status) VALUES('__integrity_duplicate_tx_"+suffix+"','integrity','"+suffix+"','Duplicate event','USD',100,NULL,datetime('now'),'draft');", "Expected duplicate business-event Journal guard did not fire.");
+expectFailure("INSERT INTO journal_transactions(id,reference_type,reference_id,description,currency,total_minor,request_id,created_at,status) VALUES('__integrity_duplicate_tx_"+suffix+"','manual_sale','"+suffix+"','Duplicate event','USD',100,NULL,datetime('now'),'draft');", "Expected duplicate business-event Journal guard did not fire.");
 expectFailure("UPDATE accounts SET current_balance_minor=999999 WHERE id='"+accountId+"';", "Expected account-balance reconciliation guard did not fire.");
 expectFailure("UPDATE accounts SET name='Tampered' WHERE id='"+accountId+"';", "Expected account-structure immutability guard did not fire.");
 
