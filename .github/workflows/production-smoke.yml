@@ -1,8 +1,9 @@
 name: SEC PACK Production Smoke Test
 
 on:
-  push:
-    branches: ["main"]
+  workflow_run:
+    workflows: ["SEC PACK Worker Deploy"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -10,12 +11,20 @@ permissions:
 
 jobs:
   smoke:
+    if: >-
+      ${{
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+        || github.event_name == 'workflow_dispatch'
+      }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
+          ref: ${{
+            github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha
+          }}
 
       - name: Check production site
         shell: bash
