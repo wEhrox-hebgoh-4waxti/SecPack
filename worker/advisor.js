@@ -56,6 +56,10 @@ function allowedOrderTransition(from,to){
   const map={pending:new Set(["processing","paid","cancelled"]),processing:new Set(["paid","ready","cancelled"]),paid:new Set(["ready"]),ready:new Set(["fulfilled"])};
   return Boolean(map[from]?.has(to));
 }
+function paymentAccountId(order){
+  const method=String(order?.payment_method||"").toLowerCase();
+  return /cash|نقد|نقدی|cashbox/.test(method)?"cash":"bank";
+}
 
 async function digest(v){const b=new TextEncoder().encode(v);const h=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,"0")).join("");}
 async function clientKey(request,env){const ip=request.headers.get("CF-Connecting-IP")||"unknown";const salt=env[RATE_SALT]||env[KEY];return salt?digest(salt+"|"+ip):null;}
@@ -360,7 +364,7 @@ async function adminOrderStatus(request,env,origin){
     }
     const existingPayment=await env.DB.prepare("SELECT id FROM journal_transactions WHERE reference_type='order_payment' AND reference_id=?1 LIMIT 1").bind(orderId).first();
     if(!existingPayment){
-      const paymentJournal=await buildJournal(env,{referenceType:"order_payment",referenceId:orderId,description:"Customer payment received · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":payment":null,lines:[{accountId:"bank",side:"debit",amount:Number(order.total_minor)},{accountId:"receivables",side:"credit",amount:Number(order.total_minor)}]});
+      const paymentJournal=await buildJournal(env,{referenceType:"order_payment",referenceId:orderId,description:"Customer payment received · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":payment":null,lines:[{accountId:paymentAccountId(order),side:"debit",amount:Number(order.total_minor)},{accountId:"receivables",side:"credit",amount:Number(order.total_minor)}]});
       if(!paymentJournal)return response({error:"Accounting accounts are not configured for this order currency."},409,origin);
       stm.push(...paymentJournal.statements);
     }
@@ -477,7 +481,7 @@ async function adminAccounting(request,env,origin){
     if(!category||!description||amount===null||amount<=0)return response({error:"Invalid supply cost."},400,origin);
     const id=crypto.randomUUID(),now=new Date().toISOString(),status=["planned","paid","cancelled"].includes(b.status)?b.status:"planned",requestId=text(request.headers.get("X-Idempotency-Key")||b._request_id,100)||null;
     if(requestId){const prior=await env.DB.prepare("SELECT id FROM journal_transactions WHERE request_id=?1").bind(requestId).first();if(prior)return response({ok:true,id:prior.id,replayed:true},200,origin);const existing=await env.DB.prepare("SELECT id FROM supply_costs WHERE request_id=?1").bind(requestId).first();if(existing)return response({ok:true,id:existing.id,replayed:true},200,origin);}
-    const stm=[env.DB.prepare("INSERT INTO supply_costs(id,category,supplier,description,amount_minor,currency,status,due_date,paid_at,account_id,reference_id,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?12)").bind(id,category,text(b.supplier,160),description,amount,currency,status,text(b.due_date,30)||null,status==="paid"?now:null,accountId,text(b.reference_id,100)||null,now)];
+    const stm=[env.DB.prepare("INSERT INTO supply_costs(id,request_id,category,supplier,description,amount_minor,currency,status,due_date,paid_at,account_id,reference_id,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?13)").bind(id,requestId,category,text(b.supplier,160),description,amount,currency,status,text(b.due_date,30)||null,status==="paid"?now:null,accountId,text(b.reference_id,100)||null,now)];
     if(status==="paid"){
       const journal=await buildJournal(env,{referenceType:"supply_cost",referenceId:id,description, currency,requestId,lines:[{accountId:"expense",side:"debit",amount},{accountId,side:"credit",amount}]});
       if(!journal)return response({error:"Accounting accounts are not configured for this currency."},409,origin);
@@ -563,7 +567,7 @@ async function adminAccounting(request,env,origin){
       }
     }
     const saleReverse=await buildJournal(env,{referenceType:"order_refund_sale",referenceId:orderId,description:"Refund revenue · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":sale":null,lines:[{accountId:"income",side:"debit",amount:Number(order.total_minor)},{accountId:"receivables",side:"credit",amount:Number(order.total_minor)}]});
-    const paymentReverse=await buildJournal(env,{referenceType:"order_refund_payment",referenceId:orderId,description:"Refund customer payment · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":payment":null,lines:[{accountId:"receivables",side:"debit",amount:Number(order.total_minor)},{accountId:"bank",side:"credit",amount:Number(order.total_minor)}]});
+    const paymentReverse=await buildJournal(env,{referenceType:"order_refund_payment",referenceId:orderId,description:"Refund customer payment · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":payment":null,lines:[{accountId:"receivables",side:"debit",amount:Number(order.total_minor)},{accountId:paymentAccountId(order),side:"credit",amount:Number(order.total_minor)}]});
     if(!saleReverse||!paymentReverse)return response({error:"Refund accounts are not configured for this currency."},409,origin);
     stm.push(...saleReverse.statements,...paymentReverse.statements);
     if(order.status==="fulfilled"&&returnInventory){
@@ -572,7 +576,7 @@ async function adminAccounting(request,env,origin){
       for(const x of items){
         const cost=safeMultiply(Number(x.quantity),Number(x.unit_cost_minor||0));if(cost===null||cost<=0)return response({error:"Exact refund cost basis is unavailable for this fulfilled order."},409,origin);
         totalCost+=cost;
-        stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,sold_qty=sold_qty-?1,updated_at=?2 WHERE id=?3").bind(x.quantity,now,x.product_id));
+        const currentStock=Number((await env.DB.prepare("SELECT stock_qty,unit_cost_minor FROM products WHERE id=?1").bind(x.product_id).first())?.stock_qty||0);\n        const currentCost=Number((await env.DB.prepare("SELECT unit_cost_minor FROM products WHERE id=?1").bind(x.product_id).first())?.unit_cost_minor||0);\n        const returnedQty=Number(x.quantity),returnedCost=Number(x.unit_cost_minor||0),newStock=currentStock+returnedQty;\n        const weightedValue=safeMultiply(currentStock,currentCost);\n        const returnedValue=safeMultiply(returnedQty,returnedCost);\n        if(weightedValue===null||returnedValue===null||newStock<=0)return response({error:"Inventory return valuation is outside the supported range."},409,origin);\n        const newAverageCost=Math.floor((weightedValue+returnedValue)/newStock);\n        stm.push(env.DB.prepare("UPDATE products SET stock_qty=stock_qty+?1,sold_qty=sold_qty-?1,unit_cost_minor=?2,updated_at=?3 WHERE id=?4 AND sold_qty>=?1").bind(returnedQty,newAverageCost,now,x.product_id));
         stm.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'RETURN',?3,?4,'Refund / inventory returned',?5,?6,?7)").bind(crypto.randomUUID(),x.product_id,x.quantity,orderId,requestId,(await env.DB.prepare("SELECT warehouse FROM products WHERE id=?1").bind(x.product_id).first())?.warehouse||"Gorgan",now));
       }
       const cogsReverse=await buildJournal(env,{referenceType:"order_refund_cogs",referenceId:orderId,description:"Reverse COGS · "+order.order_no,currency:order.currency,requestId:requestId?requestId+":cogs":null,lines:[{accountId:"inventory",side:"debit",amount:totalCost},{accountId:"cogs",side:"credit",amount:totalCost}]});
