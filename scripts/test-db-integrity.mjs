@@ -32,6 +32,7 @@ if(!fk.includes("1")) throw new Error("SQLite foreign-key enforcement is disable
 
 run("INSERT INTO products(id,name_en,name_fa,name_ar,unit,currency,unit_price,unit_price_minor,unit_cost_minor,stock_qty,reserved_qty,sold_qty,warehouse,active,updated_at) VALUES('"+productId+"','Integrity Test','تست','اختبار','unit','USD',1,100,50,10,0,0,'TEST',1,datetime('now'));");
 run("UPDATE products SET reserved_qty=6 WHERE id='"+productId+"';");
+expectFailure("UPDATE products SET reserved_qty=reserved_qty+5 WHERE id='"+productId+"';", "Expected reservation-over-available guard did not fire.");
 
 expectFailure("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,created_at) VALUES('bad-movement-"+suffix+"','"+productId+"','TEST',0,datetime('now'));", "Expected invalid inventory movement guard did not fire.");
 expectFailure("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,created_at) VALUES('bad-type-"+suffix+"','"+productId+"','UNKNOWN',1,datetime('now'));", "Expected invalid inventory movement type guard did not fire.");
@@ -46,6 +47,8 @@ expectFailure("UPDATE orders SET status='ready' WHERE id='"+orderId+"';", "Expec
 run("UPDATE orders SET status='paid',payment_status='paid' WHERE id='"+orderId+"';");
 run("UPDATE orders SET status='ready' WHERE id='"+orderId+"';");
 expectFailure("UPDATE orders SET status='fulfilled' WHERE id='"+orderId+"';", "Expected paid -> fulfilled shortcut guard did not fire.");
+expectFailure("UPDATE orders SET status='cancelled' WHERE id='"+orderId+"';", "Expected paid -> cancelled without refund guard did not fire.");
+run("UPDATE orders SET status='cancelled',payment_status='refunded' WHERE id='"+orderId+"';");
 expectFailure("UPDATE orders SET payment_status='unpaid' WHERE id='"+orderId+"';", "Expected paid -> unpaid payment transition guard did not fire.");
 
 run("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor,unit_cost_minor) VALUES('"+itemId+"','"+orderId+"','paper','Integrity','unit',1,1,1,100,100,50);");
