@@ -5,6 +5,9 @@
 This pass treats inventory, order state, refund accounting, public DTOs, migration authority and CI gates as one dependency graph.
 
 ### Cross-domain corrections now committed
+- business-event uniqueness is now enforced in D1 for order sale/payment/COGS, manual sale/COGS, stock receipt, supply cost/payment, opening balances and refund events; retries with a different request key cannot create a second canonical financial event;
+- inventory ledger business events are uniquely constrained by movement/product/reference, preventing duplicate physical movements under concurrent retries;
+- account current balances are now protected by a database reconciliation trigger against the Journal history;
 - Inventory mutations no longer depend on conditional UPDATE predicates that can silently affect zero rows while a later ledger INSERT succeeds; DB invariant triggers are now the transaction boundary.
 - Paid-order refund is explicitly represented as the only legal database transition from `paid` to `cancelled`, and it must simultaneously set `payment_status='refunded'`.
 - Refund reservation release and fulfilled-order return use DB invariant triggers rather than silent zero-row guards.
@@ -189,6 +192,7 @@ Known historical duplicate prefixes:
 Do not rename/delete them before remote reconciliation.
 
 Current integrity sequence:
+- 0023 business-event uniqueness and account-balance reconciliation
 - 0015 inventory invariants
 - 0016 production/idempotency integrity
 - 0017 domain immutability
