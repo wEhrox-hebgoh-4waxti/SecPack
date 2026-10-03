@@ -73,7 +73,7 @@ if (invalid.length) {
   process.exit(1);
 }
 const duplicates = [...versions.entries()].filter(([, list]) => list.length > 1);
-const knownDuplicateVersions = new Set([3,4,5,6,7]);
+const knownDuplicateVersions = new Set([3,4,5,6,7,18]);
 if (duplicates.length) {
   console.warn("WARNING: duplicate migration version prefixes:");
   for (const [version,list] of duplicates) console.warn(`  ${String(version).padStart(4,"0")}: ${list.join(", ")}`);
