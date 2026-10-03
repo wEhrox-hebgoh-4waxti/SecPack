@@ -253,8 +253,7 @@ async function createOrder(data,env,origin){
   if(!Number.isSafeInteger(total)||total<0)return response({error:"Order value is outside the supported accounting range."},400,origin);
   const statements=[env.DB.prepare("INSERT INTO orders(id,order_no,request_id,customer_name,company,email,phone,destination,payment_method,status,payment_status,currency,subtotal,total,subtotal_minor,total_minor,notes,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,'pending','unpaid',?10,?11,?11,?12,?12,?13,?14,?14)").bind(orderId,orderNo,data.requestId||null,data.name,data.company||null,data.email,data.phone||null,data.destination||null,data.payment||null,products[0]?.currency||"USD",minorToMoney(total,products[0]?.currency||"USD"),total,data.notes||null,now,now)];
   for(const x of lines){
-    stockStatementIndexes.push(statements.length);
-    statements.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0").bind(x.qty,now,x.p.id));
+statements.push(env.DB.prepare("UPDATE products SET reserved_qty=reserved_qty+?1,updated_at=?2 WHERE id=?3 AND active=1 AND unit_price_minor>0").bind(x.qty,now,x.p.id));
     statements.push(env.DB.prepare("INSERT INTO order_items(id,order_id,product_id,product_name,unit,quantity,unit_price,line_total,unit_price_minor,line_total_minor,unit_cost_minor) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)").bind(crypto.randomUUID(),orderId,x.p.id,x.p.name_en,x.p.unit,x.qty,minorToMoney(x.p.unit_price_minor,x.p.currency),minorToMoney(x.line,x.p.currency),x.p.unit_price_minor,x.line,Number(x.p.unit_cost_minor)));
     statements.push(env.DB.prepare("INSERT INTO inventory_ledger(id,product_id,movement_type,quantity,reference_id,note,request_id,warehouse,created_at) VALUES(?1,?2,'RESERVE',?3,?4,'Customer order reservation',?5,?6,?7)").bind(crypto.randomUUID(),x.p.id,x.qty,orderId,data.requestId||null,x.p.warehouse||"Gorgan",now));
   }
