@@ -24,7 +24,19 @@ const requiredUniqueIndexes = [
   ["idx_orders_request_id", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_orders_request_id\b[\s\S]*?ON\s+orders\s*\(\s*request_id\s*\)/i],
   ["idx_inquiries_request_id_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_inquiries_request_id_unique\b[\s\S]*?ON\s+inquiries\s*\(\s*request_id\s*\)/i],
   ["idx_accounting_ledger_request_id_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_accounting_ledger_request_id_unique\b[\s\S]*?ON\s+accounting_ledger\s*\(\s*request_id\s*\)/i],
-  ["idx_journal_request_id_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_request_id_unique\b[\s\S]*?ON\s+journal_transactions\s*\(\s*request_id\s*\)/i]
+  ["idx_journal_request_id_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_request_id_unique\b[\s\S]*?ON\s+journal_transactions\s*\(\s*request_id\s*\)/i],
+  ["idx_journal_order_sale_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_order_sale_unique\b/i],
+  ["idx_journal_order_payment_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_order_payment_unique\b/i],
+  ["idx_journal_order_cogs_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_order_cogs_unique\b/i],
+  ["idx_journal_manual_sale_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_manual_sale_unique\b/i],
+  ["idx_journal_manual_cogs_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_manual_cogs_unique\b/i],
+  ["idx_journal_order_refund_sale_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_order_refund_sale_unique\b/i],
+  ["idx_journal_order_refund_payment_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_order_refund_payment_unique\b/i],
+  ["idx_journal_order_refund_cogs_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_order_refund_cogs_unique\b/i],
+  ["idx_journal_stock_receipt_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_stock_receipt_unique\b/i],
+  ["idx_journal_supply_cost_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_supply_cost_unique\b/i],
+  ["idx_journal_supply_cost_payment_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_supply_cost_payment_unique\b/i],
+  ["idx_journal_opening_balance_unique", /CREATE\s+UNIQUE\s+INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+idx_journal_opening_balance_unique\b/i]
 ];
 const uniqueRequestColumns = ["accounts","supply_costs","documents","supply_cases","supply_milestones"];
 const baselineContracts = {
