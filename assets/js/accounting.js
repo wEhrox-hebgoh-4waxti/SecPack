@@ -4,6 +4,8 @@ try{indexedDB.deleteDatabase("secpack-offline-v1");}catch(_){}
 const ACCOUNTING_API="https://api.secpackco.com";
 const accountingApi=window.secpackAdminApi;
 if(typeof accountingApi!=="function") throw new Error("SEC PACK Admin API client is not initialized.");
+const adminGet=path=>accountingApi(path,{method:"GET"});
+const adminPost=(path,payload={})=>accountingApi(path,{method:"POST",body:JSON.stringify(payload)});
 function a(id){return document.getElementById(id);}
 function amoney(v,c){const digits=["USD","EUR","GBP","AED","SAR","TRY"].includes(c)?2:0;return Number(v||0).toLocaleString("fa-IR",{maximumFractionDigits:digits})+" "+c;}
 function fromMinor(v,c){return Number(v||0)/(["USD","EUR","GBP","AED","SAR","TRY"].includes(c)?100:1);}
@@ -37,7 +39,7 @@ function renderAccounting(d){
     const b=document.createElement("b");b.textContent=amoney(fromMinor(x.amount_minor,x.currency),x.currency);wrap.append(s,b);e.append(wrap);
     if(x.status==="planned"){
       const pay=document.createElement("button");pay.className="btn";pay.type="button";pay.textContent="ثبت پرداخت";
-      pay.onclick=async()=>{try{await accountingApi("/admin/supply-cost/pay",{request_id:crypto.randomUUID(),id:x.id});await loadAccounting();}catch(err){alert(err.message);}};
+      pay.onclick=async()=>{try{await adminPost("/admin/supply-cost/pay",{request_id:crypto.randomUUID(),id:x.id});await loadAccounting();}catch(err){alert(err.message);}};
       e.append(pay);
     }
     return e;
@@ -52,15 +54,15 @@ function renderAccounting(d){
   const docs=d.docs||[],docBox=a("documentList");if(docBox)docBox.replaceChildren(...docs.slice(0,15).map(x=>{
     const wrap=document.createElement("div");wrap.className="document-chip";const open=document.createElement("button");
     open.textContent=x.title+" · "+new Date(x.created_at).toLocaleDateString("fa-IR");
-    open.onclick=async()=>{try{const q=await accountingApi("/admin/document?id="+encodeURIComponent(x.id),null,"GET");const w=window.open();if(w){const img=w.document.createElement("img");img.style.maxWidth="100%";img.style.height="auto";img.src=q.data_url;img.alt="document";w.document.body.append(img);}}catch(err){alert(err.message)}};
+    open.onclick=async()=>{try{const q=await adminGet("/admin/document?id="+encodeURIComponent(x.id));const w=window.open();if(w){const img=w.document.createElement("img");img.style.maxWidth="100%";img.style.height="auto";img.src=q.data_url;img.alt="document";w.document.body.append(img);}}catch(err){alert(err.message)}};
     const share=document.createElement("button");share.textContent="ارسال / اشتراک ۷ روزه";
-    share.onclick=async()=>{try{const q=await accountingApi("/admin/document/share",{request_id:crypto.randomUUID(),id:x.id});if(navigator.share){await navigator.share({title:"SEC PACK · "+x.title,text:"Secure document link (valid 7 days):",url:q.url});}else{await navigator.clipboard?.writeText(q.url);alert("لینک امن ۷ روزه کپی شد.");}}catch(err){if(err.name!=="AbortError")alert(err.message)}};
+    share.onclick=async()=>{try{const q=await adminPost("/admin/document/share",{request_id:crypto.randomUUID(),id:x.id});if(navigator.share){await navigator.share({title:"SEC PACK · "+x.title,text:"Secure document link (valid 7 days):",url:q.url});}else{await navigator.clipboard?.writeText(q.url);alert("لینک امن ۷ روزه کپی شد.");}}catch(err){if(err.name!=="AbortError")alert(err.message)}};
     wrap.append(open,share);return wrap;
   }));
 }
 async function loadSupplyCases(){
   try{
-    const d=await accountingApi("/admin/supply-cases",null,"GET"),box=a("supplyCases"),select=a("supplyProduct");
+    const d=await adminGet("/admin/supply-cases"),box=a("supplyCases"),select=a("supplyProduct");
     if(select&&window.SEC_PACK_ADMIN_PRODUCTS)select.replaceChildren(...window.SEC_PACK_ADMIN_PRODUCTS.map(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.name_fa;return o;}));
     if(!box)return;
     const names={factory_order:"سفارش کارخانه",factory_payment:"پرداخت کارخانه",customs:"گمرک",transport:"حمل",warehouse_receipt:"ورود انبار گرگان",ready_for_delivery:"آماده تحویل"};
@@ -71,13 +73,13 @@ async function loadSupplyCases(){
       d.milestones.filter(m=>m.case_id===c.id).forEach(m=>{
         const row=document.createElement("div");row.className="account-row";const label=document.createElement("span");label.textContent=names[m.milestone_type]||m.milestone_type;
         const sel=document.createElement("select");["pending","in_progress","done","blocked"].forEach(s=>{const o=document.createElement("option");o.value=s;o.textContent=s;o.selected=m.status===s;sel.append(o);});
-        sel.onchange=async()=>{try{await accountingApi("/admin/supply-milestone",{request_id:crypto.randomUUID(),id:m.id,status:sel.value});await loadSupplyCases();}catch(e){alert(e.message)}};
+        sel.onchange=async()=>{try{await adminPost("/admin/supply-milestone",{request_id:crypto.randomUUID(),id:m.id,status:sel.value});await loadSupplyCases();}catch(e){alert(e.message)}};
         row.append(label,sel);card.append(row);
       });frag.append(card);
     });box.replaceChildren(frag);
   }catch(e){const box=a("supplyCases");if(box)box.textContent=e.message;}
 }
-async function loadAccounting(){try{const d=await accountingApi("/admin/accounting",null,"GET");renderAccounting(d);return d}catch(e){const x=a("accountingStatus");if(x)x.textContent=e.message;}}
+async function loadAccounting(){try{const d=await adminGet("/admin/accounting");renderAccounting(d);return d}catch(e){const x=a("accountingStatus");if(x)x.textContent=e.message;}}
 async function saveAccountingForm(form,path){
   const payload=Object.fromEntries(new FormData(form).entries());payload.request_id=crypto.randomUUID();
   if(!navigator.onLine){a("accountingStatus").textContent="برای ثبت عملیات مالی، اتصال امن به سامانه لازم است.";return;}
@@ -90,17 +92,17 @@ document.addEventListener("DOMContentLoaded",()=>{
   a("costForm")?.addEventListener("submit",e=>{e.preventDefault();saveAccountingForm(e.currentTarget,"/admin/supply-cost");});
   a("receiptForm")?.addEventListener("submit",e=>{e.preventDefault();saveAccountingForm(e.currentTarget,"/admin/stock-receipt");});
   a("supplyCaseForm")?.addEventListener("submit",e=>{e.preventDefault();saveAccountingForm(e.currentTarget,"/admin/supply-case").then(loadSupplyCases);});
-  a("auditRun")?.addEventListener("click",async()=>{try{await accountingApi("/admin/audit",{request_id:crypto.randomUUID()});await loadAccounting();}catch(e){alert(e.message);}});
-  a("assistantRun")?.addEventListener("click",async()=>{const out=a("assistantOutput");out.textContent="در حال بررسی…";try{const d=await accountingApi("/admin/accounting/assistant",{request_id:crypto.randomUUID()});out.textContent=d.answer||"تحلیلی دریافت نشد.";}catch(e){out.textContent=e.message;}});
+  a("auditRun")?.addEventListener("click",async()=>{try{await adminPost("/admin/audit",{request_id:crypto.randomUUID()});await loadAccounting();}catch(e){alert(e.message);}});
+  a("assistantRun")?.addEventListener("click",async()=>{const out=a("assistantOutput");out.textContent="در حال بررسی…";try{const d=await adminPost("/admin/accounting/assistant",{request_id:crypto.randomUUID()});out.textContent=d.answer||"تحلیلی دریافت نشد.";}catch(e){out.textContent=e.message;}});
   a("documentForm")?.addEventListener("submit",async e=>{
     e.preventDefault();const file=a("documentFile").files[0];if(!file)return;
     if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>6*1024*1024){a("accountingStatus").textContent="فقط تصویر JPG/PNG/WebP تا ۶ مگابایت مجاز است.";return;}
     const img=new Image(),url=URL.createObjectURL(file);img.onload=async()=>{
       try{
         const max=1280,scale=Math.min(1,max/img.width,max/img.height),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-        const dataUrl=canvas.toDataURL("image/jpeg",0.68),payload={request_id:crypto.randomUUID(),title:a("documentTitle").value.trim()||file.name,document_type:a("documentType").value,reference_type:a("documentRefType").value,reference_id:a("documentRefId").value,notes:a("documentNotes").value,data_url:dataUrl,captured_offline:!navigator.onLine};
+        const dataUrl=canvas.toDataURL("image/jpeg",0.68),payload={request_id:crypto.randomUUID(),title:a("documentTitle").value.trim()||file.name,document_type:a("documentType").value,reference_type:a("documentRefType").value,reference_id:a("documentRefId").value,notes:a("documentNotes").value,data_url:dataUrl,captured_offline:false};
         URL.revokeObjectURL(url);
-        try{if(!navigator.onLine)throw Object.assign(new Error("برای ثبت امن سند، اتصال اینترنت لازم است."),{status:0});await accountingApi("/admin/document",payload);e.target.reset();a("accountingStatus").textContent="تصویر سند ثبت شد.";await loadAccounting();}catch(err){a("accountingStatus").textContent=err.message||"ثبت تصویر سند ناموفق بود.";}
+        try{if(!navigator.onLine)throw Object.assign(new Error("برای ثبت امن سند، اتصال اینترنت لازم است."),{status:0});await adminPost("/admin/document",payload);e.target.reset();a("accountingStatus").textContent="تصویر سند ثبت شد.";await loadAccounting();}catch(err){a("accountingStatus").textContent=err.message||"ثبت تصویر سند ناموفق بود.";}
       }catch(err){URL.revokeObjectURL(url);a("accountingStatus").textContent="پردازش سند ناموفق بود.";}
     };
     img.onerror=()=>{URL.revokeObjectURL(url);a("accountingStatus").textContent="فایل تصویر قابل خواندن نیست.";};
