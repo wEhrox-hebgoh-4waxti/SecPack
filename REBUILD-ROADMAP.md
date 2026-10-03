@@ -479,6 +479,17 @@ Verify after every step:
 - expanded local integrity suite
 - production deployment gate
 
+### Whole-system audit findings fixed in current rebuild pass
+- authenticated supply-case and supply-milestone routes were implemented but not connected to the Admin router; routing is now connected and statically audited;
+- product mutation audit events now persist their idempotency request_id;
+- supply-cost creation now persists request_id on the canonical supply-cost row;
+- payment confirmation and refund now resolve the same cash/bank account from the order payment method;
+- fulfilled-order inventory returns now recalculate weighted-average unit cost using the returned historical cost basis;
+- document uploads are restricted to JPEG/PNG/WebP so share links cannot serve active SVG content;
+- Journal transactions now use a draft → posted boundary enforced by D1; direct posted inserts and unbalanced posting are rejected;
+- readiness now requires the Journal posting status column;
+- local integrity tests now exercise foreign-key enforcement and database-level Journal posting rejection.
+
 ### Still required
 1. Resolve Cloudflare D1 7403.
 2. Verify remote migration state.
