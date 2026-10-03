@@ -26,32 +26,10 @@ jobs:
             github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha
           }}
 
-      - name: Check production site
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl --fail --silent --show-error --location --max-time 20 https://secpackco.com/ > /tmp/home.html
-          grep -q "SEC PACK" /tmp/home.html
-          curl --fail --silent --show-error --location --max-time 20 https://secpackco.com/pages/advisor.html > /tmp/advisor.html
-          grep -q "api.secpackco.com" /tmp/advisor.html
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
 
-      - name: Check production API health
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl --fail --silent --show-error --location --max-time 20 https://api.secpackco.com/health -H "Origin: https://secpackco.com" > /tmp/health.json
-          grep -q '"ok":true' /tmp/health.json
-          grep -q '"service":"secpack-api"' /tmp/health.json
-          curl --fail --silent --show-error --location --max-time 20 https://api.secpackco.com/ready -H "Origin: https://secpackco.com" > /tmp/ready.json
-          grep -q '"ok":true' /tmp/ready.json
-          grep -q '"commerceSchema":true' /tmp/ready.json
-
-      - name: Check API rejects unauthenticated public POSTs
-        shell: bash
-        run: |
-          set -euo pipefail
-          code=$(curl --silent --show-error --location --max-time 20 -o /tmp/rejected.json -w "%{http_code}" \
-            -X POST https://api.secpackco.com/advisor \
-            -H "Content-Type: application/json" \
-            --data '{"question":"smoke test"}')
-          test "$code" = "403"
+      - name: Verify live production
+        run: node scripts/smoke-live.mjs
