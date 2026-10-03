@@ -89,7 +89,7 @@ function startTitleAlarm(message){stopTitleAlarm();beepAlarm();let on=false;titl
 async function logout(){try{await fetch(API+"/admin/logout",{method:"POST",headers:{"Accept":"application/json"},credentials:"include"});}catch(_){}token="";window.SEC_PACK_ADMIN_TOKEN="";if(timer)clearInterval(timer);stopTitleAlarm();$("dashboard").classList.add("hidden");$("login").classList.remove("hidden");$("adminToken").value="";}
 $("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();token=$("adminToken").value.trim();
-  try{await api("/admin/session",{method:"POST"});token="";window.SEC_PACK_ADMIN_TOKEN="";await api("/admin/dashboard",{method:"GET"});$("login").classList.add("hidden");$("dashboard").classList.remove("hidden");await load();timer=setInterval(load,5000);}
+  try{await api("/admin/session",{method:"POST"});token="";window.SEC_PACK_ADMIN_TOKEN="";await api("/admin/dashboard",{method:"GET"});$("login").classList.add("hidden");$("dashboard").classList.remove("hidden");await load();timer=setInterval(load,15000);}
   catch(e){$("loginStatus").textContent="کلید مدیریت نادرست است یا سرویس آماده نیست.";token="";window.SEC_PACK_ADMIN_TOKEN="";}
 });
 $("logoutBtn").onclick=logout;$("refreshBtn").onclick=load;
